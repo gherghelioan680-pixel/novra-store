@@ -52,6 +52,8 @@ export type Order = {
   stripeSessionId?: string;
   confirmationEmailSent?: boolean;
   trackingEmailSent?: boolean;
+  /** Emailuri de notificare trimise per status (processing, shipped, delivered, cancelled). */
+  statusEmailsSent?: Partial<Record<OrderStatus, boolean>>;
   createdAt: string;
   updatedAt: string;
   /** @deprecated Legacy field */
@@ -156,6 +158,7 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     stripeSessionId: raw.stripeSessionId,
     confirmationEmailSent: raw.confirmationEmailSent,
     trackingEmailSent: raw.trackingEmailSent,
+    statusEmailsSent: raw.statusEmailsSent,
     address: {
       name: address?.name ?? userName,
       email: address?.email ?? userEmail,

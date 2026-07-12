@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import { normalizeOrder, generatePurchaseCode, type Order, type OrderStatus } from "@/lib/orders";
-import { trySendOrderConfirmationEmail, sendTrackingEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail, sendTrackingEmail, trySendOrderStatusEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { spendCredits } from "@/lib/credits-server";
@@ -11,6 +11,7 @@ import {
   getAffiliateRefFromRequest,
   recordAffiliateConversion,
 } from "@/lib/affiliates-server";
+import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
 
 export const runtime = "nodejs";
 
@@ -226,6 +227,10 @@ export async function POST(request: NextRequest) {
       await recordAffiliateConversion(orders[0]);
     }
 
+    if (order.userEmail) {
+      await markAbandonedCartCompleted(order.userEmail);
+    }
+
     return Response.json({ ok: true, order: orders[0] });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
@@ -277,16 +282,42 @@ export async function PATCH(request: NextRequest) {
     orders[index] = { ...previous, ...updates };
     await writeJsonFile(ORDERS_FILE, orders);
 
-    const updated = orders[index];
+    let updated = orders[index];
+    const settings = await getServerSiteSettings();
     let trackingEmailSent = updated.trackingEmailSent;
+    let statusEmailsSent = { ...updated.statusEmailsSent };
 
-    if (typeof awbTracking === "string" && awbTracking.trim() && awbTracking.trim() !== previous.awbTracking) {
-      const settings = await getServerSiteSettings();
-      if (settings.orderEmailsEnabled) {
+    if (updates.status && updates.status !== previous.status) {
+      const statusResult = await trySendOrderStatusEmail(
+        updated,
+        previous.status,
+        settings.orderEmailsEnabled
+      );
+      if (statusResult.sent && statusResult.status) {
+        statusEmailsSent = {
+          ...statusEmailsSent,
+          [statusResult.status]: true,
+        };
+        if (statusResult.status === "shipped" && updated.awbTracking) {
+          trackingEmailSent = true;
+        }
+        updated = { ...updated, statusEmailsSent, trackingEmailSent };
+        orders[index] = updated;
+        await writeJsonFile(ORDERS_FILE, orders);
+      }
+    }
+
+    if (
+      typeof awbTracking === "string" &&
+      awbTracking.trim() &&
+      awbTracking.trim() !== previous.awbTracking
+    ) {
+      if (settings.orderEmailsEnabled && !trackingEmailSent && !statusEmailsSent.shipped) {
         const sent = await sendTrackingEmail(updated, awbTracking.trim());
         if (sent) {
           trackingEmailSent = true;
-          orders[index] = { ...orders[index], trackingEmailSent: true };
+          updated = { ...updated, trackingEmailSent: true };
+          orders[index] = updated;
           await writeJsonFile(ORDERS_FILE, orders);
         }
       }

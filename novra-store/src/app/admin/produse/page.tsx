@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, RotateCcw, Pencil, X, Star } from "lucide-react";
+import { Save, RotateCcw, Pencil, X, Star, Upload, ImageIcon } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { requireAdmin } from "@/lib/auth";
+import { getApiHeaders } from "@/lib/api-client";
+import { toImageApiUrl } from "@/lib/images";
 import {
   CATALOG_CATEGORIES,
   getCatalogProducts,
@@ -16,6 +18,7 @@ import {
   getProductImageFolder,
   getProductImagePath,
   isBundleProduct,
+  BUNDLE_COLOR_SLUGS,
   type CatalogProduct,
   type ProductOverride,
 } from "@/lib/catalog";
@@ -32,6 +35,68 @@ type EditForm = {
   useAutoBundleSavings: boolean;
 };
 
+function getProductImageTargets(product: CatalogProduct): Array<{ label: string; path: string }> {
+  const folder = getProductImageFolder(product.category);
+  const mainPath = getProductImagePath(product).replace(/^\//, "");
+  const targets: Array<{ label: string; path: string }> = [
+    { label: "Imagine principală", path: mainPath },
+  ];
+
+  if (folder === "adaptoare" || folder === "cabluri") {
+    for (const slug of BUNDLE_COLOR_SLUGS) {
+      targets.push({
+        label: `Variantă ${slug}`,
+        path: `products/${folder}/${slug}.png`,
+      });
+    }
+  }
+
+  return targets;
+}
+
+async function uploadImageFile(path: string, file: File): Promise<{ ok: boolean; message: string }> {
+  const maxBytes = 2 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    return { ok: false, message: "Fișierul depășește 2 MB." };
+  }
+
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== "string") {
+        reject(new Error("invalid"));
+        return;
+      }
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(new Error("read"));
+    reader.readAsDataURL(file);
+  }).catch(() => "");
+
+  if (!base64) {
+    return { ok: false, message: "Nu am putut citi fișierul." };
+  }
+
+  const response = await fetch("/api/store/images", {
+    method: "POST",
+    headers: getApiHeaders(),
+    body: JSON.stringify({
+      path,
+      base64,
+      contentType: file.type,
+    }),
+  });
+
+  const data = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok) {
+    return { ok: false, message: data.error ?? "Upload eșuat." };
+  }
+
+  return { ok: true, message: "Imagine salvată." };
+}
+
 export default function AdminProdusePage() {
   const admin = requireAdmin();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
@@ -39,6 +104,8 @@ export default function AdminProdusePage() {
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
+  const [uploadingImagePath, setUploadingImagePath] = useState<string | null>(null);
+  const [imageVersion, setImageVersion] = useState(0);
   const [editForm, setEditForm] = useState<EditForm>({
     title: "",
     tag: "",
@@ -157,6 +224,18 @@ export default function AdminProdusePage() {
     });
   };
 
+  const handleImageUpload = async (path: string, file: File) => {
+    setUploadingImagePath(path);
+    const result = await uploadImageFile(path, file);
+    setUploadingImagePath(null);
+    if (!result.ok) {
+      showMessage(result.message);
+      return;
+    }
+    setImageVersion((value) => value + 1);
+    showMessage(result.message);
+  };
+
   const handleSaveFullEdit = async () => {
     if (!editingProduct) return;
 
@@ -261,12 +340,35 @@ export default function AdminProdusePage() {
                 </td>
                 <td className="px-4 py-4 text-xs text-purple-200">{product.tag}</td>
                 <td className="px-4 py-4">
-                  <p className="font-mono text-[10px] text-gray-400 break-all max-w-[180px]">
-                    {getProductImagePath(product)}
-                  </p>
-                  <p className="text-[10px] text-gray-600 mt-1">
-                    Folder: public/products/{getProductImageFolder(product.category)}/
-                  </p>
+                  <div className="flex items-start gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`${toImageApiUrl(getProductImagePath(product))}&v=${imageVersion}`}
+                      alt={product.title}
+                      className="h-12 w-12 rounded-lg border border-white/10 object-cover bg-novra-bg/50"
+                    />
+                    <div>
+                      <p className="font-mono text-[10px] text-gray-400 break-all max-w-[180px]">
+                        {getProductImagePath(product)}
+                      </p>
+                      <label className="mt-2 inline-flex cursor-pointer items-center gap-1 text-[10px] text-purple-300 hover:text-purple-200">
+                        <Upload size={10} />
+                        <span>Încarcă</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const path = getProductImagePath(product).replace(/^\//, "");
+                            void handleImageUpload(path, file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-4 py-4">
                   <label className="inline-flex cursor-pointer items-center gap-2">
@@ -465,6 +567,52 @@ export default function AdminProdusePage() {
                       />
                     </div>
                   )}
+                </div>
+              )}
+
+              {editingProduct && (
+                <div className="rounded-xl border border-white/8 bg-novra-bg/30 p-4 space-y-3">
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-500">
+                    <ImageIcon size={14} className="text-purple-400" />
+                    Imagini produs
+                  </p>
+                  <div className="space-y-3">
+                    {getProductImageTargets(editingProduct).map((target) => (
+                      <div
+                        key={target.path}
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-white/8 bg-novra-bg/40 p-3"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`${toImageApiUrl(`/${target.path}`)}&v=${imageVersion}`}
+                            alt={target.label}
+                            className="h-14 w-14 rounded-lg border border-white/10 object-cover"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm text-white">{target.label}</p>
+                            <p className="text-[10px] text-gray-500 font-mono truncate">{target.path}</p>
+                          </div>
+                        </div>
+                        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-purple-500/30 bg-purple-600/10 px-3 py-2 text-xs font-semibold text-purple-200 hover:bg-purple-600/20">
+                          <Upload size={12} />
+                          {uploadingImagePath === target.path ? "Se încarcă..." : "Încarcă"}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            disabled={uploadingImagePath === target.path}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              void handleImageUpload(target.path, file);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

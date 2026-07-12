@@ -101,6 +101,27 @@ function CheckoutPageContent() {
     }
   }, [hydrated, items.length, status, router]);
 
+  useEffect(() => {
+    if (!hydrated || items.length === 0 || status === "success") return;
+
+    const email = (currentUser?.email ?? formData.email).trim().toLowerCase();
+    if (!email || !email.includes("@")) return;
+
+    const timer = window.setTimeout(() => {
+      void fetch("/api/store/abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          items,
+          totalPrice,
+        }),
+      });
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [hydrated, items, totalPrice, formData.email, currentUser?.email, status]);
+
   if (!hydrated) {
     return (
       <div className="min-h-screen bg-novra-bg text-white">

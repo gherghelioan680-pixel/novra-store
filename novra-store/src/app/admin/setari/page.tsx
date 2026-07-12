@@ -734,6 +734,12 @@ export default function AdminSetariPage() {
               </a>
               . Dacă lipsesc, opțiunea card rămâne indisponibilă; rambursul funcționează normal.
             </p>
+            <p className="rounded-xl border border-white/8 bg-novra-bg/30 px-4 py-3 text-xs text-gray-400 leading-relaxed">
+              <strong className="text-gray-300">Webhook (recomandat):</strong> setați{" "}
+              <code className="text-purple-300">STRIPE_WEBHOOK_SECRET</code> în Vercel și adăugați endpoint-ul{" "}
+              <code className="text-purple-300">/api/store/stripe/webhook</code> în Stripe (eveniment{" "}
+              <code className="text-purple-300">checkout.session.completed</code>) pentru confirmare idempotentă a plăților.
+            </p>
             <button
               type="button"
               onClick={() => handleSaveSettings("Setările Stripe au fost salvate.")}

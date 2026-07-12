@@ -1,9 +1,12 @@
 import "server-only";
 
 import { Resend } from "resend";
-import type { Order } from "./orders";
+import type { Order, OrderStatus } from "./orders";
 import { ORDER_STATUS_LABELS } from "./orders";
 import { buildFanCourierTrackingUrl } from "./tracking";
+import { getStripeCheckoutOrigin } from "./stripe-server";
+
+const NOTIFIABLE_STATUSES: OrderStatus[] = ["processing", "shipped", "delivered", "cancelled"];
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -163,6 +166,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
       <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;"><strong style="color:#d1d5db;">Status comandă:</strong> ${ORDER_STATUS_LABELS[order.status]}</p>
       <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.5;"><strong style="color:#d1d5db;">Adresă livrare:</strong> ${deliveryLines}</p>
     </div>
+    ${trackOrderLinkHtml(order.purchaseCode)}
   `;
 
   try {
@@ -182,6 +186,149 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
     return true;
   } catch (err) {
     console.error("[email] Order confirmation error:", order.purchaseCode, err);
+    return false;
+  }
+}
+
+function getTrackOrderUrl(purchaseCode: string): string {
+  const origin = getStripeCheckoutOrigin();
+  return `${origin}/urmareste-comanda?code=${encodeURIComponent(purchaseCode)}`;
+}
+
+function trackOrderLinkHtml(purchaseCode: string): string {
+  const url = getTrackOrderUrl(purchaseCode);
+  return `<p style="margin:20px 0 0;text-align:center;">
+    <a href="${url}" style="display:inline-block;background:rgba(255,255,255,0.08);color:#c4b5fd;text-decoration:none;font-weight:600;font-size:13px;padding:10px 20px;border-radius:10px;border:1px solid rgba(168,85,247,0.35);">Urmărește comanda</a>
+  </p>`;
+}
+
+function statusEmailSubject(status: OrderStatus, purchaseCode: string, awb?: string): string {
+  switch (status) {
+    case "processing":
+      return `Comanda ${purchaseCode} este în procesare`;
+    case "shipped":
+      return awb
+        ? `Comanda ${purchaseCode} a fost expediată — AWB ${awb}`
+        : `Comanda ${purchaseCode} a fost expediată`;
+    case "delivered":
+      return `Comanda ${purchaseCode} a fost livrată`;
+    case "cancelled":
+      return `Comanda ${purchaseCode} a fost anulată`;
+    default:
+      return `Actualizare comandă ${purchaseCode}`;
+  }
+}
+
+function statusEmailTitle(status: OrderStatus): string {
+  switch (status) {
+    case "processing":
+      return "Comanda ta este în procesare";
+    case "shipped":
+      return "Coletul tău este în drum";
+    case "delivered":
+      return "Comanda ta a fost livrată";
+    case "cancelled":
+      return "Comanda ta a fost anulată";
+    default:
+      return "Actualizare comandă";
+  }
+}
+
+function buildStatusEmailBody(order: Order, status: OrderStatus): string {
+  const awb = order.awbTracking?.trim();
+  const trackingUrl = awb ? buildFanCourierTrackingUrl(awb) : "";
+
+  let intro = "";
+  switch (status) {
+    case "processing":
+      intro =
+        "Comanda ta este acum <strong style=\"color:#c4b5fd;\">în procesare</strong>. Pregătim produsele și te vom anunța când coletul pleacă spre tine.";
+      break;
+    case "shipped":
+      intro = awb
+        ? `Comanda ta <strong style="color:#c4b5fd;">${escapeHtml(order.purchaseCode)}</strong> a fost expediată.`
+        : `Comanda ta <strong style="color:#c4b5fd;">${escapeHtml(order.purchaseCode)}</strong> a fost expediată și este în drum spre tine.`;
+      break;
+    case "delivered":
+      intro =
+        "Comanda ta a fost <strong style=\"color:#34d399;\">livrată</strong>. Sperăm că te bucuri de produsele NOVRA!";
+      break;
+    case "cancelled":
+      intro =
+        "Comanda ta a fost <strong style=\"color:#f87171;\">anulată</strong>. Dacă ai întrebări, contactează-ne la support@novra.ro.";
+      break;
+    default:
+      intro = `Statusul comenzii tale este acum: ${ORDER_STATUS_LABELS[status]}.`;
+  }
+
+  const awbBlock = awb && status === "shipped"
+    ? `<div style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:16px;margin:16px 0;text-align:center;">
+        <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;">Număr AWB</p>
+        <p style="margin:0;font-family:monospace;font-size:20px;font-weight:700;color:#c4b5fd;">${escapeHtml(awb)}</p>
+      </div>
+      <p style="margin:0 0 16px;text-align:center;">
+        <a href="${trackingUrl}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Urmărește coletul Fan Courier</a>
+      </p>`
+    : "";
+
+  return `
+    <p style="margin:0 0 16px;color:#e5e7eb;font-size:15px;line-height:1.6;">
+      Bună, <strong style="color:#fff;">${escapeHtml(order.address.name)}</strong>!<br>
+      ${intro}
+    </p>
+    <div style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
+      <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;">Cod comandă</p>
+      <p style="margin:0;font-family:monospace;font-size:20px;font-weight:700;color:#c4b5fd;">${escapeHtml(order.purchaseCode)}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#9ca3af;">Status: ${ORDER_STATUS_LABELS[status]}</p>
+    </div>
+    ${awbBlock}
+    ${trackOrderLinkHtml(order.purchaseCode)}
+  `;
+}
+
+/** Trimite email de status doar când statusul s-a schimbat și nu a fost deja notificat pentru acel status. */
+export async function trySendOrderStatusEmail(
+  order: Order,
+  previousStatus: OrderStatus,
+  orderEmailsEnabled: boolean
+): Promise<{ sent: boolean; status?: OrderStatus }> {
+  if (!orderEmailsEnabled) return { sent: false };
+  if (!order.userEmail?.trim()) return { sent: false };
+  if (order.status === previousStatus) return { sent: false };
+  if (!NOTIFIABLE_STATUSES.includes(order.status)) return { sent: false };
+  if (order.statusEmailsSent?.[order.status]) return { sent: false };
+
+  const sent = await sendOrderStatusEmail(order, order.status);
+  return sent ? { sent: true, status: order.status } : { sent: false };
+}
+
+export async function sendOrderStatusEmail(order: Order, status: OrderStatus): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not configured — skipping status email for", order.purchaseCode);
+    return false;
+  }
+
+  const awb = order.awbTracking?.trim();
+  const body = buildStatusEmailBody(order, status);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: getFromEmail(),
+      to: order.userEmail,
+      subject: statusEmailSubject(status, order.purchaseCode, awb),
+      html: baseEmailHtml(statusEmailTitle(status), body),
+    });
+
+    if (error) {
+      console.error("[email] Status email failed:", order.purchaseCode, status, error);
+      return false;
+    }
+
+    console.log("[email] Status email sent:", order.purchaseCode, status, "→", order.userEmail);
+    return true;
+  } catch (err) {
+    console.error("[email] Status email error:", order.purchaseCode, status, err);
     return false;
   }
 }
@@ -210,6 +357,7 @@ export async function sendTrackingEmail(order: Order, awb: string): Promise<bool
     <p style="margin:0;text-align:center;">
       <a href="${trackingUrl}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Urmărește coletul</a>
     </p>
+    ${trackOrderLinkHtml(order.purchaseCode)}
   `;
 
   try {

@@ -70,6 +70,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/urmareste-comanda" className="hover:text-purple-400 transition">
+                Urmărește comanda
+              </Link>
+            </li>
+            <li>
               <Link href="/promotii" className="hover:text-purple-400 transition">
                 Promoții
               </Link>

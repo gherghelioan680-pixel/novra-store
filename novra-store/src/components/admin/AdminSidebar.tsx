@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   LayoutDashboard,
   Package,
   ShoppingBag,
@@ -23,6 +24,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/statistici", label: "Statistici", icon: BarChart3 },
   { href: "/admin/produse", label: "Produse", icon: Package },
   { href: "/admin/comenzi", label: "Comenzi", icon: ShoppingBag },
   { href: "/admin/cautare", label: "Căutare", icon: Search },

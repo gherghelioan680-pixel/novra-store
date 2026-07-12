@@ -24,7 +24,9 @@ Deschideți **Vercel → Project → Settings → Environment Variables**. Adău
 
 | Nume variabilă | Descriere |
 |----------------|-----------|
-| `STRIPE_WEBHOOK_SECRET` | `whsec_...` — **nu e necesar**; site-ul confirmă plata la redirect din Stripe Checkout. |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` — recomandat în producție. Endpoint: `https://novra.ro/api/store/stripe/webhook`, eveniment: `checkout.session.completed`. Confirmă plăți chiar dacă clientul nu revine pe pagina de success. |
+| `CRON_SECRET` | Secret pentru `/api/cron/abandoned-carts` (Vercel Cron). |
+| `ABANDONED_CART_HOURS` | Ore până la primul email coș abandonat (implicit: `2`). |
 | `NEXT_PUBLIC_ADMIN_EMAIL` | Email login admin (implicit: `admin@novra.ro`). |
 | `NEXT_PUBLIC_ADMIN_PASSWORD` | Parolă login admin (schimbați în producție!). |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Alternative la `KV_*` dacă conectați Upstash direct. |

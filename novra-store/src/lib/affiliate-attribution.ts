@@ -5,6 +5,7 @@ import {
   AFFILIATE_REF_TIMESTAMP_KEY,
   normalizeAffiliateCode,
 } from "./affiliates-types";
+import { hasAffiliateConsent } from "./cookie-consent";
 
 const ATTRIBUTION_MS = AFFILIATE_ATTRIBUTION_DAYS * 24 * 60 * 60 * 1000;
 
@@ -18,6 +19,7 @@ function isAttributionValid(timestampMs: number): boolean {
 
 export function storeAffiliateRef(code: string): void {
   if (!isBrowser()) return;
+  if (!hasAffiliateConsent()) return;
 
   const normalized = normalizeAffiliateCode(code);
   if (!normalized) return;

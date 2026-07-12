@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2, Mail, MailCheck } from "lucide-react";
+import { Trash2, Mail, MailCheck, ExternalLink } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin } from "@/lib/auth";
@@ -119,6 +119,14 @@ export default function AdminComenziPage() {
                       </span>
                     )}
                     <CopyButton text={order.purchaseCode} label="Copiază cod" />
+                    <Link
+                      href={`/urmareste-comanda?code=${encodeURIComponent(order.purchaseCode)}`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-novra-bg/50 px-2.5 py-1 text-[10px] font-semibold text-gray-300 transition hover:border-purple-500/40 hover:text-purple-200"
+                    >
+                      <ExternalLink size={10} />
+                      Vezi tracking public
+                    </Link>
                   </div>
                   <p className="mt-2 font-mono text-xs text-purple-300">{order.id}</p>
                   <p className="mt-1 text-lg font-semibold text-white">{order.userName}</p>
