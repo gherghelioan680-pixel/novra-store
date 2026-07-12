@@ -11,7 +11,6 @@ import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/o
 import CopyButton from "@/components/CopyButton";
 import { getCurrentUser, addOrderIdToLocalUser } from "@/lib/auth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { buildWhatsAppUrl } from "@/lib/store";
 import {
   calculateDiscountAmount,
   validateDiscountCode,
@@ -53,7 +52,7 @@ function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { items, totalPrice, clearCart, hydrated } = useCart();
-  const { whatsappNumber, freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
+  const { freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
   const [formData, setFormData] = useState(buildInitialFormData);
@@ -146,11 +145,6 @@ function CheckoutPageContent() {
     ]
       .filter(Boolean)
       .join("\n");
-  };
-
-  const openWhatsAppOrder = (purchaseCode?: string) => {
-    const url = buildWhatsAppUrl(whatsappNumber, formatOrderMessage(purchaseCode));
-    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleApplyDiscount = async () => {
@@ -266,7 +260,6 @@ function CheckoutPageContent() {
       /* optional notification */
     }
 
-    openWhatsAppOrder(finalOrder.purchaseCode);
     setPlacedOrder(finalOrder);
     clearCart();
     setStatus("success");
@@ -280,8 +273,7 @@ function CheckoutPageContent() {
           <CheckCircle size={56} className="mx-auto text-green-500 mb-6" />
           <h1 className="text-4xl font-bold tracking-tighter mb-4">Comandă trimisă!</h1>
           <p className="text-gray-300 mb-4 leading-relaxed px-2">
-            Mulțumim! Am primit comanda ta și vei primi un email de confirmare.
-            Comanda a fost salvată și poți confirma rapid pe WhatsApp.
+            Mulțumim! Am primit comanda ta și vei primi un email de confirmare în curând.
           </p>
           {placedOrder?.purchaseCode && (
             <div className="mb-8 inline-flex flex-col items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 px-6 py-4">
@@ -518,7 +510,7 @@ function CheckoutPageContent() {
 
             {status === "error" && (
               <p className="text-red-400 text-sm">
-                A apărut o eroare. Te rugăm să încerci din nou sau să ne contactezi pe WhatsApp.
+                A apărut o eroare. Te rugăm să încerci din nou.
               </p>
             )}
 

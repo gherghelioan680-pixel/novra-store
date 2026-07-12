@@ -8,7 +8,6 @@ import DevToolsBlocker from "@/components/DevToolsBlocker";
 import SessionCookieSync from "@/components/SessionCookieSync";
 
 const CookieConsent = dynamic(() => import("@/components/CookieConsent"), { ssr: false });
-const LiveVisitors = dynamic(() => import("@/components/LiveVisitors"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +18,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         {children}
         <CountdownFallbackScript />
         <CookieConsent />
-        <LiveVisitors />
       </CartProvider>
     </SiteSettingsProvider>
   );

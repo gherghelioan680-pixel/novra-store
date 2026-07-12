@@ -27,7 +27,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
-const FloatingWhatsApp = dynamic(() => import("@/components/FloatingWhatsApp"), {
+const LiveVisitors = dynamic(() => import("@/components/LiveVisitors"), {
   ssr: false,
 });
 
@@ -210,7 +210,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <FloatingWhatsApp />
+      <LiveVisitors />
 
       <main className="w-full px-4 sm:px-6">
 
