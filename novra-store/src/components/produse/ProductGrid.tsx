@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ProductImage from "@/components/produse/ProductImage";
 import Link from "next/link";
 import type { CatalogProduct } from "@/lib/catalog";
 import { buildProductUrl } from "@/lib/catalog";
@@ -29,12 +29,13 @@ export function ProductGrid({ products }: ProductGridProps) {
                   {product.tag}
                 </span>
                 <span className="relative w-28 h-28 sm:w-32 sm:h-32 block transition-transform duration-500 group-hover:scale-105">
-                  <Image
+                  <ProductImage
                     src={product.imageSrc}
+                    category={product.category}
                     alt={product.title}
                     fill
                     sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-contain"
+                    className="object-contain rounded-lg"
                     draggable={false}
                   />
                 </span>

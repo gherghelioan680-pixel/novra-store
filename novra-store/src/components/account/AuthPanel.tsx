@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getStoredUsers, loginUser, registerUser } from "@/lib/auth";
+import { loginUser, registerUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import AccountLogo from "./AccountLogo";
 
@@ -17,18 +17,27 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAuth = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage("");
     setIsSubmitting(true);
 
     try {
       if (mode === "forgot-password") {
-        const users = getStoredUsers();
-        const userExists = users.some((user) => user.email.toLowerCase() === email.toLowerCase());
+        try {
+          const response = await fetch("/api/store/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "check-email", email }),
+          });
+          const data = (await response.json()) as { exists?: boolean };
 
-        if (!userExists) {
-          setMessage("Nu am găsit niciun cont cu acest email.");
+          if (!data.exists) {
+            setMessage("Nu am găsit niciun cont cu acest email.");
+            return;
+          }
+        } catch {
+          setMessage("Eroare de rețea. Încearcă din nou.");
           return;
         }
 
@@ -42,7 +51,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
       }
 
       if (mode === "register") {
-        const result = registerUser(name, email, password);
+        const result = await registerUser(name, email, password);
         setMessage(result.message);
         if (result.success && result.user) {
           onAuthSuccess(result.user, result.message);
@@ -50,7 +59,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
         return;
       }
 
-      const result = loginUser(email, password);
+      const result = await loginUser(email, password);
       setMessage(result.message);
       if (result.success && result.user) {
         onAuthSuccess(result.user, result.message);

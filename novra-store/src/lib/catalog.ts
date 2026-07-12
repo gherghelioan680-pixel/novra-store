@@ -8,6 +8,7 @@ export type CatalogProduct = {
   category: string;
   basePrice: number;
   imageSrc: string;
+  image: string;
   tag: string;
   description: string;
   bestseller?: boolean;
@@ -21,14 +22,60 @@ export type CatalogProduct = {
   modifiers: number[];
 };
 
+export const PRODUCT_IMAGE_FOLDER: Record<string, string> = {
+  "usb-c": "cabluri",
+  lightning: "adaptoare",
+  accesorii: "bundle",
+};
+
+export const PRODUCT_IMAGE_FILES: Record<string, string> = {
+  "usb-c-100w": "novra-ultracharge-100w.jpg",
+  "usb-c-pro-240w": "novra-hyperpower-240w.jpg",
+  "usb-a-c-100w": "novra-hybrid-100w.jpg",
+  "usb-c-lightning-pd": "novra-applecharge-pro-violet.jpg",
+  "usb-a-lightning-classic": "novra-lightning-classic-blue.jpg",
+  "usb-c-lightning-flex": "novra-flexlink-nova-roz.jpg",
+  "incarcator-gan-65w": "novra-gan-nova-65w.jpg",
+  "incarcator-auto-metal": "novra-drivespeed-45w.jpg",
+  "bundle-travel-pack": "novra-travelpack-duo.jpg",
+};
+
+const CATEGORY_PLACEHOLDERS: Record<string, string> = {
+  cabluri: "/products/placeholders/cabluri.svg",
+  adaptoare: "/products/placeholders/adaptoare.svg",
+  bundle: "/products/placeholders/bundle.svg",
+};
+
+export function getProductImageFolder(category: string): string {
+  return PRODUCT_IMAGE_FOLDER[category] ?? "cabluri";
+}
+
+export function getProductImagePath(product: Pick<CatalogProduct, "id" | "category">): string {
+  const folder = getProductImageFolder(product.category);
+  const filename = PRODUCT_IMAGE_FILES[product.id];
+  if (filename) return `/products/${folder}/${filename}`;
+  return getProductImageFallback(product.category);
+}
+
+export function getProductImageFallback(category: string): string {
+  const folder = getProductImageFolder(category);
+  return CATEGORY_PLACEHOLDERS[folder] ?? CATEGORY_PLACEHOLDERS.cabluri;
+}
+
+function withProductImages(
+  product: Omit<CatalogProduct, "image" | "imageSrc"> & Partial<Pick<CatalogProduct, "image" | "imageSrc">>
+): CatalogProduct {
+  const imageSrc = product.imageSrc ?? getProductImagePath(product as Pick<CatalogProduct, "id" | "category">);
+  return { ...product, imageSrc, image: product.image ?? imageSrc };
+}
+
 export const CATALOG_PRODUCTS: CatalogProduct[] = [
-  {
+  withProductImages({
     id: "usb-c-100w",
     title: "NOVRA UltraCharge 100W",
     subtitle: "USB-C to USB-C Premium Cable",
     category: "usb-c",
     basePrice: 79.99,
-    imageSrc: "/cablu.png",
     tag: "Popular",
     description:
       "Cablu de înaltă performanță echipat cu cip inteligent E-Mark. Ideal pentru MacBook Pro, laptopuri, iPad-uri și smartphone-uri de ultimă generație care necesită Power Delivery masiv.",
@@ -40,14 +87,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["1M", "2M"],
     modifiers: [0, 0],
-  },
-  {
+  }),
+  withProductImages({
     id: "usb-c-pro-240w",
     title: "NOVRA HyperPower 240W",
     subtitle: "Next-Gen PD 3.1 USB-C Cable",
     category: "usb-c",
     basePrice: 79.99,
-    imageSrc: "/cablu.png",
     tag: "Performanță Extremă",
     description:
       "Pregătit pentru viitor. Suportă noul standard USB Power Delivery 3.1 de până la 240W. Creat special pentru stații de lucru grafice și cele mai gurande laptopuri de gaming.",
@@ -59,14 +105,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["1M", "2M"],
     modifiers: [0, 0],
-  },
-  {
+  }),
+  withProductImages({
     id: "usb-a-c-100w",
     title: "NOVRA Hybrid 100W",
     subtitle: "USB-A to USB-C Fast Charge",
     category: "usb-c",
     basePrice: 79.99,
-    imageSrc: "/cablu.png",
     tag: "Versatil",
     description:
       "Conexiunea perfectă între încărcătoarele clasice USB-A și dispozitivele moderne USB-C. Suportă protocoale de încărcare rapidă Quick Charge și SuperCharge.",
@@ -78,14 +123,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["1M", "2M"],
     modifiers: [0, 0],
-  },
-  {
+  }),
+  withProductImages({
     id: "usb-c-lightning-pd",
     title: "NOVRA AppleCharge Pro",
     subtitle: "USB-C to Lightning Fast Charge",
     category: "lightning",
     basePrice: 99.99,
-    imageSrc: "/cablu.png",
     tag: "iOS Recomandat",
     bestseller: true,
     description:
@@ -98,14 +142,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["Violet"],
     modifiers: [0],
-  },
-  {
+  }),
+  withProductImages({
     id: "usb-a-lightning-classic",
     title: "NOVRA Lightning Classic",
     subtitle: "USB-A to Lightning Durable Cable",
     category: "lightning",
     basePrice: 99.99,
-    imageSrc: "/cablu.png",
     tag: "Ultra-Durabil",
     description:
       "Conexiunea clasică, optimizată pentru durabilitate extremă. Structura internă ranforsată previne ruperea la îmbinări, fiind perfect pentru utilizarea zilnică acasă sau în mașină prin Apple CarPlay.",
@@ -117,14 +160,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["Blue"],
     modifiers: [0],
-  },
-  {
+  }),
+  withProductImages({
     id: "usb-c-lightning-flex",
     title: "NOVRA FlexLink Nova",
     subtitle: "USB-C to Lightning MagSafe Ready",
     category: "lightning",
     basePrice: 99.99,
-    imageSrc: "/cablu.png",
     tag: "Design Compact",
     description:
       "Adaptor premium ultra-subțire, optimizat pentru încărcare wireless MagSafe și Power Delivery simultan. Conectori din aliaj anodizat și cablu flexibil din silicon medical pentru utilizare zilnică fără încurcare.",
@@ -136,14 +178,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: ["Roz"],
     modifiers: [0],
-  },
-  {
+  }),
+  withProductImages({
     id: "incarcator-gan-65w",
     title: "NOVRA GaN Nova 65W",
     subtitle: "Triple-Port Fast Wall Charger + Cable",
     category: "accesorii",
     basePrice: 159.99,
-    imageSrc: "/cutie.png",
     tag: "Tehnologie GaN",
     description:
       "Încărcător de rețea ultra-compact alimentat de tehnologia de ultimă generație GaN (Galiu Nitrură). Dispune de 3 porturi inteligente (2x USB-C + 1x USB-A) capabile să încarce simultan un MacBook Pro, un iPhone și o pereche de căști la viteză maximă. Personalizează independent culoarea adaptorului și a cablului inclus.",
@@ -155,14 +196,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: [],
     modifiers: [],
-  },
-  {
+  }),
+  withProductImages({
     id: "incarcator-auto-metal",
     title: "NOVRA DriveSpeed 45W",
     subtitle: "Dual USB-C Metal Car Charger + Cable",
     category: "accesorii",
     basePrice: 159.99,
-    imageSrc: "/cutie.png",
     tag: "Metal Premium",
     description:
       "Creat integral dintr-un aliaj premium de aluminiu pentru o disipare optimă a căldurii. Se potrivește perfect în bricheta mașinii tale și oferă două porturi USB-C independente, asigurând încărcare ultra-rapidă chiar și în cele mai scurte călătorii. Alege orice combinație de culori pentru adaptor și cablu.",
@@ -174,14 +214,13 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: [],
     modifiers: [],
-  },
-  {
+  }),
+  withProductImages({
     id: "bundle-travel-pack",
     title: "NOVRA TravelPack Duo",
     subtitle: "GaN Travel Charger + Braided Cable Kit",
     category: "accesorii",
     basePrice: 159.99,
-    imageSrc: "/cutie.png",
     tag: "Kit Călătorie",
     bestseller: true,
     description:
@@ -194,7 +233,7 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
     },
     options: [],
     modifiers: [],
-  },
+  }),
 ];
 
 export const CATALOG_CATEGORIES = [

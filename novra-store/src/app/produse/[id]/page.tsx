@@ -3,7 +3,7 @@
 import { use, useState, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import ProductImage from "@/components/produse/ProductImage";
 import { ArrowLeft, Check, Cpu, Layers, Lock, ShieldCheck, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
@@ -160,7 +160,15 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
               {product.tag}
             </span>
             <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40">
-              <Image src={product.imageSrc} alt={product.title} fill className="object-contain" priority draggable={false} />
+              <ProductImage
+                src={product.imageSrc}
+                category={product.category}
+                alt={product.title}
+                fill
+                className="object-contain rounded-xl"
+                priority
+                draggable={false}
+              />
             </div>
           </div>
 

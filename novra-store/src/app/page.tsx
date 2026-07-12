@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import ProductImage from "@/components/produse/ProductImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, RefreshCcw, Gem, ShieldCheck, CheckCircle2, ShoppingBag, Package, ArrowRight, Mail, Sparkles, Gift, Star, Quote } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -777,6 +778,7 @@ function buildHomepageProducts() {
     return {
       title: product.title,
       category: categoryLabel,
+      categoryId: product.category,
       price: `${product.basePrice.toFixed(2)} Lei`,
       imageSrc: product.imageSrc,
       productId: product.id,
@@ -789,6 +791,7 @@ function buildHomepageProducts() {
   }).filter(Boolean) as Array<{
     title: string;
     category: string;
+    categoryId: string;
     price: string;
     imageSrc: string;
     productId: string;
@@ -803,6 +806,7 @@ function buildHomepageProducts() {
 function ProductCard({
   title,
   category,
+  categoryId,
   price,
   imageSrc,
   productId,
@@ -816,6 +820,7 @@ function ProductCard({
 }: {
   title: string;
   category: string;
+  categoryId: string;
   price: string;
   imageSrc: string;
   productId: string;
@@ -852,13 +857,14 @@ function ProductCard({
       className="group relative bg-novra-card/40 border border-white/8 rounded-2xl p-5 sm:p-6 hover:border-purple-500/40 hover:bg-novra-card/60 transition-all duration-500 overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
-      <div className="h-48 sm:h-56 rounded-xl mb-4 sm:mb-5 flex items-center justify-center overflow-hidden relative border border-white/5">
-        <Image
+      <div className="h-48 sm:h-56 rounded-xl mb-4 sm:mb-5 flex items-center justify-center overflow-hidden relative border border-white/5 bg-gradient-to-br from-purple-500/5 to-transparent">
+        <ProductImage
           src={imageSrc}
+          category={categoryId}
           alt={title}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
           {bestseller && (

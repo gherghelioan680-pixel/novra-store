@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid user data" }, { status: 400 });
     }
 
+    user.email = user.email.trim().toLowerCase();
+
     const users = await readJsonFile<StoredUser[]>(FILE, []);
     const index = findUserIndex(users, user.email);
 

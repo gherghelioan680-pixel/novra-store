@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="24" fill="#0f0a1a"/>
+  <rect x="40" y="40" width="320" height="320" rx="16" fill="#1a1028" stroke="#7c3aed" stroke-opacity="0.3"/>
+  <path d="M120 200h160M200 120v160" stroke="#7c3aed" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+  <text x="200" y="340" text-anchor="middle" fill="#a78bfa" font-family="system-ui,sans-serif" font-size="14" opacity="0.7">Cabluri</text>
+</svg>

@@ -12,6 +12,8 @@ import {
   saveProductOverride,
   saveProductPriceOverride,
   getBundleSavings,
+  getProductImageFolder,
+  getProductImagePath,
   isBundleProduct,
   type CatalogProduct,
   type ProductOverride,
@@ -205,6 +207,7 @@ export default function AdminProdusePage() {
               <th className="px-4 py-4 sm:px-6">Produs</th>
               <th className="px-4 py-4">Categorie</th>
               <th className="px-4 py-4">Tag</th>
+              <th className="px-4 py-4">Imagine</th>
               <th className="px-4 py-4">Bestseller</th>
               <th className="px-4 py-4">Preț (RON)</th>
               <th className="px-4 py-4 sm:px-6">Acțiuni</th>
@@ -224,6 +227,14 @@ export default function AdminProdusePage() {
                   </span>
                 </td>
                 <td className="px-4 py-4 text-xs text-purple-200">{product.tag}</td>
+                <td className="px-4 py-4">
+                  <p className="font-mono text-[10px] text-gray-400 break-all max-w-[180px]">
+                    {getProductImagePath(product)}
+                  </p>
+                  <p className="text-[10px] text-gray-600 mt-1">
+                    Folder: public/products/{getProductImageFolder(product.category)}/
+                  </p>
+                </td>
                 <td className="px-4 py-4">
                   <label className="inline-flex cursor-pointer items-center gap-2">
                     <input

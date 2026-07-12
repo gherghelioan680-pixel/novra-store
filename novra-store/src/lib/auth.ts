@@ -268,6 +268,28 @@ export function saveUsers(users: User[]): { ok: true } | { ok: false; message: s
   return storageSet(USERS_KEY, JSON.stringify(users));
 }
 
+function upsertLocalUser(user: User): { ok: true } | { ok: false; message: string } {
+  const users = getStoredUsers();
+  const index = users.findIndex(
+    (item) => item.id === user.id || item.email.toLowerCase() === user.email.toLowerCase()
+  );
+
+  if (index === -1) {
+    users.push(user);
+  } else {
+    users[index] = { ...users[index], ...user, password: user.password };
+  }
+
+  return saveUsers(users);
+}
+
+function mergeServerUserWithPassword(
+  serverUser: Omit<User, "password">,
+  password: string
+): User {
+  return { ...serverUser, password };
+}
+
 export function getCurrentUser(): User | null {
   if (!isBrowser()) return null;
 
@@ -296,7 +318,7 @@ export function logoutUser() {
   setCurrentUser(null);
 }
 
-export function registerUser(name: string, email: string, password: string) {
+export async function registerUser(name: string, email: string, password: string) {
   const trimmedName = name.trim();
   const trimmedEmail = email.trim().toLowerCase();
   const trimmedPassword = password.trim();
@@ -305,70 +327,57 @@ export function registerUser(name: string, email: string, password: string) {
     return { success: false, message: "Completează toate câmpurile." };
   }
 
-  const users = getStoredUsers();
-  const userExists = users.some((user) => user.email.toLowerCase() === trimmedEmail);
-
-  if (userExists) {
-    return { success: false, message: "Există deja un cont cu acest email." };
-  }
-
-  const nameParts = trimmedName.split(/\s+/);
-  const firstName = nameParts[0] ?? "";
-  const lastName = nameParts.slice(1).join(" ");
-
-  const newUser: User = {
-    id: `${Date.now()}`,
-    name: trimmedName,
-    firstName,
-    lastName: lastName || undefined,
-    email: trimmedEmail,
-    password: trimmedPassword,
-    phone: "",
-    address: "",
-    country: "Romania",
-    paymentMethod: "",
-    favoriteItems: [],
-    orders: [],
-    addresses: [],
-    paymentMethods: [],
-    novraCredits: SIGNUP_CREDITS,
-    signupBonusClaimed: true,
-    profileCompleted: false,
-    subscribedToNewsletter: false,
-    loyalty: {
-      points: SIGNUP_CREDITS,
-      discount: "0%",
-    },
-    preferences: {
-      offers: true,
-      orders: true,
-      recommendations: false,
-    },
-    role: "customer",
-    createdAt: new Date().toISOString(),
-  };
-
   if (!canUseLocalStorage()) {
     return { success: false, message: STORAGE_UNAVAILABLE_MSG };
   }
 
-  users.push(newUser);
-  const savedUsers = saveUsers(users);
-  if (!savedUsers.ok) {
-    return { success: false, message: savedUsers.message };
+  try {
+    const response = await fetch("/api/store/auth", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "register",
+        name: trimmedName,
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      user?: SafeUser;
+    };
+
+    if (!response.ok || !data.success || !data.user) {
+      return {
+        success: false,
+        message: data.message ?? "Nu s-a putut crea contul. Încearcă din nou.",
+      };
+    }
+
+    const newUser = mergeServerUserWithPassword(data.user, trimmedPassword);
+    const savedUsers = upsertLocalUser(newUser);
+    if (!savedUsers.ok) {
+      return { success: false, message: savedUsers.message };
+    }
+
+    const savedSession = setCurrentUser(newUser);
+    if (!savedSession.ok) {
+      return { success: false, message: savedSession.message };
+    }
+
+    return {
+      success: true,
+      message: data.message ?? "Cont creat cu succes! Ai primit 50 NovraCredits.",
+      user: newUser,
+    };
+  } catch {
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
   }
-
-  const savedSession = setCurrentUser(newUser);
-  if (!savedSession.ok) {
-    return { success: false, message: savedSession.message };
-  }
-
-  void syncUserToServer(newUser);
-
-  return { success: true, message: "Cont creat cu succes! Ai primit 50 NovraCredits.", user: newUser };
 }
 
-export function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string) {
   const trimmedEmail = email.trim().toLowerCase();
   const trimmedPassword = password.trim();
 
@@ -376,27 +385,53 @@ export function loginUser(email: string, password: string) {
     return { success: false, message: "Completează emailul și parola." };
   }
 
-  const users = getStoredUsers();
-  const user = users.find(
-    (item) => item.email.toLowerCase() === trimmedEmail && item.password === trimmedPassword
-  );
-
-  if (!user) {
-    return { success: false, message: "Date de autentificare incorecte." };
-  }
-
   if (!canUseLocalStorage()) {
     return { success: false, message: STORAGE_UNAVAILABLE_MSG };
   }
 
-  const savedSession = setCurrentUser(user);
-  if (!savedSession.ok) {
-    return { success: false, message: savedSession.message };
+  try {
+    const response = await fetch("/api/store/auth", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "login",
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      user?: SafeUser;
+    };
+
+    if (!response.ok || !data.success || !data.user) {
+      return {
+        success: false,
+        message: data.message ?? "Date de autentificare incorecte.",
+      };
+    }
+
+    const user = mergeServerUserWithPassword(data.user, trimmedPassword);
+    const savedUsers = upsertLocalUser(user);
+    if (!savedUsers.ok) {
+      return { success: false, message: savedUsers.message };
+    }
+
+    const savedSession = setCurrentUser(user);
+    if (!savedSession.ok) {
+      return { success: false, message: savedSession.message };
+    }
+
+    return {
+      success: true,
+      message: data.message ?? "Autentificare reușită!",
+      user,
+    };
+  } catch {
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
   }
-
-  void syncUserToServer(user);
-
-  return { success: true, message: "Autentificare reușită!", user };
 }
 
 export function loginAdmin(email: string, password: string) {
