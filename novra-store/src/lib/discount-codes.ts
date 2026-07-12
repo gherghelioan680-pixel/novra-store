@@ -1,20 +1,37 @@
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 
+export type DiscountCodeType = "percent" | "fixed";
+export type DiscountCodeSource = "newsletter" | "admin";
+
 export type DiscountCode = {
   code: string;
-  email: string;
-  percentOff: number;
-  singleUse: boolean;
+  type: DiscountCodeType;
+  value: number;
   used: boolean;
+  usedBy?: string;
   usedAt?: string;
-  orderId?: string;
+  email?: string;
+  maxUses?: number;
+  useCount?: number;
+  usedByEmails?: string[];
+  expiresAt?: string;
+  active: boolean;
+  singleUsePerEmail?: boolean;
+  source: DiscountCodeSource;
   createdAt: string;
-  source: "newsletter" | "manual";
+  orderId?: string;
+};
+
+export type AppliedDiscount = {
+  code: string;
+  type: DiscountCodeType;
+  value: number;
 };
 
 export const NEWSLETTER_DISCOUNT_PERCENT = 10;
 export const NEWSLETTER_DISCOUNT_PREFIX = "NOVRA10";
+export const ADMIN_DISCOUNT_PREFIX = "NOVRA";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -35,11 +52,25 @@ export function generateNewsletterDiscountCode(existingCodes: string[] = []): st
   return `${NEWSLETTER_DISCOUNT_PREFIX}-${generateDiscountCodeSuffix(8)}`;
 }
 
+export function generateAdminDiscountCode(existingCodes: string[] = []): string {
+  const existingSet = new Set(existingCodes.map((c) => c.toUpperCase()));
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const code = `${ADMIN_DISCOUNT_PREFIX}-${generateDiscountCodeSuffix()}`;
+    if (!existingSet.has(code)) return code;
+  }
+  return `${ADMIN_DISCOUNT_PREFIX}-${generateDiscountCodeSuffix(8)}`;
+}
+
+export function formatDiscountValue(type: DiscountCodeType, value: number): string {
+  return type === "percent" ? `${value}%` : `${value} RON`;
+}
+
 export function formatDiscountSuccessMessage(
   code: string,
-  percentOff = NEWSLETTER_DISCOUNT_PERCENT
+  type: DiscountCodeType = "percent",
+  value = NEWSLETTER_DISCOUNT_PERCENT
 ): string {
-  return `Codul tău: ${code} — ${percentOff}% reducere la prima comandă!`;
+  return `Codul tău: ${code} — ${formatDiscountValue(type, value)} reducere la prima comandă!`;
 }
 
 function isBrowser() {
@@ -76,11 +107,9 @@ export async function loadDiscountCodes(): Promise<DiscountCode[]> {
 }
 
 export async function validateDiscountCode(
-  code: string
-): Promise<
-  | { ok: true; percentOff: number; code: string }
-  | { ok: false; message: string }
-> {
+  code: string,
+  email?: string
+): Promise<{ ok: true; discount: AppliedDiscount } | { ok: false; message: string }> {
   if (!isBrowser()) {
     return { ok: false, message: "Validarea nu este disponibilă acum." };
   }
@@ -94,26 +123,94 @@ export async function validateDiscountCode(
     const response = await fetch("/api/store/discount-codes", {
       method: "POST",
       headers: getApiHeaders(),
-      body: JSON.stringify({ action: "validate", code: trimmed }),
+      body: JSON.stringify({
+        action: "validate",
+        code: trimmed,
+        email: email?.trim().toLowerCase(),
+      }),
     });
 
     const data = (await response.json()) as {
       valid?: boolean;
-      percentOff?: number;
+      type?: DiscountCodeType;
+      value?: number;
       code?: string;
       message?: string;
     };
 
     if (!response.ok || !data.valid) {
-      return { ok: false, message: data.message ?? "Cod invalid sau expirat." };
+      return { ok: false, message: data.message ?? "Cod invalid." };
     }
 
-    return { ok: true, percentOff: data.percentOff ?? NEWSLETTER_DISCOUNT_PERCENT, code: data.code ?? trimmed };
+    return {
+      ok: true,
+      discount: {
+        code: data.code ?? trimmed,
+        type: data.type ?? "percent",
+        value: data.value ?? NEWSLETTER_DISCOUNT_PERCENT,
+      },
+    };
   } catch {
     return { ok: false, message: "Nu s-a putut valida codul. Încearcă din nou." };
   }
 }
 
-export function calculateDiscountAmount(subtotal: number, percentOff: number): number {
-  return Math.round(subtotal * (percentOff / 100) * 100) / 100;
+export function calculateDiscountAmount(
+  subtotal: number,
+  discount: Pick<AppliedDiscount, "type" | "value">
+): number {
+  if (discount.type === "fixed") {
+    return Math.min(subtotal, Math.round(discount.value * 100) / 100);
+  }
+  return Math.round(subtotal * (discount.value / 100) * 100) / 100;
+}
+
+export type CreateDiscountCodeInput = {
+  code: string;
+  type: DiscountCodeType;
+  value: number;
+  maxUses?: number;
+  expiresAt?: string;
+  singleUsePerEmail?: boolean;
+  active?: boolean;
+};
+
+export async function createDiscountCode(
+  input: CreateDiscountCodeInput
+): Promise<{ ok: true; code: DiscountCode } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/discount-codes", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "create", ...input }),
+    });
+    const data = (await response.json()) as { ok?: boolean; code?: DiscountCode; message?: string; error?: string };
+    if (!response.ok || !data.ok || !data.code) {
+      return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut crea codul." };
+    }
+    dispatchStoreUpdate({ scope: "discountCodes" });
+    return { ok: true, code: data.code };
+  } catch {
+    return { ok: false, message: "Nu s-a putut crea codul. Încearcă din nou." };
+  }
+}
+
+export async function deleteDiscountCode(
+  code: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/discount-codes", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "delete", code }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut șterge codul." };
+    }
+    dispatchStoreUpdate({ scope: "discountCodes" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Nu s-a putut șterge codul. Încearcă din nou." };
+  }
 }

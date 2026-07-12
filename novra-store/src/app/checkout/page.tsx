@@ -13,7 +13,9 @@ import { getCurrentUser, addOrderIdToLocalUser } from "@/lib/auth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   calculateDiscountAmount,
+  formatDiscountValue,
   validateDiscountCode,
+  type AppliedDiscount,
 } from "@/lib/discount-codes";
 
 function buildInitialFormData() {
@@ -59,7 +61,8 @@ function CheckoutPageContent() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ramburs">("ramburs");
   const [stripeConfig, setStripeConfig] = useState<StripeConfig | null>(null);
   const [discountInput, setDiscountInput] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percentOff: number } | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const [discountSuccess, setDiscountSuccess] = useState("");
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
   const [stripeError, setStripeError] = useState("");
@@ -111,7 +114,7 @@ function CheckoutPageContent() {
   }
 
   const discountAmount = appliedDiscount
-    ? calculateDiscountAmount(totalPrice, appliedDiscount.percentOff)
+    ? calculateDiscountAmount(totalPrice, appliedDiscount)
     : 0;
   const subtotalAfterDiscount = Math.max(0, totalPrice - discountAmount);
   const shippingCost = subtotalAfterDiscount >= freeShippingThreshold ? 0 : deliveryCost;
@@ -150,8 +153,10 @@ function CheckoutPageContent() {
 
   const handleApplyDiscount = async () => {
     setDiscountError("");
+    setDiscountSuccess("");
     setDiscountLoading(true);
-    const result = await validateDiscountCode(discountInput);
+    const userEmail = (getCurrentUser()?.email ?? formData.email).trim().toLowerCase();
+    const result = await validateDiscountCode(discountInput, userEmail || undefined);
     setDiscountLoading(false);
 
     if (!result.ok) {
@@ -160,14 +165,16 @@ function CheckoutPageContent() {
       return;
     }
 
-    setAppliedDiscount({ code: result.code, percentOff: result.percentOff });
-    setDiscountInput(result.code);
+    setAppliedDiscount(result.discount);
+    setDiscountInput(result.discount.code);
+    setDiscountSuccess("Cod aplicat!");
   };
 
   const handleRemoveDiscount = () => {
     setAppliedDiscount(null);
     setDiscountInput("");
     setDiscountError("");
+    setDiscountSuccess("");
   };
 
   const buildOrder = async (): Promise<Order> => {
@@ -450,7 +457,9 @@ function CheckoutPageContent() {
               </div>
               {appliedDiscount && (
                 <p className="mt-2 text-xs text-emerald-400">
-                  Reducere {appliedDiscount.percentOff}% aplicată (−{discountAmount.toFixed(2)} RON)
+                  {discountSuccess || "Cod aplicat!"} Reducere{" "}
+                  {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
+                  {discountAmount.toFixed(2)} RON)
                 </p>
               )}
               {discountError && <p className="mt-2 text-xs text-red-400">{discountError}</p>}
@@ -561,9 +570,9 @@ function CheckoutPageContent() {
                 <span>Subtotal produse</span>
                 <span>{totalPrice.toFixed(2)} RON</span>
               </div>
-              {discountAmount > 0 && (
+              {discountAmount > 0 && appliedDiscount && (
                 <div className="flex justify-between text-sm text-emerald-400">
-                  <span>Reducere</span>
+                  <span>Reducere ({appliedDiscount.code})</span>
                   <span>−{discountAmount.toFixed(2)} RON</span>
                 </div>
               )}

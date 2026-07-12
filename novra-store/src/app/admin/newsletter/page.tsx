@@ -6,7 +6,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin, getStoredUsers } from "@/lib/auth";
 import { loadNewsletterSubscribers } from "@/lib/newsletter";
-import { loadDiscountCodes, type DiscountCode } from "@/lib/discount-codes";
+import { loadDiscountCodes, formatDiscountValue, type DiscountCode } from "@/lib/discount-codes";
 import { loadSiteSettings } from "@/lib/site-settings";
 import { subscribeToStoreUpdates } from "@/lib/store";
 
@@ -118,9 +118,9 @@ export default function AdminNewsletterPage() {
               Coduri reducere newsletter
             </h3>
             <p className="mt-1 text-xs text-gray-500">
-              Reducere implicită pentru coduri noi: {discountPercent}% · configurabil în{" "}
-              <a href="/admin/setari" className="text-purple-300 hover:text-white underline">
-                Setări
+              Reducere implicită pentru coduri noi: {discountPercent}% · gestionează toate codurile în{" "}
+              <a href="/admin/coduri-reducere" className="text-purple-300 hover:text-white underline">
+                Coduri reducere
               </a>
             </p>
           </div>
@@ -144,7 +144,7 @@ export default function AdminNewsletterPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">{code.email}</td>
-                  <td className="px-4 py-3">{code.percentOff}%</td>
+                  <td className="px-4 py-3">{formatDiscountValue(code.type, code.value)}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${

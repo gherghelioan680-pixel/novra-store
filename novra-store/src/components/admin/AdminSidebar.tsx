@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Users,
   Mail,
+  Tag,
   Star,
   Settings,
   LogOut,
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/admin/cautare", label: "Căutare", icon: Search },
   { href: "/admin/clienti", label: "Clienți", icon: Users },
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
+  { href: "/admin/coduri-reducere", label: "Coduri reducere", icon: Tag },
   { href: "/admin/recenzii", label: "Recenzii", icon: Star },
   { href: "/admin/setari", label: "Setări", icon: Settings },
 ];

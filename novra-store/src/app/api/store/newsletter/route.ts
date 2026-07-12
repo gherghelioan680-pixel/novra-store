@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         alreadySubscribed: true,
         discountCode: existing.discountCode,
         discountMessage: existing.discountCode
-          ? formatDiscountSuccessMessage(existing.discountCode, discountPercent)
+          ? formatDiscountSuccessMessage(existing.discountCode, "percent", discountPercent)
           : undefined,
       });
     }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       subscriber: next,
       discountCode: discount.code,
-      discountMessage: formatDiscountSuccessMessage(discount.code, discountPercent),
+      discountMessage: formatDiscountSuccessMessage(discount.code, discount.type, discount.value),
     });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });

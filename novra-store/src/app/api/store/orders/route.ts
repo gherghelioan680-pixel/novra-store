@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (order.discountCode && order.paymentMethod !== "card") {
-      await markDiscountCodeUsed(order.discountCode, order.id);
+      await markDiscountCodeUsed(order.discountCode, order.id, order.userEmail);
     }
 
     const settings = await getServerSiteSettings();

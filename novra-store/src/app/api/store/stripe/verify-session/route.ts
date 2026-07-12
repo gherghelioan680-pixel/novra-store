@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     await writeJsonFile(ORDERS_FILE, orders);
 
     if (updated.discountCode) {
-      await markDiscountCodeUsed(updated.discountCode, updated.id);
+      await markDiscountCodeUsed(updated.discountCode, updated.id, updated.userEmail);
     }
 
     const settings = await getServerSiteSettings();
