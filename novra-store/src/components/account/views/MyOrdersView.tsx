@@ -35,6 +35,24 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
     return createStoreRefreshEffect(refreshOrders, { scopes: ["orders"] });
   }, [userEmail]);
 
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refreshOrders();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const updated = orders.find((order) => order.id === selectedOrder.id);
+    if (updated && updated.updatedAt !== selectedOrder.updatedAt) {
+      setSelectedOrder(updated);
+    }
+  }, [orders, selectedOrder?.id, selectedOrder?.updatedAt]);
+
   const filteredOrders = orders.filter((order) => {
     if (statusFilter === "all") return true;
     return order.status === statusFilter;
@@ -59,6 +77,7 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
             { value: "pending", label: "În așteptare" },
             { value: "processing", label: "În procesare" },
             { value: "shipped", label: "Expediată" },
+            { value: "delivered", label: "Livrată" },
             { value: "cancelled", label: "Anulată" },
           ]}
           onChange={(v) => setStatusFilter(v as OrderStatusFilter)}
@@ -131,14 +150,14 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
       minute: "2-digit",
     });
 
-  const timeline: { status: OrderStatus; label: string; active: boolean }[] = [
-    { status: "pending", label: "În așteptare", active: true },
-    { status: "processing", label: "În procesare", active: false },
-    { status: "shipped", label: "Expediată", active: false },
-    { status: "cancelled", label: "Anulată", active: false },
+  const timeline: { status: OrderStatus; label: string }[] = [
+    { status: "pending", label: "În așteptare" },
+    { status: "processing", label: "În procesare" },
+    { status: "shipped", label: "Expediată" },
+    { status: "delivered", label: "Livrată" },
   ];
 
-  const statusOrder: OrderStatus[] = ["pending", "processing", "shipped"];
+  const statusOrder: OrderStatus[] = ["pending", "processing", "shipped", "delivered"];
   const currentIndex =
     order.status === "cancelled" ? -1 : statusOrder.indexOf(order.status);
 
@@ -176,15 +195,16 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
           </div>
 
           {order.status !== "cancelled" && (
-            <div className="flex items-center gap-2">
-              {timeline.slice(0, 3).map((step, i) => (
+            <div className="flex items-center gap-1">
+              {timeline.map((step, i) => (
                 <div key={step.status} className="flex flex-1 items-center gap-1">
                   <div
                     className={`h-2 w-2 rounded-full ${
                       i <= currentIndex ? "bg-purple-500" : "bg-white/20"
                     }`}
+                    title={step.label}
                   />
-                  {i < 2 && (
+                  {i < timeline.length - 1 && (
                     <div
                       className={`h-0.5 flex-1 ${i < currentIndex ? "bg-purple-500" : "bg-white/10"}`}
                     />
@@ -192,6 +212,10 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
                 </div>
               ))}
             </div>
+          )}
+
+          {order.status === "cancelled" && (
+            <p className="text-sm text-red-300">Această comandă a fost anulată.</p>
           )}
 
           <div className="rounded-xl border border-white/8 bg-novra-bg/30 p-4">

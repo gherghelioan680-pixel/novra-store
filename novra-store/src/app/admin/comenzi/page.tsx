@@ -14,17 +14,13 @@ import {
   isGuestOrder,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
+  ORDER_STATUS_OPTIONS,
   type Order,
   type OrderStatus,
 } from "@/lib/orders";
 import { createStoreRefreshEffect } from "@/lib/store";
 
-const statusOptions: { value: OrderStatus; label: string }[] = [
-  { value: "pending", label: "În așteptare" },
-  { value: "processing", label: "În procesare" },
-  { value: "shipped", label: "Expediată" },
-  { value: "cancelled", label: "Anulată" },
-];
+const statusOptions = ORDER_STATUS_OPTIONS;
 
 export default function AdminComenziPage() {
   const admin = requireAdmin();

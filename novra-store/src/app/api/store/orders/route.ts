@@ -87,6 +87,17 @@ function searchOrders(orders: Order[], query: string): Order[] {
   });
 }
 
+function ordersForAccount(orders: Order[], email: string, userId?: string): Order[] {
+  const normalizedEmail = email.toLowerCase();
+  return orders.filter((order) => {
+    const orderEmail = order.userEmail.toLowerCase();
+    const addressEmail = order.address.email.toLowerCase();
+    if (orderEmail === normalizedEmail || addressEmail === normalizedEmail) return true;
+    if (userId && order.userId === userId) return true;
+    return false;
+  });
+}
+
 export async function GET(request: NextRequest) {
   const session = getSessionFromRequest(request);
   const emailParam = request.nextUrl.searchParams.get("email")?.toLowerCase();
@@ -100,7 +111,7 @@ export async function GET(request: NextRequest) {
 
   if (isAdminRequest(request)) {
     if (emailParam) {
-      return Response.json({ orders: orders.filter((order) => order.userEmail === emailParam) });
+      return Response.json({ orders: ordersForAccount(orders, emailParam) });
     }
     return Response.json({ orders });
   }
@@ -110,11 +121,13 @@ export async function GET(request: NextRequest) {
     if (emailParam && emailParam !== userEmail) {
       return unauthorizedResponse();
     }
-    return Response.json({ orders: orders.filter((order) => order.userEmail === userEmail) });
+    return Response.json({
+      orders: ordersForAccount(orders, userEmail, session.userId),
+    });
   }
 
   if (emailParam) {
-    return Response.json({ orders: orders.filter((order) => order.userEmail === emailParam) });
+    return Response.json({ orders: ordersForAccount(orders, emailParam) });
   }
 
   return unauthorizedResponse();
@@ -185,7 +198,15 @@ export async function PATCH(request: NextRequest) {
 
     if (status) {
       const normalizedStatus = status === "processed" ? "processing" : status;
-      updates.status = normalizedStatus as OrderStatus;
+      if (
+        normalizedStatus === "pending" ||
+        normalizedStatus === "processing" ||
+        normalizedStatus === "shipped" ||
+        normalizedStatus === "delivered" ||
+        normalizedStatus === "cancelled"
+      ) {
+        updates.status = normalizedStatus as OrderStatus;
+      }
     }
 
     if (typeof awbTracking === "string") {
@@ -213,7 +234,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    return Response.json({ orders, trackingEmailSent });
+    return Response.json({ orders, order: updated, trackingEmailSent });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

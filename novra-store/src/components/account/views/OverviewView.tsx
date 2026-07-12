@@ -33,7 +33,20 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
       const orders = await getOrdersForUserFromApi(user.email);
       setRecentOrders(orders.slice(0, 3));
     };
-    return createStoreRefreshEffect(refresh, { scopes: ["orders"] });
+
+    const cleanup = createStoreRefreshEffect(refresh, { scopes: ["orders"] });
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cleanup();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [user.email]);
 
   const earnItems = [

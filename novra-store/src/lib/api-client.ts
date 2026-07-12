@@ -20,6 +20,7 @@ export function getApiHeaders(): HeadersInit {
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T | null> {
   try {
     const response = await fetch(path, {
+      cache: "no-store",
       ...options,
       headers: {
         ...getApiHeaders(),

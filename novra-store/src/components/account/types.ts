@@ -12,4 +12,4 @@ export type AccountSection =
   | "support-center";
 
 export type OrderFilterType = "all" | "regular" | "subscription";
-export type OrderStatusFilter = "all" | "pending" | "processing" | "shipped" | "cancelled";
+export type OrderStatusFilter = "all" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";

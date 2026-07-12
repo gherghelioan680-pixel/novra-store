@@ -1,7 +1,7 @@
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 
-export type OrderStatus = "pending" | "processing" | "shipped" | "cancelled";
+export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export type OrderItem = {
   title: string;
@@ -85,6 +85,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "În așteptare",
   processing: "În procesare",
   shipped: "Expediată",
+  delivered: "Livrată",
   cancelled: "Anulată",
 };
 
@@ -92,12 +93,27 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "bg-yellow-500/15 text-yellow-300",
   processing: "bg-blue-500/15 text-blue-300",
   shipped: "bg-green-500/15 text-green-300",
+  delivered: "bg-emerald-500/15 text-emerald-300",
   cancelled: "bg-red-500/15 text-red-300",
 };
 
+export const ORDER_STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
+  { value: "pending", label: ORDER_STATUS_LABELS.pending },
+  { value: "processing", label: ORDER_STATUS_LABELS.processing },
+  { value: "shipped", label: ORDER_STATUS_LABELS.shipped },
+  { value: "delivered", label: ORDER_STATUS_LABELS.delivered },
+  { value: "cancelled", label: ORDER_STATUS_LABELS.cancelled },
+];
+
 function normalizeStatus(status: string | undefined): OrderStatus {
   if (status === "processed") return "processing";
-  if (status === "pending" || status === "processing" || status === "shipped" || status === "cancelled") {
+  if (
+    status === "pending" ||
+    status === "processing" ||
+    status === "shipped" ||
+    status === "delivered" ||
+    status === "cancelled"
+  ) {
     return status;
   }
   return "pending";
@@ -180,6 +196,27 @@ function cacheOrders(orders: Order[]): void {
   }
 }
 
+function mergeOrdersIntoCache(incoming: Order[]): void {
+  if (!isBrowser() || incoming.length === 0) return;
+
+  const byId = new Map(getStoredOrders().map((order) => [order.id, order]));
+  for (const order of incoming) {
+    byId.set(order.id, order);
+  }
+
+  const merged = Array.from(byId.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  cacheOrders(merged);
+}
+
+function buildOrdersQuery(email?: string): string {
+  const params = new URLSearchParams();
+  if (email) params.set("email", email);
+  params.set("_", String(Date.now()));
+  return `?${params.toString()}`;
+}
+
 export function getStoredOrders(): Order[] {
   if (!isBrowser()) return [];
 
@@ -194,24 +231,37 @@ export function getStoredOrders(): Order[] {
 }
 
 export async function loadOrders(email?: string): Promise<Order[]> {
-  const query = email ? `?email=${encodeURIComponent(email)}` : "";
-  const fromApi = await apiFetch<{ orders: Partial<Order>[] }>(`/api/store/orders${query}`);
+  const fromApi = await apiFetch<{ orders: Partial<Order>[] }>(
+    `/api/store/orders${buildOrdersQuery(email)}`
+  );
   if (fromApi?.orders) {
     const orders = fromApi.orders.map(normalizeOrder);
-    if (!email) cacheOrders(orders);
+    if (email) {
+      mergeOrdersIntoCache(orders);
+    } else {
+      cacheOrders(orders);
+    }
     return orders;
   }
   const stored = getStoredOrders();
   if (email) {
     const normalizedEmail = email.toLowerCase();
-    return stored.filter((order) => order.userEmail === normalizedEmail);
+    return stored.filter(
+      (order) =>
+        order.userEmail === normalizedEmail ||
+        order.address.email.toLowerCase() === normalizedEmail
+    );
   }
   return stored;
 }
 
 export function getOrdersForUser(email: string): Order[] {
   const normalizedEmail = email.toLowerCase();
-  return getStoredOrders().filter((order) => order.userEmail === normalizedEmail);
+  return getStoredOrders().filter(
+    (order) =>
+      order.userEmail === normalizedEmail ||
+      order.address.email.toLowerCase() === normalizedEmail
+  );
 }
 
 export async function getOrdersForUserFromApi(email: string): Promise<Order[]> {
@@ -235,9 +285,7 @@ export async function saveOrder(order: Order): Promise<Order | null> {
     const data = (await response.json()) as { order?: Partial<Order> };
     const saved = normalizeOrder(data.order ?? normalized);
 
-    const orders = getStoredOrders();
-    orders.unshift(saved);
-    cacheOrders(orders);
+    mergeOrdersIntoCache([saved]);
     dispatchStoreUpdate({ scope: "orders" });
     return saved;
   } catch {
@@ -283,13 +331,19 @@ export async function updateOrderAwb(orderId: string, awbTracking: string): Prom
     const response = await fetch("/api/store/orders", {
       method: "PATCH",
       headers: getApiHeaders(),
+      cache: "no-store",
       body: JSON.stringify({ orderId, awbTracking }),
     });
 
     if (!response.ok) return false;
 
-    const data = (await response.json()) as { orders: Partial<Order>[] };
-    cacheOrders(data.orders.map(normalizeOrder));
+    const data = (await response.json()) as { orders: Partial<Order>[]; order?: Partial<Order> };
+    const updatedOrders = data.orders?.map(normalizeOrder) ?? [];
+    if (updatedOrders.length > 0) {
+      mergeOrdersIntoCache(updatedOrders);
+    } else if (data.order) {
+      mergeOrdersIntoCache([normalizeOrder(data.order)]);
+    }
     dispatchStoreUpdate({ scope: "orders" });
     return true;
   } catch {
@@ -304,13 +358,19 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     const response = await fetch("/api/store/orders", {
       method: "PATCH",
       headers: getApiHeaders(),
+      cache: "no-store",
       body: JSON.stringify({ orderId, status }),
     });
 
     if (!response.ok) return false;
 
-    const data = (await response.json()) as { orders: Partial<Order>[] };
-    cacheOrders(data.orders.map(normalizeOrder));
+    const data = (await response.json()) as { orders: Partial<Order>[]; order?: Partial<Order> };
+    const updatedOrders = data.orders?.map(normalizeOrder) ?? [];
+    if (updatedOrders.length > 0) {
+      mergeOrdersIntoCache(updatedOrders);
+    } else if (data.order) {
+      mergeOrdersIntoCache([normalizeOrder(data.order)]);
+    }
     dispatchStoreUpdate({ scope: "orders" });
     return true;
   } catch {
@@ -331,6 +391,7 @@ export function getOrderStats() {
     pendingOrders: orders.filter((order) => order.status === "pending").length,
     processingOrders: orders.filter((order) => order.status === "processing").length,
     shippedOrders: orders.filter((order) => order.status === "shipped").length,
+    deliveredOrders: orders.filter((order) => order.status === "delivered").length,
     cancelledOrders: orders.filter((order) => order.status === "cancelled").length,
   };
 }
