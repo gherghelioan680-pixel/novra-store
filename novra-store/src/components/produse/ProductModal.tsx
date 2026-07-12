@@ -8,7 +8,6 @@ import { FaWhatsapp } from "react-icons/fa";
 import type { CatalogProduct } from "@/lib/catalog";
 import {
   getAdapterProductImage,
-  getBundleColorImage,
 } from "@/lib/catalog";
 import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
@@ -198,13 +197,15 @@ export function ProductModal({
                                 }`}
                               >
                                 <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
-                                  <ProductImage
-                                    src={getBundleColorImage(colorType, colorIdx)}
-                                    category={colorType === "adapter" ? "lightning" : "usb-c"}
-                                    alt={color}
-                                    fill
-                                    className="object-contain p-0.5"
-                                    draggable={false}
+                                  <BundleProductImages
+                                    productId={product.id}
+                                    adapterIdx={colorType === "adapter" ? colorIdx : bundleSelection.adapterIdx}
+                                    cableIdx={colorType === "cable" ? colorIdx : bundleSelection.cableIdx}
+                                    className="flex flex-col h-full w-full gap-0 min-h-0"
+                                    adapterClassName="relative h-[55%] w-full min-h-0 shrink-0"
+                                    cableClassName="relative h-[45%] w-full min-h-0 shrink-0"
+                                    imageClassName="object-contain object-center"
+                                    sizes="32px"
                                   />
                                 </span>
                                 {selected && <Check size={12} className={colorStyle.text} />}

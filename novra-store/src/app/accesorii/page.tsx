@@ -7,7 +7,6 @@ import { FaWhatsapp } from "react-icons/fa";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
 import { useCart } from "@/context/CartContext";
 import {
@@ -15,7 +14,6 @@ import {
   ADAPTER_COLOR_STYLES,
   DEFAULT_BUNDLE_SELECTIONS,
   getAdapterColorImage,
-  getBundleColorImage,
   getBundleVariantLabel,
   getProductsByCategory,
   type CatalogProduct,
@@ -183,12 +181,15 @@ export default function Accesorii() {
                                     }`}
                                   >
                                     <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
-                                      <ProductImage
-                                        src={getBundleColorImage(colorType, cIdx)}
-                                        category={colorType === "adapter" ? "lightning" : "usb-c"}
-                                        alt={color}
-                                        fill
-                                        className="object-contain p-0.5"
+                                      <BundleProductImages
+                                        productId={product.id}
+                                        adapterIdx={colorType === "adapter" ? cIdx : selection.adapterIdx}
+                                        cableIdx={colorType === "cable" ? cIdx : selection.cableIdx}
+                                        className="flex flex-col h-full w-full gap-0 min-h-0"
+                                        adapterClassName="relative h-[55%] w-full min-h-0 shrink-0"
+                                        cableClassName="relative h-[45%] w-full min-h-0 shrink-0"
+                                        imageClassName="object-contain object-center"
+                                        sizes="32px"
                                       />
                                     </span>
                                     {selected && <Check size={12} className={colorStyle.text} />}
