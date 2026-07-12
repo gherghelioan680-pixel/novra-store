@@ -9,6 +9,7 @@ import {
   findAffiliateByUserId,
   getAvailablePayoutBalance,
   readAffiliatePayouts,
+  serializePayoutForScope,
   submitAffiliatePayout,
   updateAffiliatePayoutStatus,
 } from "@/lib/affiliates-server";
@@ -22,7 +23,9 @@ export async function GET(request: NextRequest) {
 
   if (scope === "admin") {
     if (!isAdminRequest(request)) return unauthorizedResponse();
-    return Response.json({ payouts });
+    return Response.json({
+      payouts: payouts.map((p) => serializePayoutForScope(p, "admin")),
+    });
   }
 
   const session = getSessionFromRequest(request);
@@ -38,7 +41,10 @@ export async function GET(request: NextRequest) {
   const userPayouts = payouts.filter((p) => p.affiliateId === affiliate.id);
   const availableBalance = getAvailablePayoutBalance(affiliate, payouts);
 
-  return Response.json({ payouts: userPayouts, availableBalance });
+  return Response.json({
+    payouts: userPayouts.map((p) => serializePayoutForScope(p, "own")),
+    availableBalance,
+  });
 }
 
 export async function POST(request: NextRequest) {

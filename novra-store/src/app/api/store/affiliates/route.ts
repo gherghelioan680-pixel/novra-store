@@ -17,6 +17,7 @@ import {
   readAffiliateReferrals,
   readAffiliates,
   reviewAffiliateApplication,
+  serializePayoutForScope,
   submitAffiliateApplication,
   updateAffiliate,
 } from "@/lib/affiliates-server";
@@ -36,7 +37,12 @@ export async function GET(request: NextRequest) {
       readAffiliateReferrals(),
       readAffiliatePayouts(),
     ]);
-    return Response.json({ affiliates, applications, referrals, payouts });
+    return Response.json({
+      affiliates,
+      applications,
+      referrals,
+      payouts: payouts.map((p) => serializePayoutForScope(p, "admin")),
+    });
   }
 
   if (!session?.email) return unauthorizedResponse();
@@ -66,7 +72,7 @@ export async function GET(request: NextRequest) {
     affiliate,
     application,
     referrals: userReferrals,
-    payouts: userPayouts,
+    payouts: userPayouts.map((p) => serializePayoutForScope(p, "own")),
     availableBalance,
   });
 }

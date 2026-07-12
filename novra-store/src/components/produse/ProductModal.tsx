@@ -2,11 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import Link from "next/link";
 import { Check, Cpu, Layers, Lock, ShieldCheck, ShoppingBag, X, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import type { CatalogProduct } from "@/lib/catalog";
+import {
+  BUNDLE_COLORS,
+  getAdapterColorImage,
+  getAdapterProductImage,
+  getBundleColorImage,
+  getCableColorImage,
+} from "@/lib/catalog";
+import ProductImage from "@/components/produse/ProductImage";
 
 type BundleSelection = { adapterIdx: number; cableIdx: number };
 
@@ -103,7 +110,46 @@ export function ProductModal({
             {product.tag}
           </span>
           <div className="relative w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48">
-            <Image src={product.imageSrc} alt={product.title} fill className="object-contain" priority draggable={false} />
+            {isBundleProduct(product.category) ? (
+              <div className="flex h-full items-center justify-center gap-2">
+                <div className="relative h-36 w-28 sm:h-40 sm:w-32">
+                  <ProductImage
+                    src={getAdapterColorImage(bundleSelection.adapterIdx)}
+                    category="lightning"
+                    alt={`Adaptor ${BUNDLE_COLORS[bundleSelection.adapterIdx]}`}
+                    fill
+                    className="object-contain"
+                    priority
+                    draggable={false}
+                  />
+                </div>
+                <div className="relative h-36 w-28 sm:h-40 sm:w-32">
+                  <ProductImage
+                    src={getCableColorImage(bundleSelection.cableIdx)}
+                    category="usb-c"
+                    alt={`Cablu ${BUNDLE_COLORS[bundleSelection.cableIdx]}`}
+                    fill
+                    className="object-contain"
+                    priority
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ) : (
+              <ProductImage
+                src={
+                  isAdapterProduct(product.category)
+                    ? getAdapterProductImage(product.options[activeOptionIdx])
+                    : product.imageSrc
+                }
+                category={product.category}
+                alt={product.title}
+                fill
+                className="object-contain"
+                priority
+                draggable={false}
+              />
+            )}
           </div>
         </div>
 
@@ -160,12 +206,22 @@ export function ProductModal({
                                 key={`${colorType}-${color}`}
                                 type="button"
                                 onClick={() => onBundleColorSelect(product.id, colorType, colorIdx)}
-                                className={`min-h-11 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-1.5 cursor-pointer touch-manipulation ${
+                                className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-2 cursor-pointer touch-manipulation ${
                                   selected
                                     ? `${colorStyle.selectedBg} ${colorStyle.border} ${colorStyle.text} shadow-lg font-semibold`
                                     : `${colorStyle.bg} ${colorStyle.border} ${colorStyle.text} hover:opacity-90`
                                 }`}
                               >
+                                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
+                                  <ProductImage
+                                    src={getBundleColorImage(colorType, colorIdx)}
+                                    category={colorType === "adapter" ? "lightning" : "usb-c"}
+                                    alt={color}
+                                    fill
+                                    className="object-contain p-0.5"
+                                    draggable={false}
+                                  />
+                                </span>
                                 {selected && <Check size={12} className={colorStyle.text} />}
                                 <span className={colorStyle.text}>{color}</span>
                               </button>
@@ -200,7 +256,7 @@ export function ProductModal({
                         type="button"
                         disabled={locked}
                         onClick={() => onOptionSelect(product.id, optionIdx)}
-                        className={`min-h-11 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-1.5 touch-manipulation ${
+                        className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-2 touch-manipulation ${
                           shakingOptionIdx === optionIdx ? "animate-[shake_0.4s_ease-in-out]" : ""
                         } ${
                           locked
@@ -224,6 +280,18 @@ export function ProductModal({
                           </>
                         ) : (
                           <>
+                            {colorStyle && (
+                              <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
+                                <ProductImage
+                                  src={getAdapterProductImage(option)}
+                                  category="lightning"
+                                  alt={option}
+                                  fill
+                                  className="object-contain p-0.5"
+                                  draggable={false}
+                                />
+                              </span>
+                            )}
                             {selected && <Check size={12} className={colorStyle?.text} />}
                             <span className={colorStyle?.text}>{option}</span>
                           </>

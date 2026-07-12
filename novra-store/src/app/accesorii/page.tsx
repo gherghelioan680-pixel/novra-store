@@ -1,84 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Zap, ShieldCheck, Cpu, Layers, ArrowLeft, Check, ShoppingBag } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ProductImage from "@/components/produse/ProductImage";
 import { useCart } from "@/context/CartContext";
-
-const BUNDLE_COLORS = ["Violet", "Blue", "Roz"] as const;
-
-const BUNDLE_COLOR_STYLES: Record<string, { text: string; border: string; bg: string; selectedBg: string }> = {
-  Violet: { text: "text-violet-400", border: "border-violet-400/60", bg: "bg-violet-500/10", selectedBg: "bg-violet-500/20" },
-  Blue: { text: "text-blue-400", border: "border-blue-400/60", bg: "bg-blue-500/10", selectedBg: "bg-blue-500/20" },
-  Roz: { text: "text-pink-400", border: "border-pink-400/60", bg: "bg-pink-500/10", selectedBg: "bg-pink-500/20" },
-};
-
-const getBundleVariantLabel = (adapterIdx: number, cableIdx: number) =>
-  `Adaptor: ${BUNDLE_COLORS[adapterIdx]} / Cablu: ${BUNDLE_COLORS[cableIdx]}`;
-
-// Date detaliate pentru gama de Accesorii Premium
-const accessoryProducts = [
-  {
-    id: "incarcator-gan-65w",
-    title: "NOVRA GaN Nova 65W",
-    subtitle: "Triple-Port Fast Wall Charger + Cable",
-    basePrice: 159.99,
-    imageSrc: "/cutie.png",
-    tag: "Tehnologie GaN",
-    description: "Încărcător de rețea ultra-compact alimentat de tehnologia de ultimă generație GaN (Galiu Nitrură). Dispune de 3 porturi inteligente (2x USB-C + 1x USB-A) capabile să încarce simultan un MacBook Pro, un iPhone și o pereche de căști la viteză maximă. Personalizează independent culoarea adaptorului și a cablului inclus.",
-    specs: {
-      power: "65W Max Smart Allocation",
-      speed: "Power Delivery 3.0 / Quick Charge 4.0",
-      material: "Policarbonat Ignifug + Cablu Nylon",
-      chip: "GaNSafe cip pentru controlul temperaturii",
-    },
-  },
-  {
-    id: "incarcator-auto-metal",
-    title: "NOVRA DriveSpeed 45W",
-    subtitle: "Dual USB-C Metal Car Charger + Cable",
-    basePrice: 159.99,
-    imageSrc: "/cutie.png",
-    tag: "Premium Metal",
-    description: "Creat integral dintr-un aliaj premium de aluminiu pentru o disipare optimă a căldurii. Se potrivește perfect în bricheta mașinii tale și oferă două porturi USB-C independente, asigurând încărcare ultra-rapidă chiar și în cele mai scurte călătorii. Alege orice combinație de culori pentru adaptor și cablu.",
-    specs: {
-      power: "45W Total (25W + 20W Dual PD)",
-      speed: "Suport stabil pentru sisteme GPS și iOS/Android",
-      material: "Aliaj de Aluminiu Anodizat + Cablu Premium",
-      chip: "Protecție inteligentă la supratensiune auto",
-    },
-  },
-  {
-    id: "bundle-travel-pack",
-    title: "NOVRA TravelPack Duo",
-    subtitle: "GaN Travel Charger + Braided Cable Kit",
-    basePrice: 159.99,
-    imageSrc: "/cutie.png",
-    tag: "Kit Călătorie",
-    description: "Set complet pentru mobilitate: încărcător GaN compact cu cablu premium împletit, ambalate într-un kit elegant. Ideal pentru birou, călătorii sau cadou — configurează independent culoarea adaptorului și a cablului din paleta NOVRA.",
-    specs: {
-      power: "65W PD + Cablu 100W compatibil",
-      speed: "Power Delivery 3.0 / Transfer 480 Mbps",
-      material: "GaN Shell + Nylon Balistic Cablu",
-      chip: "GaNSafe + E-Mark Smart Chip",
-    },
-  },
-];
-
-const DEFAULT_COLOR_SELECTIONS: Record<string, { adapterIdx: number; cableIdx: number }> = {
-  "incarcator-gan-65w": { adapterIdx: 0, cableIdx: 1 },
-  "incarcator-auto-metal": { adapterIdx: 0, cableIdx: 0 },
-  "bundle-travel-pack": { adapterIdx: 2, cableIdx: 2 },
-};
+import {
+  BUNDLE_COLORS,
+  ADAPTER_COLOR_STYLES,
+  DEFAULT_BUNDLE_SELECTIONS,
+  getAdapterColorImage,
+  getBundleColorImage,
+  getBundleVariantLabel,
+  getCableColorImage,
+  getProductsByCategory,
+  type CatalogProduct,
+} from "@/lib/catalog";
+import { getWhatsAppNumber } from "@/lib/site-settings";
+import { buildWhatsAppUrl as buildWhatsAppLink } from "@/lib/store";
 
 export default function Accesorii() {
   const { addItem } = useCart();
-  const [colorSelections, setColorSelections] = useState(DEFAULT_COLOR_SELECTIONS);
+  const accessoryProducts = getProductsByCategory("accesorii");
+  const [colorSelections, setColorSelections] = useState(DEFAULT_BUNDLE_SELECTIONS);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
 
   const getSelection = (productId: string) =>
@@ -94,24 +42,25 @@ export default function Accesorii() {
     }));
   };
 
-  const handleOrder = (product: typeof accessoryProducts[0]) => {
+  const handleOrder = (product: CatalogProduct) => {
     const { adapterIdx, cableIdx } = getSelection(product.id);
     const variantLabel = getBundleVariantLabel(adapterIdx, cableIdx);
     const finalPrice = product.basePrice.toFixed(2);
 
     const message = `Salut echipa NOVRA! Aș dori să comand din gama Cablu + Adaptor:\n\n- Produs: ${product.title}\n- Tip: ${product.subtitle}\n- Configurație: ${variantLabel}\n- Preț: ${finalPrice} RON`;
 
-    window.open(`https://wa.me/407XXXXXXXXX?text=${encodeURIComponent(message)}`, "_blank");
+    const url = buildWhatsAppLink(getWhatsAppNumber(), message);
+    if (url) window.open(url, "_blank");
   };
 
-  const handleAddToCart = (product: typeof accessoryProducts[0]) => {
+  const handleAddToCart = (product: CatalogProduct) => {
     const { adapterIdx, cableIdx } = getSelection(product.id);
     addItem({
       productId: product.id,
       title: product.title,
       variantLabel: getBundleVariantLabel(adapterIdx, cableIdx),
       unitPrice: product.basePrice,
-      imageSrc: product.imageSrc,
+      imageSrc: getAdapterColorImage(adapterIdx),
     });
     setAddedProductId(product.id);
     window.setTimeout(() => setAddedProductId(null), 2000);
@@ -166,14 +115,27 @@ export default function Accesorii() {
 
                   <div className="absolute inset-0 bg-purple-500/0 group-hover:bg-purple-500/5 blur-xl transition-all duration-700 rounded-full scale-75"></div>
 
-                  <div className="relative w-72 h-72 transition-transform duration-700 group-hover:scale-105">
-                    <Image
-                      src={product.imageSrc}
-                      alt={product.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-contain"
-                    />
+                  <div className="relative flex h-72 w-72 items-center justify-center gap-3 transition-transform duration-700 group-hover:scale-105">
+                    <div className="relative h-56 w-40">
+                      <ProductImage
+                        src={getAdapterColorImage(selection.adapterIdx)}
+                        category="lightning"
+                        alt={`Adaptor ${BUNDLE_COLORS[selection.adapterIdx]}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="relative h-56 w-40">
+                      <ProductImage
+                        src={getCableColorImage(selection.cableIdx)}
+                        category="usb-c"
+                        alt={`Cablu ${BUNDLE_COLORS[selection.cableIdx]}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -217,7 +179,7 @@ export default function Accesorii() {
                             </span>
                             <div className="flex flex-wrap gap-2.5">
                               {BUNDLE_COLORS.map((color, cIdx) => {
-                                const colorStyle = BUNDLE_COLOR_STYLES[color];
+                                const colorStyle = ADAPTER_COLOR_STYLES[color];
                                 const selected = activeIdx === cIdx;
 
                                 return (
@@ -225,12 +187,21 @@ export default function Accesorii() {
                                     key={`${product.id}-${colorType}-${color}`}
                                     type="button"
                                     onClick={() => handleColorChange(product.id, colorType, cIdx)}
-                                    className={`min-h-11 px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-300 flex items-center gap-1.5 cursor-pointer touch-manipulation ${
+                                    className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-all duration-300 flex items-center gap-2 cursor-pointer touch-manipulation ${
                                       selected
                                         ? `${colorStyle.selectedBg} ${colorStyle.border} ${colorStyle.text} shadow-lg font-semibold`
                                         : `${colorStyle.bg} ${colorStyle.border} ${colorStyle.text} hover:opacity-90`
                                     }`}
                                   >
+                                    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
+                                      <ProductImage
+                                        src={getBundleColorImage(colorType, cIdx)}
+                                        category={colorType === "adapter" ? "lightning" : "usb-c"}
+                                        alt={color}
+                                        fill
+                                        className="object-contain p-0.5"
+                                      />
+                                    </span>
                                     {selected && <Check size={12} className={colorStyle.text} />}
                                     <span className={colorStyle.text}>{color}</span>
                                   </button>

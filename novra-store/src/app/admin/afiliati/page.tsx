@@ -50,6 +50,8 @@ type CreateForm = {
   adminNote: string;
 };
 
+type AdminTab = "payouts" | "affiliates" | "referrals";
+
 const defaultCreateForm = (): CreateForm => ({
   userEmail: "",
   name: "",
@@ -74,6 +76,8 @@ export default function AdminAfiliatiPage() {
   const [editForm, setEditForm] = useState<Partial<Affiliate>>({});
   const [actionId, setActionId] = useState<string | null>(null);
   const [selectedAffiliateId, setSelectedAffiliateId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>("payouts");
+  const [loadError, setLoadError] = useState("");
 
   const refresh = async () => {
     const data = await loadAffiliatesAdmin();
@@ -82,6 +86,9 @@ export default function AdminAfiliatiPage() {
       setApplications(data.applications);
       setReferrals(data.referrals);
       setPayouts(data.payouts ?? []);
+      setLoadError("");
+    } else {
+      setLoadError("Nu s-au putut încărca datele. Reautentifică-te ca admin și reîncearcă.");
     }
     setLoading(false);
   };
@@ -124,34 +131,104 @@ export default function AdminAfiliatiPage() {
   };
 
   const PayoutBankDetails = ({ payout }: { payout: AffiliatePayout }) => (
-    <div className="space-y-2">
+    <div className="space-y-2 rounded-lg border border-white/10 bg-black/20 p-3">
       <div>
         <p className="text-[10px] uppercase tracking-wider text-gray-500">Titular cont</p>
-        <p className="font-medium text-white">{payout.beneficiaryName}</p>
+        <p className="font-medium text-white break-words">{payout.beneficiaryName || "—"}</p>
       </div>
-      {payout.iban && (
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-gray-500">IBAN</p>
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-gray-500">IBAN</p>
+        {payout.iban ? (
           <div className="flex flex-wrap items-center gap-2">
-            <code className="font-mono text-sm text-purple-200">{payout.iban}</code>
+            <code className="break-all font-mono text-sm text-emerald-200">{payout.iban}</code>
             <CopyButton text={payout.iban} label="Copiază IBAN" />
           </div>
-        </div>
-      )}
-      {payout.cardNumber && (
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-gray-500">Număr card</p>
+        ) : (
+          <p className="text-sm text-gray-500">—</p>
+        )}
+      </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-gray-500">Număr card</p>
+        {payout.cardNumber ? (
           <div className="flex flex-wrap items-center gap-2">
-            <code className="font-mono text-sm text-purple-200">{payout.cardNumber}</code>
+            <code className="break-all font-mono text-sm text-emerald-200">{payout.cardNumber}</code>
             <CopyButton text={payout.cardNumber} label="Copiază card" />
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-gray-500">—</p>
+        )}
+      </div>
       <div>
         <p className="text-[10px] uppercase tracking-wider text-gray-500">Bancă</p>
-        <p className="text-gray-300">{payout.bankName ?? "—"}</p>
+        <p className="text-gray-300 break-words">{payout.bankName || "—"}</p>
       </div>
       <CopyButton text={buildTransferDetails(payout)} label="Copiază tot pentru transfer" />
+    </div>
+  );
+
+  const PayoutCard = ({
+    payout,
+    showActions = false,
+  }: {
+    payout: AffiliatePayout;
+    showActions?: boolean;
+  }) => (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="grid flex-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500">Afiliat</p>
+            <p className="font-medium text-white">{payout.affiliateName}</p>
+            <p className="text-xs text-gray-500 break-all">{payout.affiliateEmail}</p>
+            <p className="mt-2 text-xs text-gray-500">{formatDate(payout.createdAt)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500">Sumă solicitată</p>
+            <p className="text-2xl font-bold text-amber-300">{formatMoney(payout.amount)}</p>
+            <span
+              className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs ${
+                payout.status === "paid"
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : payout.status === "rejected"
+                    ? "bg-red-500/15 text-red-300"
+                    : "bg-amber-500/15 text-amber-300"
+              }`}
+            >
+              {payout.status === "paid"
+                ? "Plătit"
+                : payout.status === "rejected"
+                  ? "Respins"
+                  : "În așteptare"}
+            </span>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <PayoutBankDetails payout={payout} />
+          </div>
+        </div>
+        {showActions && payout.status === "pending" && (
+          <div className="flex shrink-0 gap-2 lg:flex-col">
+            <button
+              type="button"
+              disabled={actionId === payout.id}
+              onClick={() => handleMarkPayoutPaid(payout)}
+              className="rounded-lg bg-emerald-600/20 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
+            >
+              Marchează plătit
+            </button>
+            <button
+              type="button"
+              disabled={actionId === payout.id}
+              onClick={() => handleRejectPayout(payout)}
+              className="rounded-lg bg-red-600/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
+            >
+              Respinge
+            </button>
+          </div>
+        )}
+      </div>
+      {payout.status === "rejected" && payout.adminNote && (
+        <p className="mt-3 text-xs text-red-400/80">Motiv: {payout.adminNote}</p>
+      )}
     </div>
   );
 
@@ -343,65 +420,94 @@ export default function AdminAfiliatiPage() {
         })}
       </div>
 
-      {pendingPayouts.length > 0 && (
-        <section className="mb-8 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-            <Banknote size={18} />
-            Cereri retragere ({pendingPayouts.length})
-          </h2>
-          <p className="mb-5 text-sm text-gray-400">
-            Date complete pentru transfer manual — copiază IBAN-ul sau toate detaliile direct din fiecare cerere.
-          </p>
-          <div className="space-y-4">
-            {pendingPayouts.map((payout) => (
-              <div
-                key={payout.id}
-                className="rounded-xl border border-white/10 bg-black/25 p-5"
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="grid flex-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Afiliat</p>
-                      <p className="font-medium text-white">{payout.affiliateName}</p>
-                      <p className="text-xs text-gray-500">{payout.affiliateEmail}</p>
-                      <p className="mt-2 text-xs text-gray-500">{formatDate(payout.createdAt)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Sumă solicitată</p>
-                      <p className="text-2xl font-bold text-amber-300">{formatMoney(payout.amount)}</p>
-                      <span className="mt-2 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-300">
-                        În așteptare
-                      </span>
-                    </div>
-                    <div className="sm:col-span-2 lg:col-span-1">
-                      <PayoutBankDetails payout={payout} />
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 gap-2 lg:flex-col">
-                    <button
-                      type="button"
-                      disabled={actionId === payout.id}
-                      onClick={() => handleMarkPayoutPaid(payout)}
-                      className="rounded-lg bg-emerald-600/20 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
-                    >
-                      Marchează plătit
-                    </button>
-                    <button
-                      type="button"
-                      disabled={actionId === payout.id}
-                      onClick={() => handleRejectPayout(payout)}
-                      className="rounded-lg bg-red-600/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
-                    >
-                      Respinge
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {loadError && (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-600/10 px-4 py-3 text-sm text-red-200">
+          {loadError}
+        </div>
+      )}
+
+      <div className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4">
+        {([
+          { id: "payouts" as const, label: "Cereri retragere", count: pendingPayouts.length },
+          { id: "affiliates" as const, label: "Afiliați", count: affiliates.length },
+          { id: "referrals" as const, label: "Referrals", count: referrals.length },
+        ]).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === tab.id
+                ? "bg-purple-600 text-white"
+                : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="ml-2 rounded-full bg-black/30 px-2 py-0.5 text-xs">{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "payouts" && (
+        <section className="mb-8">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                <Banknote size={18} />
+                Cereri retragere
+              </h2>
+              <p className="mt-1 text-sm text-gray-400">
+                Date complete pentru transfer manual — IBAN, card și bancă afișate integral.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-white"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              Reîmprospătează
+            </button>
           </div>
+
+          {pendingPayouts.length > 0 && (
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-amber-300">
+                În așteptare ({pendingPayouts.length})
+              </h3>
+              <div className="space-y-4">
+                {pendingPayouts.map((payout) => (
+                  <PayoutCard key={payout.id} payout={payout} showActions />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {payouts.length === 0 ? (
+            <p className="rounded-xl border border-white/10 px-4 py-8 text-center text-sm text-gray-400">
+              Niciun payout încă.
+            </p>
+          ) : (
+            <div>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+                Istoric ({payouts.length})
+              </h3>
+              <div className="space-y-4">
+                {payouts
+                  .filter((p) => p.status !== "pending")
+                  .map((payout) => (
+                    <PayoutCard key={payout.id} payout={payout} />
+                  ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
+      {activeTab === "affiliates" && (
+        <>
       {pendingApplications.length > 0 && (
         <section className="mb-8 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
           <h2 className="mb-4 text-lg font-semibold text-white">
@@ -737,63 +843,10 @@ export default function AdminAfiliatiPage() {
           </div>
         )}
       </section>
+        </>
+      )}
 
-      <section className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold text-white">
-          Istoric retrageri ({payouts.length})
-        </h2>
-        {payouts.length === 0 ? (
-          <p className="rounded-xl border border-white/10 px-4 py-8 text-center text-sm text-gray-400">
-            Niciun payout încă.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {payouts.slice(0, 50).map((payout) => (
-              <div
-                key={payout.id}
-                className="rounded-xl border border-white/10 bg-black/15 p-4"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Afiliat</p>
-                      <p className="font-medium text-purple-300">{payout.affiliateName}</p>
-                      <p className="text-xs text-gray-500">{payout.affiliateEmail}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Sumă</p>
-                      <p className="font-medium text-white">{formatMoney(payout.amount)}</p>
-                      <p className="mt-1 text-xs text-gray-500">{formatDate(payout.createdAt)}</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <PayoutBankDetails payout={payout} />
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 self-start rounded-full px-2.5 py-1 text-xs ${
-                      payout.status === "paid"
-                        ? "bg-emerald-500/15 text-emerald-300"
-                        : payout.status === "rejected"
-                          ? "bg-red-500/15 text-red-300"
-                          : "bg-amber-500/15 text-amber-300"
-                    }`}
-                  >
-                    {payout.status === "paid"
-                      ? "Plătit"
-                      : payout.status === "rejected"
-                        ? "Respins"
-                        : "În așteptare"}
-                  </span>
-                </div>
-                {payout.status === "rejected" && payout.adminNote && (
-                  <p className="mt-3 text-xs text-red-400/80">Motiv: {payout.adminNote}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
+      {activeTab === "referrals" && (
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">
           Referrals recente {selectedAffiliateId ? "(filtrat)" : ""}
@@ -871,6 +924,7 @@ export default function AdminAfiliatiPage() {
           </div>
         )}
       </section>
+      )}
     </div>
   );
 }

@@ -35,13 +35,30 @@ export const PRODUCT_IMAGE_FILES: Record<string, string> = {
   "usb-c-100w": "novra-ultracharge-100w.jpg",
   "usb-c-pro-240w": "novra-hyperpower-240w.jpg",
   "usb-a-c-100w": "novra-hybrid-100w.jpg",
-  "usb-c-lightning-pd": "novra-applecharge-pro-violet.jpg",
-  "usb-a-lightning-classic": "novra-lightning-classic-blue.jpg",
-  "usb-c-lightning-flex": "novra-flexlink-nova-roz.jpg",
+  "usb-c-lightning-pd": "violet.png",
+  "usb-a-lightning-classic": "albastru.png",
+  "usb-c-lightning-flex": "roz.png",
   "incarcator-gan-65w": "novra-gan-nova-65w.jpg",
   "incarcator-auto-metal": "novra-drivespeed-45w.jpg",
   "bundle-travel-pack": "novra-travelpack-duo.jpg",
 };
+
+/** Slug-uri fișiere pentru variantele de culoare (index aliniat cu BUNDLE_COLORS). */
+export const BUNDLE_COLOR_SLUGS = ["violet", "albastru", "roz"] as const;
+
+export function getAdapterColorImage(colorIdx: number): string {
+  const slug = BUNDLE_COLOR_SLUGS[colorIdx] ?? BUNDLE_COLOR_SLUGS[0];
+  return `/products/adaptoare/${slug}.png`;
+}
+
+export function getCableColorImage(colorIdx: number): string {
+  const slug = BUNDLE_COLOR_SLUGS[colorIdx] ?? BUNDLE_COLOR_SLUGS[0];
+  return `/products/cabluri/${slug}.png`;
+}
+
+export function getBundleColorImage(type: "adapter" | "cable", colorIdx: number): string {
+  return type === "adapter" ? getAdapterColorImage(colorIdx) : getCableColorImage(colorIdx);
+}
 
 const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   cabluri: "/products/placeholders/cabluri.svg",
@@ -265,6 +282,11 @@ export const isAdapterProduct = (category: string) => category === "lightning";
 export const isBundleProduct = (category: string) => category === "accesorii";
 
 export const BUNDLE_COLORS = ["Violet", "Blue", "Roz"] as const;
+
+export function getAdapterProductImage(option: string): string {
+  const colorIdx = BUNDLE_COLORS.indexOf(option as (typeof BUNDLE_COLORS)[number]);
+  return getAdapterColorImage(colorIdx >= 0 ? colorIdx : 0);
+}
 
 export const DEFAULT_BUNDLE_SELECTIONS: Record<string, { adapterIdx: number; cableIdx: number }> = {
   "incarcator-gan-65w": { adapterIdx: 0, cableIdx: 1 },

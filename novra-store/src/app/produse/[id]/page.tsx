@@ -17,6 +17,10 @@ import {
   ADAPTER_COLOR_STYLES,
   BUNDLE_COLORS,
   getBundleVariantLabel,
+  getAdapterColorImage,
+  getCableColorImage,
+  getAdapterProductImage,
+  getBundleColorImage,
   isLockedVariant,
   isAdapterProduct,
   isBundleProduct,
@@ -108,6 +112,16 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
     return buildWhatsAppLink(getWhatsAppNumber(), message);
   };
 
+  const getCurrentProductImage = () => {
+    if (isBundleProduct(product.category)) {
+      return getAdapterColorImage(bundleSelection.adapterIdx);
+    }
+    if (isAdapterProduct(product.category)) {
+      return getAdapterProductImage(product.options[activeOptionIdx]);
+    }
+    return product.imageSrc;
+  };
+
   const getCurrentVariantLabel = () => {
     if (isBundleProduct(product.category)) {
       const sel = getBundleSelection(product.id);
@@ -164,15 +178,42 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
               {product.tag}
             </span>
             <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40">
-              <ProductImage
-                src={product.imageSrc}
-                category={product.category}
-                alt={product.title}
-                fill
-                className="object-contain rounded-xl"
-                priority
-                draggable={false}
-              />
+              {isBundleProduct(product.category) ? (
+                <div className="flex h-full items-center justify-center gap-2">
+                  <div className="relative h-28 w-24 sm:h-32 sm:w-28">
+                    <ProductImage
+                      src={getAdapterColorImage(bundleSelection.adapterIdx)}
+                      category="lightning"
+                      alt={`Adaptor ${BUNDLE_COLORS[bundleSelection.adapterIdx]}`}
+                      fill
+                      className="object-contain rounded-xl"
+                      priority
+                      draggable={false}
+                    />
+                  </div>
+                  <div className="relative h-28 w-24 sm:h-32 sm:w-28">
+                    <ProductImage
+                      src={getCableColorImage(bundleSelection.cableIdx)}
+                      category="usb-c"
+                      alt={`Cablu ${BUNDLE_COLORS[bundleSelection.cableIdx]}`}
+                      fill
+                      className="object-contain rounded-xl"
+                      priority
+                      draggable={false}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <ProductImage
+                  src={getCurrentProductImage()}
+                  category={product.category}
+                  alt={product.title}
+                  fill
+                  className="object-contain rounded-xl"
+                  priority
+                  draggable={false}
+                />
+              )}
             </div>
           </div>
 
@@ -230,12 +271,22 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                                 key={`${colorType}-${color}`}
                                 type="button"
                                 onClick={() => handleBundleColorSelect(product.id, colorType, colorIdx)}
-                                className={`min-h-11 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-1.5 cursor-pointer touch-manipulation ${
+                                className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-2 cursor-pointer touch-manipulation ${
                                   selected
                                     ? `${colorStyle.selectedBg} ${colorStyle.border} ${colorStyle.text} shadow-lg font-semibold`
                                     : `${colorStyle.bg} ${colorStyle.border} ${colorStyle.text} hover:opacity-90`
                                 }`}
                               >
+                                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
+                                  <ProductImage
+                                    src={getBundleColorImage(colorType, colorIdx)}
+                                    category={colorType === "adapter" ? "lightning" : "usb-c"}
+                                    alt={color}
+                                    fill
+                                    className="object-contain p-0.5"
+                                    draggable={false}
+                                  />
+                                </span>
                                 {selected && <Check size={12} className={colorStyle.text} />}
                                 <span className={colorStyle.text}>{color}</span>
                               </button>
@@ -264,7 +315,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                         type="button"
                         disabled={locked}
                         onClick={() => handleOptionSelect(product.id, optionIdx)}
-                        className={`min-h-11 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-1.5 touch-manipulation ${
+                        className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-colors duration-200 flex items-center gap-2 touch-manipulation ${
                           shakingOptionIdx === optionIdx ? "animate-[shake_0.4s_ease-in-out]" : ""
                         } ${
                           locked
@@ -285,6 +336,18 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                           </>
                         ) : (
                           <>
+                            {colorStyle && (
+                              <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-black/20">
+                                <ProductImage
+                                  src={getAdapterProductImage(option)}
+                                  category="lightning"
+                                  alt={option}
+                                  fill
+                                  className="object-contain p-0.5"
+                                  draggable={false}
+                                />
+                              </span>
+                            )}
                             {selected && <Check size={12} className={colorStyle?.text} />}
                             <span className={colorStyle?.text}>{option}</span>
                           </>

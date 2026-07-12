@@ -71,6 +71,20 @@ export function maskPayoutAccount(payout: Pick<AffiliatePayout, "iban" | "cardNu
   return "—";
 }
 
+/** Returnează payout complet pentru admin; maschează datele sensibile pentru afiliați. */
+export function serializePayoutForScope(
+  payout: AffiliatePayout,
+  scope: "admin" | "own"
+): AffiliatePayout {
+  if (scope === "admin") return payout;
+  return {
+    ...payout,
+    iban: undefined,
+    cardNumber: undefined,
+    bankName: undefined,
+  };
+}
+
 export function getPendingPayoutTotal(
   payouts: AffiliatePayout[],
   affiliateId: string
