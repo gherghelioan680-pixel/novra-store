@@ -1,0 +1,146 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, ArrowRight, Sparkles, Timer, Zap } from "lucide-react";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+const promotions = [
+  {
+    id: "bundle-pro",
+    title: "PowerBundle 100W",
+    subtitle: "Combo: Încărcător + Cablu",
+    category: "kituri",
+    discount: "Reducere 25%",
+    oldPrice: "75.00 RON",
+    newPrice: "56.25 RON",
+    description: "Kit-ul complet pentru setup-ul tău. Include încărcător GaN 65W și cablu 100W împletit.",
+    gradient: "from-purple-600/20 to-blue-600/20",
+  },
+  {
+    id: "promo-lightning",
+    title: "Dual Apple Pack",
+    subtitle: "Pachet 2 Cabluri Lightning",
+    category: "cabluri",
+    discount: "Reducere 15%",
+    oldPrice: "19.00 RON",
+    newPrice: "16.15 RON",
+    description: "Nu rămâne niciodată fără baterie. Două cabluri ultra-durabile pentru iPhone-ul tău.",
+    gradient: "from-amber-500/20 to-orange-600/20",
+  },
+];
+
+const filters = [
+  { id: "toate", label: "Toate promoțiile" },
+  { id: "kituri", label: "Kituri" },
+  { id: "cabluri", label: "Cabluri" },
+];
+
+export default function Promotii() {
+  const [activeFilter, setActiveFilter] = useState("toate");
+
+  const filteredPromotions =
+    activeFilter === "toate"
+      ? promotions
+      : promotions.filter((promo) => promo.category === activeFilter);
+
+  return (
+    <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
+      <Navbar />
+
+      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-7xl mx-auto">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group"
+        >
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+          Înapoi acasă
+        </Link>
+
+        <div className="relative border-b border-white/10 pb-12 mb-12">
+          <div className="max-w-2xl">
+            <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">
+              Promoții speciale
+            </span>
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tighter mb-4">
+              Oferta NOVRA, gata de luat
+            </h1>
+            <p className="text-gray-400 text-base font-light leading-relaxed">
+              Descoperă pachetele și ofertele limitate, pregătite pentru un setup mai bun, mai rapid și mai eficient.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12 bg-novra-card/30 border border-white/8 p-4 rounded-2xl">
+          <div className="flex items-center gap-2 text-xs text-gray-400 font-medium uppercase tracking-wider px-2">
+            <Sparkles size={14} className="text-purple-500" />
+            <span>Filtrează după:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {filters.map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-300 cursor-pointer ${
+                  activeFilter === filter.id
+                    ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-600/20"
+                    : "bg-transparent text-gray-400 border-white/8 hover:border-white/20 hover:text-white"
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredPromotions.map((promo) => (
+              <motion.div
+                layout
+                initial={false}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.35 }}
+                key={promo.id}
+                whileHover={{ y: -6, scale: 1.01 }}
+                className={`group bg-gradient-to-br ${promo.gradient} border border-white/10 rounded-3xl p-8 relative overflow-hidden`}
+              >
+                <div className="absolute top-4 right-4 bg-novra-bg/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                  <Timer size={14} />
+                  {promo.discount}
+                </div>
+
+                <div className="h-36 rounded-2xl border border-white/10 bg-novra-card/40 mb-6 flex items-center justify-center">
+                  <Zap className="text-purple-400" size={32} />
+                </div>
+
+                <h3 className="text-2xl font-bold mb-1">{promo.title}</h3>
+                <p className="text-white/60 text-sm mb-4">{promo.subtitle}</p>
+                <p className="text-gray-300 text-sm mb-8 max-w-sm">{promo.description}</p>
+
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">
+                      Preț promoțional
+                    </span>
+                    <span className="text-2xl font-bold">{promo.newPrice}</span>
+                  </div>
+                  <span className="text-sm text-gray-500 line-through mb-1">{promo.oldPrice}</span>
+                </div>
+
+                <button className="mt-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-white text-black px-6 py-3 rounded-xl hover:bg-purple-500 hover:text-white transition-colors">
+                  Vezi Oferta <ArrowRight size={14} />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

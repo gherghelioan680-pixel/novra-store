@@ -1,0 +1,326 @@
+import { apiFetch, getApiHeaders } from "./api-client";
+import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
+
+export type OrderStatus = "pending" | "processing" | "shipped" | "cancelled";
+
+export type OrderItem = {
+  title: string;
+  variantLabel: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export type OrderAddress = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  notes: string;
+};
+
+/** @deprecated Legacy shape — use OrderAddress */
+export type OrderCustomer = OrderAddress;
+
+export type PaymentStatus = "pending" | "paid" | "failed";
+
+export type Order = {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  items: OrderItem[];
+  total: number;
+  shipping: number;
+  status: OrderStatus;
+  paymentMethod: "card" | "ramburs";
+  paymentStatus?: PaymentStatus;
+  address: OrderAddress;
+  purchaseCode: string;
+  discountCode?: string;
+  discountAmount?: number;
+  awbTracking?: string;
+  stripeSessionId?: string;
+  confirmationEmailSent?: boolean;
+  trackingEmailSent?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  /** @deprecated Legacy field */
+  totalPrice?: number;
+  /** @deprecated Legacy field */
+  customer?: OrderAddress;
+};
+
+const PURCHASE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function randomPurchaseCodeSuffix(length: number): string {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += PURCHASE_CODE_CHARS[Math.floor(Math.random() * PURCHASE_CODE_CHARS.length)];
+  }
+  return result;
+}
+
+export function generatePurchaseCode(existingCodes: string[] = [], date = new Date()): string {
+  const datePart = [
+    String(date.getDate()).padStart(2, "0"),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getFullYear()).slice(-2),
+  ].join("");
+
+  const existingSet = new Set(existingCodes.map((code) => code.toUpperCase()));
+  let code = "";
+  for (let attempt = 0; attempt < 100; attempt++) {
+    code = `NV-${datePart}-${randomPurchaseCodeSuffix(6)}`;
+    if (!existingSet.has(code.toUpperCase())) break;
+  }
+  return code;
+}
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pending: "În așteptare",
+  processing: "În procesare",
+  shipped: "Expediată",
+  cancelled: "Anulată",
+};
+
+export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
+  pending: "bg-yellow-500/15 text-yellow-300",
+  processing: "bg-blue-500/15 text-blue-300",
+  shipped: "bg-green-500/15 text-green-300",
+  cancelled: "bg-red-500/15 text-red-300",
+};
+
+function normalizeStatus(status: string | undefined): OrderStatus {
+  if (status === "processed") return "processing";
+  if (status === "pending" || status === "processing" || status === "shipped" || status === "cancelled") {
+    return status;
+  }
+  return "pending";
+}
+
+export function normalizeOrder(raw: Partial<Order>): Order {
+  const address = raw.address ?? raw.customer;
+  const userEmail = (raw.userEmail ?? address?.email ?? "").toLowerCase();
+  const userName = raw.userName ?? address?.name ?? "";
+  const total = raw.total ?? raw.totalPrice ?? 0;
+  const createdAt = raw.createdAt ?? new Date().toISOString();
+
+  const purchaseCode =
+    raw.purchaseCode ??
+    generatePurchaseCode([], new Date(createdAt));
+
+  return {
+    id: raw.id ?? `order-${Date.now()}`,
+    userId: raw.userId ?? userEmail,
+    userEmail,
+    userName,
+    items: raw.items ?? [],
+    total,
+    shipping: raw.shipping ?? 0,
+    status: normalizeStatus(raw.status),
+    paymentMethod: raw.paymentMethod ?? "ramburs",
+    paymentStatus: raw.paymentStatus ?? (raw.paymentMethod === "card" ? "pending" : undefined),
+    discountCode: raw.discountCode,
+    discountAmount: raw.discountAmount,
+    awbTracking: raw.awbTracking,
+    stripeSessionId: raw.stripeSessionId,
+    confirmationEmailSent: raw.confirmationEmailSent,
+    trackingEmailSent: raw.trackingEmailSent,
+    address: {
+      name: address?.name ?? userName,
+      email: address?.email ?? userEmail,
+      phone: address?.phone ?? "",
+      address: address?.address ?? "",
+      city: address?.city ?? "",
+      notes: address?.notes ?? "",
+    },
+    purchaseCode,
+    createdAt,
+    updatedAt: raw.updatedAt ?? createdAt,
+    totalPrice: total,
+    customer: address,
+  };
+}
+
+export function searchOrders(orders: Order[], query: string): Order[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return [];
+
+  return orders.filter((order) => {
+    const code = order.purchaseCode?.toLowerCase() ?? "";
+    const id = order.id.toLowerCase();
+    const email = order.userEmail.toLowerCase();
+    return (
+      code === normalized ||
+      code.includes(normalized) ||
+      id === normalized ||
+      id.includes(normalized) ||
+      email.includes(normalized)
+    );
+  });
+}
+
+function isBrowser() {
+  return typeof window !== "undefined";
+}
+
+function cacheOrders(orders: Order[]): void {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orders.slice(0, 100)));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function getStoredOrders(): Order[] {
+  if (!isBrowser()) return [];
+
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEYS.orders);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored) as Array<Partial<Order>>;
+    return parsed.map(normalizeOrder);
+  } catch {
+    return [];
+  }
+}
+
+export async function loadOrders(email?: string): Promise<Order[]> {
+  const query = email ? `?email=${encodeURIComponent(email)}` : "";
+  const fromApi = await apiFetch<{ orders: Partial<Order>[] }>(`/api/store/orders${query}`);
+  if (fromApi?.orders) {
+    const orders = fromApi.orders.map(normalizeOrder);
+    if (!email) cacheOrders(orders);
+    return orders;
+  }
+  const stored = getStoredOrders();
+  if (email) {
+    const normalizedEmail = email.toLowerCase();
+    return stored.filter((order) => order.userEmail === normalizedEmail);
+  }
+  return stored;
+}
+
+export function getOrdersForUser(email: string): Order[] {
+  const normalizedEmail = email.toLowerCase();
+  return getStoredOrders().filter((order) => order.userEmail === normalizedEmail);
+}
+
+export async function getOrdersForUserFromApi(email: string): Promise<Order[]> {
+  return loadOrders(email);
+}
+
+export async function saveOrder(order: Order): Promise<Order | null> {
+  if (!isBrowser()) return null;
+
+  const normalized = normalizeOrder(order);
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ order: normalized }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as { order?: Partial<Order> };
+    const saved = normalizeOrder(data.order ?? normalized);
+
+    const orders = getStoredOrders();
+    orders.unshift(saved);
+    cacheOrders(orders);
+    dispatchStoreUpdate({ scope: "orders" });
+    return saved;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteOrder(orderId: string): Promise<boolean> {
+  if (!isBrowser()) return false;
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ orderId }),
+    });
+
+    if (!response.ok) return false;
+
+    const orders = getStoredOrders().filter((order) => order.id !== orderId);
+    cacheOrders(orders);
+    dispatchStoreUpdate({ scope: "orders" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function searchOrdersFromApi(query: string): Promise<Order[]> {
+  const fromApi = await apiFetch<{ orders: Partial<Order>[] }>(
+    `/api/store/orders?search=${encodeURIComponent(query)}`
+  );
+  if (fromApi?.orders) {
+    return fromApi.orders.map(normalizeOrder);
+  }
+  return searchOrders(getStoredOrders(), query);
+}
+
+export async function updateOrderAwb(orderId: string, awbTracking: string): Promise<boolean> {
+  if (!isBrowser()) return false;
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ orderId, awbTracking }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as { orders: Partial<Order>[] };
+    cacheOrders(data.orders.map(normalizeOrder));
+    dispatchStoreUpdate({ scope: "orders" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {
+  if (!isBrowser()) return false;
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ orderId, status }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as { orders: Partial<Order>[] };
+    cacheOrders(data.orders.map(normalizeOrder));
+    dispatchStoreUpdate({ scope: "orders" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getOrderStats() {
+  const orders = getStoredOrders();
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  return {
+    totalOrders: orders.length,
+    totalRevenue,
+    pendingOrders: orders.filter((order) => order.status === "pending").length,
+    processingOrders: orders.filter((order) => order.status === "processing").length,
+    shippedOrders: orders.filter((order) => order.status === "shipped").length,
+    cancelledOrders: orders.filter((order) => order.status === "cancelled").length,
+  };
+}

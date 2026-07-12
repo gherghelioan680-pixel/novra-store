@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@theme {
+  /* NOVRA premium palette — purple-tinted charcoal, lighter than pure black */
+  --color-novra-bg: #13111c;
+  --color-novra-bg-alt: #181622;
+  --color-novra-surface: #1e1e2a;
+  --color-novra-card: #252532;
+  --color-novra-elevated: #2a2a38;
+  --color-novra-border: #3a3a4a;
+  --color-novra-muted: #9494a8;
+
+  /* Fallback header heights — updated dynamically by Navbar */
+  --header-height: 148px;
+  --header-height-mobile: 148px;
+  --header-height-desktop: 156px;
+}
+
+@layer base {
+  html {
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-novra-bg text-white;
+    overflow-x: clip;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.08), transparent);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+@keyframes marquee-slow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 35s linear infinite;
+    width: max-content;
+  }
+
+  .animate-marquee-mobile {
+    animation: marquee 45s linear infinite;
+    width: max-content;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .bottom-safe {
+    bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .header-spacer {
+    height: var(--header-height, 148px);
+    max-height: 240px;
+  }
+
+  @media (min-width: 768px) {
+    .header-spacer {
+      max-height: 260px;
+    }
+  }
+
+  .pb-page {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .animate-marquee-slow {
+    animation: marquee-slow 8s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee,
+    .animate-marquee-mobile,
+    .animate-marquee-slow {
+      animation: none;
+    }
+  }
+
+  /* iOS Safari: checkbox mobile menu — peer fallback + tappable hit area */
+  .mobile-nav-toggle {
+    position: absolute;
+    opacity: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    cursor: pointer;
+    z-index: 10003;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #mobile-nav-toggle:checked ~ .mobile-nav-overlay {
+    display: block;
+  }
+
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
