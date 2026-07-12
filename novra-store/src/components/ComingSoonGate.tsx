@@ -8,8 +8,6 @@ import { parseSessionRaw, type SessionData } from "@/lib/server-auth";
 
 const DEFAULT_COMING_SOON_COUNTDOWN = "2026-08-11T23:59:59+03:00";
 
-export const dynamic = "force-dynamic";
-
 function isExemptPath(pathname: string): boolean {
   return (
     pathname.startsWith("/admin") ||
@@ -55,7 +53,7 @@ export default async function ComingSoonGate({ children }: { children: React.Rea
 
   const settings = await getServerSiteSettings();
 
-  if (!settings.comingSoon.enabled) {
+  if (settings.comingSoon.enabled !== true) {
     return children;
   }
 

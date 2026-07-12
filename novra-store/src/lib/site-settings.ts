@@ -59,10 +59,16 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 function mergeComingSoon(partial?: Partial<ComingSoonSettings>): ComingSoonSettings {
-  return {
+  const merged: ComingSoonSettings = {
     ...DEFAULT_COMING_SOON,
     ...partial,
   };
+
+  if (partial && "enabled" in partial) {
+    merged.enabled = partial.enabled === true;
+  }
+
+  return merged;
 }
 
 function isBrowser() {

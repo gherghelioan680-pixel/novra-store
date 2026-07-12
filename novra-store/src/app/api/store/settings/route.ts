@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
     const current = await readJsonFile<Partial<SiteSettings>>(FILE, DEFAULT_SETTINGS);
     const next = mergeSettings({ ...current, ...body });
     await writeJsonFile(FILE, next);
+    revalidatePath("/", "layout");
     return Response.json(next);
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });

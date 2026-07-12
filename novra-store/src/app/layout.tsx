@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from "next";
 import Providers from "@/components/Providers";
 import ComingSoonGate from "@/components/ComingSoonGate";
 
+export const dynamic = "force-dynamic";
+
 // Aceasta este metoda oficială în Next.js pentru a defini tag-ul viewport
 export const viewport: Viewport = {
   width: "device-width",
