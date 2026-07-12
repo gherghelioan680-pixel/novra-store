@@ -24,7 +24,13 @@ function CheckoutSuccessContent() {
 
     void fetch(`/api/store/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`)
       .then(async (res) => {
-        const data = (await res.json()) as { ok?: boolean; paid?: boolean; order?: Partial<Order> };
+        const data = (await res.json()) as {
+          ok?: boolean;
+          paid?: boolean;
+          order?: Partial<Order>;
+          purchaseCode?: string;
+          message?: string;
+        };
         if (data.ok && data.paid) {
           if (data.order) setOrder(normalizeOrder(data.order));
           setStatus("success");
@@ -60,6 +66,11 @@ function CheckoutSuccessContent() {
                 <p className="font-mono text-lg font-semibold text-purple-300">{order.purchaseCode}</p>
                 <CopyButton text={order.purchaseCode} label="Copiază cod" />
               </div>
+            )}
+            {!order?.purchaseCode && (
+              <p className="text-gray-400 text-sm mb-8">
+                Plata a fost procesată. Dacă nu primești emailul de confirmare în câteva minute, contactează-ne.
+              </p>
             )}
             <button
               type="button"

@@ -18,12 +18,12 @@ async function readOrders(): Promise<Order[]> {
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
   if (!sessionId) {
-    return Response.json({ error: "Missing session_id" }, { status: 400 });
+    return Response.json({ error: "Lipsește session_id." }, { status: 400 });
   }
 
   const stripe = getStripeClient();
   if (!stripe) {
-    return Response.json({ error: "Stripe not configured" }, { status: 503 });
+    return Response.json({ error: "Stripe nu este configurat." }, { status: 503 });
   }
 
   try {
@@ -42,13 +42,31 @@ export async function GET(request: NextRequest) {
     const orders = await readOrders();
     const index = orders.findIndex((o) => o.id === orderId);
     if (index === -1) {
-      return Response.json({ ok: true, paid: true, purchaseCode, order: null });
+      return Response.json({
+        ok: true,
+        paid: true,
+        purchaseCode,
+        order: null,
+        message: "Plata a fost confirmată, dar comanda nu a fost găsită în sistem.",
+      });
+    }
+
+    const existing = orders[index];
+
+    if (existing.paymentStatus === "paid") {
+      return Response.json({
+        ok: true,
+        paid: true,
+        purchaseCode: existing.purchaseCode,
+        order: existing,
+        alreadyProcessed: true,
+      });
     }
 
     const updated: Order = {
-      ...orders[index],
+      ...existing,
       paymentStatus: "paid",
-      status: orders[index].status === "pending" ? "processing" : orders[index].status,
+      status: existing.status === "pending" ? "processing" : existing.status,
       stripeSessionId: sessionId,
       updatedAt: new Date().toISOString(),
     };
@@ -61,7 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     const settings = await getServerSiteSettings();
-    if (settings.orderEmailsEnabled) {
+    if (settings.orderEmailsEnabled && !updated.confirmationEmailSent) {
       const sent = await sendOrderConfirmationEmail(updated);
       if (sent) {
         orders[index] = { ...orders[index], confirmationEmailSent: true };
@@ -73,6 +91,6 @@ export async function GET(request: NextRequest) {
     return Response.json({ ok: true, paid: true, purchaseCode: updated.purchaseCode, order: updated });
   } catch (err) {
     console.error("[stripe] verify-session error:", err);
-    return Response.json({ error: "Verificare eșuată" }, { status: 500 });
+    return Response.json({ error: "Verificarea plății a eșuat." }, { status: 500 });
   }
 }

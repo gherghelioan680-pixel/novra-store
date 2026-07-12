@@ -62,6 +62,7 @@ function CheckoutPageContent() {
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percentOff: number } | null>(null);
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
+  const [stripeError, setStripeError] = useState("");
 
   const cancelled = searchParams.get("cancelled") === "1";
   const cardAvailable = Boolean(stripeConfig?.available && cardPaymentEnabled);
@@ -207,13 +208,20 @@ function CheckoutPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("sending");
+    setStripeError("");
 
     const currentUser = getCurrentUser();
     const userEmail = (currentUser?.email ?? formData.email).trim().toLowerCase();
     const order = await buildOrder();
 
     const savedOrder = await saveOrder(order);
-    const finalOrder = savedOrder ?? order;
+    if (!savedOrder) {
+      setStripeError("Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou.");
+      setStatus("error");
+      return;
+    }
+
+    const finalOrder = savedOrder;
 
     if (currentUser) {
       addOrderIdToLocalUser(userEmail, finalOrder.id);
@@ -224,11 +232,12 @@ function CheckoutPageContent() {
         const response = await fetch("/api/store/stripe/create-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order: finalOrder }),
+          body: JSON.stringify({ orderId: finalOrder.id }),
         });
 
         const data = (await response.json()) as { url?: string; error?: string };
         if (!response.ok || !data.url) {
+          setStripeError(data.error ?? "Nu s-a putut inițializa plata cu cardul.");
           setStatus("error");
           return;
         }
@@ -237,6 +246,7 @@ function CheckoutPageContent() {
         window.location.href = data.url;
         return;
       } catch {
+        setStripeError("Eroare de rețea la conectarea cu Stripe. Încearcă din nou.");
         setStatus("error");
         return;
       }
@@ -511,7 +521,7 @@ function CheckoutPageContent() {
 
             {status === "error" && (
               <p className="text-red-400 text-sm">
-                A apărut o eroare. Te rugăm să încerci din nou.
+                {stripeError || "A apărut o eroare. Te rugăm să încerci din nou."}
               </p>
             )}
 
