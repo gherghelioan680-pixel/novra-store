@@ -1,6 +1,7 @@
 import { addNewsletterSubscriber } from "./newsletter";
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate } from "./store";
+import { getInviteRef } from "./referral-attribution";
 
 export type ShippingAddress = {
   fullName: string;
@@ -42,6 +43,10 @@ export type User = {
   profileCompleted?: boolean;
   signupBonusClaimed?: boolean;
   subscribedToNewsletter?: boolean;
+  /** Cod unic program recomandă prieten. */
+  friendReferralCode?: string;
+  /** Codul cu care utilizatorul a fost invitat. */
+  referredByCode?: string;
   loyalty?: {
     points: number;
     discount: string;
@@ -340,6 +345,7 @@ export async function registerUser(name: string, email: string, password: string
         name: trimmedName,
         email: trimmedEmail,
         password: trimmedPassword,
+        inviteCode: getInviteRef() ?? undefined,
       }),
     });
 

@@ -282,6 +282,15 @@ export async function adminAdjustCredits(
   return updateUserCreditsInternal(userEmail, delta, type, description);
 }
 
+export async function grantReferralCredits(
+  userEmail: string,
+  amount: number,
+  description: string,
+  referenceId?: string
+): Promise<{ ok: true; user: StoredUser; transaction: CreditTransaction } | { ok: false; message: string }> {
+  return updateUserCreditsInternal(userEmail, amount, "referral_reward", description, referenceId);
+}
+
 export async function adminRevokeCreditPurchase(
   purchaseId: string,
   reason?: string

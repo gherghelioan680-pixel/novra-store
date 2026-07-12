@@ -21,6 +21,7 @@ import GiftCardsView from "./views/GiftCardsView";
 import EmailPreferencesView from "./views/EmailPreferencesView";
 import SupportCenterView from "./views/SupportCenterView";
 import AffiliateProgramView from "./views/AffiliateProgramView";
+import ReferFriendView from "./views/ReferFriendView";
 
 const VALID_SECTIONS: AccountSection[] = [
   "overview",
@@ -35,6 +36,7 @@ const VALID_SECTIONS: AccountSection[] = [
   "email-preferences",
   "support-center",
   "affiliate-program",
+  "refer-friend",
 ];
 
 function isAccountSection(value: string | null): value is AccountSection {
@@ -168,6 +170,8 @@ function AccountDashboardContent() {
         return <SupportCenterView />;
       case "affiliate-program":
         return <AffiliateProgramView user={currentUser} onToast={showToast} />;
+      case "refer-friend":
+        return <ReferFriendView user={currentUser} />;
       default:
         return null;
     }

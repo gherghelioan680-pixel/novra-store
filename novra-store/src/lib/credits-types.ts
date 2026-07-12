@@ -22,7 +22,8 @@ export type CreditTransactionType =
   | "admin_adjust"
   | "signup_bonus"
   | "profile_bonus"
-  | "revoke";
+  | "revoke"
+  | "referral_reward";
 
 export type CreditTransaction = {
   id: string;

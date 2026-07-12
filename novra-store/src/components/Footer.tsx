@@ -80,6 +80,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/blog" className="hover:text-purple-400 transition">
+                Blog & Ghiduri
+              </Link>
+            </li>
+            <li>
               <Link href="/recenzii" className="hover:text-purple-400 transition">
                 Recenzii clienți
               </Link>

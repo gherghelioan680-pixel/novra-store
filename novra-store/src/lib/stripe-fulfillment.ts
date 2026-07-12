@@ -9,6 +9,7 @@ import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { recordAffiliateConversion } from "@/lib/affiliates-server";
 import { fulfillCreditPurchase } from "@/lib/credits-server";
 import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
+import { processReferralRewardsForOrder } from "@/lib/referrals-server";
 
 const ORDERS_FILE = "orders.json";
 
@@ -61,6 +62,8 @@ export async function fulfillOrderFromStripeSession(
     if (order.affiliateCode) {
       await recordAffiliateConversion(order);
     }
+
+    await processReferralRewardsForOrder(order);
 
     if (order.userEmail) {
       await markAbandonedCartCompleted(order.userEmail);

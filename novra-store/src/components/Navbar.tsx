@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/", label: "Acasă" },
   { href: "/produse", label: "Produse" },
   { href: "/promotii", label: "Promoții" },
+  { href: "/blog", label: "Ghiduri" },
   { href: "/urmareste-comanda", label: "Urmărește comanda" },
   { href: "/cos", label: "Coș" },
 ];
@@ -23,6 +24,7 @@ const mobileMenuLinks = [
   { href: "/", label: "Acasă" },
   { href: "/produse", label: "Produse" },
   { href: "/promotii", label: "Promoții" },
+  { href: "/blog", label: "Ghiduri" },
   { href: "/urmareste-comanda", label: "Urmărește comanda" },
   { href: "/cos", label: "Coș", showCartCount: true },
   { href: "/contul-meu", label: "Contul meu", icon: "user" as const },

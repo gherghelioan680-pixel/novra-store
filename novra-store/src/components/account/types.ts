@@ -10,7 +10,8 @@ export type AccountSection =
   | "gift-cards"
   | "email-preferences"
   | "support-center"
-  | "affiliate-program";
+  | "affiliate-program"
+  | "refer-friend";
 
 export type OrderFilterType = "all" | "regular" | "subscription";
 export type OrderStatusFilter = "all" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";

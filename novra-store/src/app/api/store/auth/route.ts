@@ -2,6 +2,11 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest } from "@/lib/server-auth";
 import type { User } from "@/lib/auth";
+import {
+  ensureUserReferralCode,
+  linkRefereeOnRegister,
+} from "@/lib/referrals-server";
+import { normalizeReferralCode } from "@/lib/referrals-types";
 
 export const runtime = "nodejs";
 
@@ -123,8 +128,19 @@ export async function POST(request: NextRequest) {
       }
 
       const newUser = buildRegisterUser(name, email, password);
+      const inviteCode =
+        typeof body?.inviteCode === "string" ? normalizeReferralCode(body.inviteCode) : "";
+      if (inviteCode) {
+        (newUser as StoredUser).referredByCode = inviteCode;
+      }
+
       users.push(newUser);
       await writeJsonFile(FILE, users);
+
+      await ensureUserReferralCode(newUser as StoredUser);
+      if (inviteCode) {
+        await linkRefereeOnRegister(newUser as StoredUser, inviteCode);
+      }
 
       return Response.json({
         success: true,

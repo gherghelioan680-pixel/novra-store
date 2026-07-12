@@ -16,6 +16,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "NOVRA | Precision. Performance. Power.",
   description: "Cabluri premium create pentru viteză, siguranță și performanță fără compromis.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

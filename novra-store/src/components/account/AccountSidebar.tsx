@@ -60,6 +60,7 @@ const navGroups: NavGroup[] = [
       { id: "my-novra-credits", label: "My NovraCredits", icon: Coins },
       { id: "gift-cards", label: "Gift Cards", icon: Gift },
       { id: "affiliate-program", label: "Program Afiliere", icon: Link2 },
+      { id: "refer-friend", label: "Recomandă un prieten", icon: Gift },
     ],
   },
   {

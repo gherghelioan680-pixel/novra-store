@@ -11,7 +11,7 @@ export const STORAGE_KEYS = {
 } as const;
 
 export type StoreUpdateDetail = {
-  scope?: "products" | "settings" | "reviews" | "orders" | "newsletter" | "discountCodes" | "users" | "credits" | "affiliates";
+  scope?: "products" | "settings" | "reviews" | "orders" | "newsletter" | "discountCodes" | "users" | "credits" | "affiliates" | "campaigns" | "blog" | "referrals" | "push";
 };
 
 const STORE_STORAGE_KEYS = new Set<string>(Object.values(STORAGE_KEYS));

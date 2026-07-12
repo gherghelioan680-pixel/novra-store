@@ -48,6 +48,10 @@ export type Order = {
   discountFreeShipping?: boolean;
   /** Cod afiliat care a generat această comandă. */
   affiliateCode?: string;
+  /** Slug campanie landing (reducere automată). */
+  campaignSlug?: string;
+  campaignDiscountPercent?: number;
+  campaignDiscountAmount?: number;
   awbTracking?: string;
   stripeSessionId?: string;
   confirmationEmailSent?: boolean;

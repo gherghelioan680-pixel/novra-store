@@ -10,6 +10,10 @@ import {
   ArrowRight,
   Clock,
   Shield,
+  Megaphone,
+  FileText,
+  UserPlus,
+  Bell,
 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import StatCard from "@/components/admin/StatCard";
@@ -17,9 +21,18 @@ import { requireAdmin, loadAllUsersFromServer } from "@/lib/auth";
 import { loadOrders, getOrderStats, ORDER_STATUS_LABELS, type Order } from "@/lib/orders";
 import { getCatalogProducts } from "@/lib/catalog";
 import { createStoreRefreshEffect } from "@/lib/store";
+import { loadCampaigns } from "@/lib/campaigns";
+import { loadBlogArticles } from "@/lib/blog";
+import { loadReferralsAdmin } from "@/lib/referrals";
+import { loadPushNotificationsAdmin } from "@/lib/push";
+import { isCampaignCurrentlyActive } from "@/lib/campaigns-types";
 
 const quickLinks = [
   { href: "/admin/setari#administratori", label: "Administratori", desc: "Adaugă conturi admin pentru echipă", icon: Shield },
+  { href: "/admin/campanii", label: "Campanii active", desc: "Landing pages promoționale", icon: Megaphone },
+  { href: "/admin/blog", label: "Blog & Ghiduri", desc: "Articole și conținut SEO", icon: FileText },
+  { href: "/admin/recomandari", label: "Recomandări prieteni", desc: "Statistici program invitații", icon: UserPlus },
+  { href: "/admin/notificari", label: "Notificări Push", desc: "Abonați și trimiteri", icon: Bell },
   { href: "/admin/produse", label: "Gestionează produse", desc: "Editează prețuri și catalog" },
   { href: "/admin/comenzi", label: "Vezi comenzi", desc: "Procesează și expediază" },
   { href: "/admin/clienti", label: "Clienți înregistrați", desc: "Utilizatori și NovraCredits" },
@@ -39,6 +52,12 @@ export default function AdminDashboardPage() {
     cancelledOrders: 0,
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [marketing, setMarketing] = useState({
+    activeCampaigns: 0,
+    blogPosts: 0,
+    referralConverted: 0,
+    pushSubscribers: 0,
+  });
   const admin = requireAdmin();
 
   useEffect(() => {
@@ -46,6 +65,13 @@ export default function AdminDashboardPage() {
       const orders = await loadOrders();
       const orderStats = getOrderStats();
       const customers = (await loadAllUsersFromServer()).filter((u) => u.role !== "admin");
+
+      const [campaigns, articles, referralsData, pushData] = await Promise.all([
+        loadCampaigns(),
+        loadBlogArticles(),
+        loadReferralsAdmin(),
+        loadPushNotificationsAdmin(),
+      ]);
 
       setStats({
         totalOrders: orderStats.totalOrders,
@@ -58,8 +84,14 @@ export default function AdminDashboardPage() {
         cancelledOrders: orderStats.cancelledOrders,
       });
       setRecentOrders(orders.slice(0, 5));
+      setMarketing({
+        activeCampaigns: campaigns.filter((c) => isCampaignCurrentlyActive(c)).length,
+        blogPosts: articles.filter((a) => a.published).length,
+        referralConverted: referralsData?.stats.converted ?? 0,
+        pushSubscribers: pushData?.subscriptions ?? 0,
+      });
     };
-    return createStoreRefreshEffect(refresh, { scopes: ["orders", "users", "products"] });
+    return createStoreRefreshEffect(refresh, { scopes: ["orders", "users", "products", "campaigns", "blog", "referrals", "push"] });
   }, []);
 
   if (!admin) return null;
@@ -89,6 +121,13 @@ export default function AdminDashboardPage() {
         <StatusPill label={ORDER_STATUS_LABELS.processing} count={stats.processingOrders} color="text-blue-300" />
         <StatusPill label={ORDER_STATUS_LABELS.shipped} count={stats.shippedOrders} color="text-green-300" />
         <StatusPill label={ORDER_STATUS_LABELS.cancelled} count={stats.cancelledOrders} color="text-red-300" />
+      </div>
+
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MarketingPill label="Campanii live" count={marketing.activeCampaigns} href="/admin/campanii" />
+        <MarketingPill label="Articole blog" count={marketing.blogPosts} href="/admin/blog" />
+        <MarketingPill label="Recomandări convertite" count={marketing.referralConverted} href="/admin/recomandari" />
+        <MarketingPill label="Abonați push" count={marketing.pushSubscribers} href="/admin/notificari" />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -185,5 +224,17 @@ function StatusPill({ label, count, color }: { label: string; count: number; col
       <p className={`text-2xl font-bold ${color}`}>{count}</p>
       <p className="mt-1 text-xs text-gray-500">{label}</p>
     </div>
+  );
+}
+
+function MarketingPill({ label, count, href }: { label: string; count: number; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-xl border border-purple-500/20 bg-purple-600/5 px-4 py-3 text-center transition hover:border-purple-500/40 hover:bg-purple-600/10"
+    >
+      <p className="text-2xl font-bold text-purple-300">{count}</p>
+      <p className="mt-1 text-xs text-gray-500">{label}</p>
+    </Link>
   );
 }

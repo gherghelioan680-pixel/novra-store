@@ -17,6 +17,10 @@ import {
   Search,
   Coins,
   Link2,
+  Megaphone,
+  FileText,
+  UserPlus,
+  Bell,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,6 +37,10 @@ const navItems = [
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   { href: "/admin/coduri-reducere", label: "Coduri reducere", icon: Tag },
   { href: "/admin/afiliati", label: "Program Afiliere", icon: Link2 },
+  { href: "/admin/campanii", label: "Campanii", icon: Megaphone },
+  { href: "/admin/blog", label: "Blog & Ghiduri", icon: FileText },
+  { href: "/admin/recomandari", label: "Recomandări", icon: UserPlus },
+  { href: "/admin/notificari", label: "Notificări Push", icon: Bell },
   { href: "/admin/recenzii", label: "Recenzii", icon: Star },
   { href: "/admin/setari", label: "Setări", icon: Settings },
 ];

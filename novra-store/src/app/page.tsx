@@ -29,6 +29,7 @@ import {
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useReviews } from "@/hooks/useReviews";
 import AffiliateProgramSection from "@/components/AffiliateProgramSection";
+import CampaignHomeBanner from "@/components/CampaignHomeBanner";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
@@ -218,6 +219,10 @@ export default function Home() {
       <LiveVisitors />
 
       <main className="w-full px-4 sm:px-6">
+
+      <div className="max-w-7xl mx-auto pt-6">
+        <CampaignHomeBanner />
+      </div>
 
       {/* Hero */}
       <section id="acasa" className="flex flex-col lg:flex-row items-center justify-between py-10 sm:py-16 md:py-24 max-w-7xl mx-auto gap-10 lg:gap-16">

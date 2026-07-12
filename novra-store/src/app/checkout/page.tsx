@@ -9,6 +9,8 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
 import { getAffiliateRef } from "@/lib/affiliate-attribution";
+import { getCampaignRef } from "@/lib/campaign-attribution";
+import { loadCampaignBySlug } from "@/lib/campaigns";
 import { loadProductOverrides, validateCartStock } from "@/lib/catalog";
 import CopyButton from "@/components/CopyButton";
 import { getCurrentUser, addOrderIdToLocalUser, getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
@@ -78,6 +80,11 @@ function CheckoutPageContent() {
     typeof window !== "undefined" ? getCurrentUser() : null
   );
   const [useCredits, setUseCredits] = useState(false);
+  const [campaignDiscount, setCampaignDiscount] = useState<{
+    slug: string;
+    percent: number;
+    title: string;
+  } | null>(null);
 
   const currentUser = authenticatedUser ?? getCurrentUser();
   const userCredits = getNovraCredits(currentUser);
@@ -87,6 +94,20 @@ function CheckoutPageContent() {
 
   const cancelled = searchParams.get("cancelled") === "1";
   const cardAvailable = Boolean(stripeConfig?.available && cardPaymentEnabled);
+
+  useEffect(() => {
+    const slug = getCampaignRef();
+    if (!slug) return;
+    void loadCampaignBySlug(slug).then((campaign) => {
+      if (campaign && campaign.discountPercent > 0) {
+        setCampaignDiscount({
+          slug: campaign.slug,
+          percent: campaign.discountPercent,
+          title: campaign.title,
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     void fetch("/api/store/stripe/config")
@@ -159,11 +180,16 @@ function CheckoutPageContent() {
     ? discountIncludesFreeShipping(appliedDiscount)
     : false;
 
+  const campaignDiscountAmount =
+    campaignDiscount && campaignDiscount.percent > 0
+      ? Math.round(totalPrice * (campaignDiscount.percent / 100) * 100) / 100
+      : 0;
+
   const discountAmount =
     appliedDiscount && productDiscountApplies
       ? calculateDiscountAmount(totalPrice, appliedDiscount)
       : 0;
-  const subtotalAfterDiscount = Math.max(0, totalPrice - discountAmount);
+  const subtotalAfterDiscount = Math.max(0, totalPrice - discountAmount - campaignDiscountAmount);
   const thresholdFreeShipping = subtotalAfterDiscount >= freeShippingThreshold;
   const shippingCost =
     freeShippingFromCode || thresholdFreeShipping ? 0 : deliveryCost;
@@ -190,6 +216,9 @@ function CheckoutPageContent() {
       `Subtotal: ${totalPrice.toFixed(2)} RON`,
       appliedDiscount && discountAmount > 0
         ? `Reducere (${appliedDiscount.code}): -${discountAmount.toFixed(2)} RON`
+        : "",
+      campaignDiscount && campaignDiscountAmount > 0
+        ? `Reducere campanie (${campaignDiscount.title}): -${campaignDiscountAmount.toFixed(2)} RON`
         : "",
       freeShippingFromCode && appliedDiscount
         ? `Livrare gratuită (cod ${appliedDiscount.code})`
@@ -255,6 +284,7 @@ function CheckoutPageContent() {
     const existingOrders = await loadOrders();
     const purchaseCode = generatePurchaseCode(existingOrders.map((o) => o.purchaseCode));
     const affiliateRef = getAffiliateRef();
+    const campaignSlug = campaignDiscount?.slug ?? getCampaignRef() ?? undefined;
 
     return {
       id: `order-${Date.now()}`,
@@ -284,6 +314,9 @@ function CheckoutPageContent() {
       creditsUsed: creditsToApply > 0 ? creditsToApply : undefined,
       discountCode: appliedDiscount?.code,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
+      campaignSlug,
+      campaignDiscountPercent: campaignDiscount?.percent,
+      campaignDiscountAmount: campaignDiscountAmount > 0 ? campaignDiscountAmount : undefined,
       discountFreeShipping: freeShippingFromCode || undefined,
       address: { ...formData, name: userName, email: userEmail },
       status: "pending",
@@ -767,6 +800,12 @@ function CheckoutPageContent() {
                 <div className="flex justify-between text-sm text-emerald-400">
                   <span>Reducere ({appliedDiscount.code})</span>
                   <span>−{discountAmount.toFixed(2)} RON</span>
+                </div>
+              )}
+              {campaignDiscountAmount > 0 && campaignDiscount && (
+                <div className="flex justify-between text-sm text-emerald-400">
+                  <span>Campanie ({campaignDiscount.title})</span>
+                  <span>−{campaignDiscountAmount.toFixed(2)} RON</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">

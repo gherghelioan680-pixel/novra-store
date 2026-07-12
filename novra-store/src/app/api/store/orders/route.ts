@@ -11,6 +11,12 @@ import {
   getAffiliateRefFromRequest,
   recordAffiliateConversion,
 } from "@/lib/affiliates-server";
+import {
+  getCampaignRefFromRequest,
+  findCampaignBySlug,
+  getCampaignDiscountForOrder,
+} from "@/lib/campaigns-server";
+import { processReferralRewardsForOrder } from "@/lib/referrals-server";
 import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
 
 export const runtime = "nodejs";
@@ -153,6 +159,21 @@ export async function POST(request: NextRequest) {
       order.affiliateCode = cookieRef;
     }
 
+    const cookieCampaign = getCampaignRefFromRequest(request);
+    if (!order.campaignSlug && cookieCampaign) {
+      order.campaignSlug = cookieCampaign;
+      const campaign = await findCampaignBySlug(cookieCampaign);
+      if (campaign) {
+        const subtotal = order.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+        const { percent, amount } = getCampaignDiscountForOrder(campaign, subtotal);
+        if (amount > 0 && !order.campaignDiscountAmount) {
+          order.campaignDiscountPercent = percent;
+          order.campaignDiscountAmount = amount;
+          order.total = Math.max(0, Math.round((order.total - amount) * 100) / 100);
+        }
+      }
+    }
+
     const orders = await readOrders();
     const existingCodes = orders.map((o) => o.purchaseCode).filter(Boolean);
 
@@ -225,6 +246,10 @@ export async function POST(request: NextRequest) {
 
     if (order.affiliateCode && order.paymentMethod !== "card") {
       await recordAffiliateConversion(orders[0]);
+    }
+
+    if (order.paymentMethod !== "card") {
+      await processReferralRewardsForOrder(orders[0]);
     }
 
     if (order.userEmail) {

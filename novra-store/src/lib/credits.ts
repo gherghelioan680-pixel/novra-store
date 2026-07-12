@@ -12,6 +12,7 @@ export const CREDIT_TRANSACTION_LABELS: Record<CreditTransaction["type"], string
   spend: "Plată comandă",
   admin_adjust: "Ajustare admin",
   signup_bonus: "Bonus înregistrare",
+  referral_reward: "Recompensă recomandare",
   profile_bonus: "Bonus profil complet",
   revoke: "Revocare credite",
 };
