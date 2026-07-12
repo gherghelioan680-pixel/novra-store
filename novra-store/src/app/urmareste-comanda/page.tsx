@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Package,
@@ -53,9 +53,8 @@ function TrackOrderContent() {
   const [error, setError] = useState("");
   const [order, setOrder] = useState<TrackedOrder | null>(null);
 
-  const handleSearch = async (event?: React.FormEvent) => {
-    event?.preventDefault();
-    const trimmed = code.trim().toUpperCase();
+  const fetchOrder = async (searchCode: string) => {
+    const trimmed = searchCode.trim().toUpperCase();
     if (!trimmed) {
       setError("Introdu codul comenzii.");
       return;
@@ -78,6 +77,16 @@ function TrackOrderContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!initialCode.trim()) return;
+    void fetchOrder(initialCode);
+  }, [initialCode]);
+
+  const handleSearch = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    await fetchOrder(code);
   };
 
   return (
