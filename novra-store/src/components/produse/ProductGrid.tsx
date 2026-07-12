@@ -1,6 +1,7 @@
 import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
+import { ProductGalleryCard } from "@/components/produse/ProductGalleryBox";
 import Link from "next/link";
 import type { CatalogProduct } from "@/lib/catalog";
 import { buildProductUrl, isBundleProduct } from "@/lib/catalog";
@@ -25,33 +26,35 @@ export function ProductGrid({ products }: ProductGridProps) {
         >
           <span className="flex flex-col justify-between w-full h-full">
             <span className="block">
-              <span className="h-40 rounded-lg bg-gradient-to-br from-purple-500/5 to-transparent border border-white/8 mb-3 flex items-center justify-center relative overflow-hidden block">
-                <ProductBadgesOverlay product={product} />
-                <span className="absolute top-2 right-2 bg-novra-card/40 border border-white/10 text-gray-300 text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-md font-medium">
-                  {product.tag}
-                </span>
-                <span className="relative w-28 h-28 sm:w-32 sm:h-32 block transition-transform duration-500 group-hover:scale-105">
-                  {isBundleProduct(product.category) ? (
-                    <BundleProductImages
-                      productId={product.id}
-                      adapterClassName="relative h-full w-[46%]"
-                      cableClassName="relative h-full w-[46%]"
-                      imageClassName="object-contain rounded-lg"
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <ProductImage
-                      src={product.imageSrc}
-                      category={product.category}
-                      alt={product.title}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="object-contain rounded-lg"
-                      draggable={false}
-                    />
-                  )}
-                </span>
-              </span>
+              <ProductGalleryCard
+                className="mb-3 block transition-transform duration-500 group-hover:scale-[1.02]"
+                overlay={
+                  <>
+                    <ProductBadgesOverlay product={product} />
+                    <span className="absolute top-2 right-2 z-10 bg-novra-card/40 border border-white/10 text-gray-300 text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-md font-medium">
+                      {product.tag}
+                    </span>
+                  </>
+                }
+              >
+                {isBundleProduct(product.category) ? (
+                  <BundleProductImages
+                    productId={product.id}
+                    imageClassName="object-contain object-center rounded-lg"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                  />
+                ) : (
+                  <ProductImage
+                    src={product.imageSrc}
+                    category={product.category}
+                    alt={product.title}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    className="object-contain object-center rounded-lg"
+                    draggable={false}
+                  />
+                )}
+              </ProductGalleryCard>
               <span className="font-bold text-base text-white mb-0.5 group-hover:text-purple-400 transition-colors duration-300 block line-clamp-1">
                 {product.title}
               </span>

@@ -7,13 +7,12 @@ import { Check, Cpu, Layers, Lock, ShieldCheck, ShoppingBag, X, Zap } from "luci
 import { FaWhatsapp } from "react-icons/fa";
 import type { CatalogProduct } from "@/lib/catalog";
 import {
-  BUNDLE_COLORS,
-  getAdapterColorImage,
   getAdapterProductImage,
   getBundleColorImage,
-  getCableColorImage,
 } from "@/lib/catalog";
 import ProductImage from "@/components/produse/ProductImage";
+import BundleProductImages from "@/components/produse/BundleProductImages";
+import ProductGalleryBox from "@/components/produse/ProductGalleryBox";
 
 type BundleSelection = { adapterIdx: number; cableIdx: number };
 
@@ -105,53 +104,39 @@ export function ProductModal({
           <X size={20} />
         </Link>
 
-        <div className="shrink-0 bg-gradient-to-br from-purple-500/8 to-transparent border border-white/8 rounded-2xl p-4 sm:p-5 flex items-center justify-center relative min-h-[180px] md:min-h-0 md:w-[38%]">
-          <span className="absolute top-4 left-4 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-medium">
-            {product.tag}
-          </span>
-          <div className="relative w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48">
-            {isBundleProduct(product.category) ? (
-              <div className="flex h-full items-center justify-center gap-2">
-                <div className="relative h-36 w-28 sm:h-40 sm:w-32">
-                  <ProductImage
-                    src={getAdapterColorImage(bundleSelection.adapterIdx)}
-                    category="lightning"
-                    alt={`Adaptor ${BUNDLE_COLORS[bundleSelection.adapterIdx]}`}
-                    fill
-                    className="object-contain"
-                    priority
-                    draggable={false}
-                  />
-                </div>
-                <div className="relative h-36 w-28 sm:h-40 sm:w-32">
-                  <ProductImage
-                    src={getCableColorImage(bundleSelection.cableIdx)}
-                    category="usb-c"
-                    alt={`Cablu ${BUNDLE_COLORS[bundleSelection.cableIdx]}`}
-                    fill
-                    className="object-contain"
-                    priority
-                    draggable={false}
-                  />
-                </div>
-              </div>
-            ) : (
-              <ProductImage
-                src={
-                  isAdapterProduct(product.category)
-                    ? getAdapterProductImage(product.options[activeOptionIdx])
-                    : product.imageSrc
-                }
-                category={product.category}
-                alt={product.title}
-                fill
-                className="object-contain"
-                priority
-                draggable={false}
-              />
-            )}
-          </div>
-        </div>
+        <ProductGalleryBox
+          className="w-full md:w-[38%] md:min-h-[280px] rounded-2xl"
+          overlay={
+            <span className="absolute top-4 left-4 z-10 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-medium">
+              {product.tag}
+            </span>
+          }
+        >
+          {isBundleProduct(product.category) ? (
+            <BundleProductImages
+              productId={product.id}
+              adapterIdx={bundleSelection.adapterIdx}
+              cableIdx={bundleSelection.cableIdx}
+              imageClassName="object-contain object-center"
+              priority
+            />
+          ) : (
+            <ProductImage
+              src={
+                isAdapterProduct(product.category)
+                  ? getAdapterProductImage(product.options[activeOptionIdx])
+                  : product.imageSrc
+              }
+              category={product.category}
+              alt={product.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 38vw"
+              className="object-contain object-center"
+              priority
+              draggable={false}
+            />
+          )}
+        </ProductGalleryBox>
 
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 min-h-0 pr-1">

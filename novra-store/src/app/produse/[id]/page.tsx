@@ -4,6 +4,8 @@ import { use, useState, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductImage from "@/components/produse/ProductImage";
+import BundleProductImages from "@/components/produse/BundleProductImages";
+import ProductGalleryBox from "@/components/produse/ProductGalleryBox";
 import { ArrowLeft, Check, Cpu, Layers, Lock, ShieldCheck, ShoppingBag, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
@@ -172,50 +174,38 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
         </Link>
 
         <article className="bg-novra-surface border border-white/10 rounded-t-2xl sm:rounded-xl p-3 sm:p-5 md:p-6 flex flex-col md:flex-row gap-3 md:gap-6 -mx-4 sm:mx-0">
-          <div className="shrink-0 bg-gradient-to-br from-purple-500/8 to-transparent border border-white/8 rounded-xl p-3 sm:p-4 flex items-center justify-center relative min-h-[140px] md:w-[36%]">
-            <ProductBadgesOverlay product={product} />
-            <span className="absolute top-3 right-3 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium">
-              {product.tag}
-            </span>
-            <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40">
-              {isBundleProduct(product.category) ? (
-                <div className="flex h-full items-center justify-center gap-2">
-                  <div className="relative h-28 w-24 sm:h-32 sm:w-28">
-                    <ProductImage
-                      src={getAdapterColorImage(bundleSelection.adapterIdx)}
-                      category="lightning"
-                      alt={`Adaptor ${BUNDLE_COLORS[bundleSelection.adapterIdx]}`}
-                      fill
-                      className="object-contain rounded-xl"
-                      priority
-                      draggable={false}
-                    />
-                  </div>
-                  <div className="relative h-28 w-24 sm:h-32 sm:w-28">
-                    <ProductImage
-                      src={getCableColorImage(bundleSelection.cableIdx)}
-                      category="usb-c"
-                      alt={`Cablu ${BUNDLE_COLORS[bundleSelection.cableIdx]}`}
-                      fill
-                      className="object-contain rounded-xl"
-                      priority
-                      draggable={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <ProductImage
-                  src={getCurrentProductImage()}
-                  category={product.category}
-                  alt={product.title}
-                  fill
-                  className="object-contain rounded-xl"
-                  priority
-                  draggable={false}
-                />
-              )}
-            </div>
-          </div>
+          <ProductGalleryBox
+            className="w-full md:w-[38%] md:min-h-[320px]"
+            overlay={
+              <>
+                <ProductBadgesOverlay product={product} />
+                <span className="absolute top-3 right-3 z-10 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium">
+                  {product.tag}
+                </span>
+              </>
+            }
+          >
+            {isBundleProduct(product.category) ? (
+              <BundleProductImages
+                productId={product.id}
+                adapterIdx={bundleSelection.adapterIdx}
+                cableIdx={bundleSelection.cableIdx}
+                imageClassName="object-contain object-center rounded-lg"
+                priority
+              />
+            ) : (
+              <ProductImage
+                src={getCurrentProductImage()}
+                category={product.category}
+                alt={product.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 38vw"
+                className="object-contain object-center rounded-lg"
+                priority
+                draggable={false}
+              />
+            )}
+          </ProductGalleryBox>
 
           <div className="flex-1 flex flex-col">
             <h1 className="font-bold tracking-tight text-white mb-1 text-lg md:text-xl">{product.title}</h1>

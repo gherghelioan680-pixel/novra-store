@@ -8,6 +8,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductImage from "@/components/produse/ProductImage";
+import BundleProductImages from "@/components/produse/BundleProductImages";
 import { useCart } from "@/context/CartContext";
 import {
   BUNDLE_COLORS,
@@ -16,7 +17,6 @@ import {
   getAdapterColorImage,
   getBundleColorImage,
   getBundleVariantLabel,
-  getCableColorImage,
   getProductsByCategory,
   type CatalogProduct,
 } from "@/lib/catalog";
@@ -108,32 +108,21 @@ export default function Accesorii() {
                 }`}
               >
                 {/* Imagine Produs */}
-                <div className="flex-1 w-full bg-gradient-to-br from-purple-500/8 to-transparent border border-white/8 rounded-3xl p-6 sm:p-8 relative flex items-center justify-center overflow-hidden h-[280px] sm:h-[340px] lg:h-[400px] group">
+                <div className="flex-1 w-full bg-gradient-to-br from-purple-500/8 to-transparent border border-white/8 rounded-3xl relative overflow-hidden aspect-square sm:aspect-[4/5] lg:aspect-auto lg:h-[400px] group">
                   <span className="absolute top-4 left-4 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-medium z-10">
                     {product.tag}
                   </span>
 
-                  <div className="absolute inset-0 bg-purple-500/0 group-hover:bg-purple-500/5 blur-xl transition-all duration-700 rounded-full scale-75"></div>
+                  <div className="absolute inset-0 bg-purple-500/0 group-hover:bg-purple-500/5 blur-xl transition-all duration-700 rounded-full scale-75 pointer-events-none" />
 
-                  <div className="relative flex h-72 w-72 items-center justify-center gap-3 transition-transform duration-700 group-hover:scale-105">
-                    <div className="relative h-56 w-40">
-                      <ProductImage
-                        src={getAdapterColorImage(selection.adapterIdx)}
-                        category="lightning"
-                        alt={`Adaptor ${BUNDLE_COLORS[selection.adapterIdx]}`}
-                        fill
+                  <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+                    <div className="relative h-full w-full min-h-0 transition-transform duration-700 group-hover:scale-[1.02]">
+                      <BundleProductImages
+                        productId={product.id}
+                        adapterIdx={selection.adapterIdx}
+                        cableIdx={selection.cableIdx}
+                        imageClassName="object-contain object-center"
                         sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-contain"
-                      />
-                    </div>
-                    <div className="relative h-56 w-40">
-                      <ProductImage
-                        src={getCableColorImage(selection.cableIdx)}
-                        category="usb-c"
-                        alt={`Cablu ${BUNDLE_COLORS[selection.cableIdx]}`}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-contain"
                       />
                     </div>
                   </div>

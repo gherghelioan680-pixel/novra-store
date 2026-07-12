@@ -875,26 +875,27 @@ function ProductCard({
       className="group relative bg-novra-card/40 border border-white/8 rounded-2xl p-5 sm:p-6 hover:border-purple-500/40 hover:bg-novra-card/60 transition-all duration-500 overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
-      <div className="h-48 sm:h-56 rounded-xl mb-4 sm:mb-5 flex items-center justify-center overflow-hidden relative border border-white/5 bg-gradient-to-br from-purple-500/5 to-transparent">
-        {isBundle ? (
-          <BundleProductImages
-            productId={productId}
-            className="relative h-full w-full max-w-[220px] flex items-center justify-center gap-2 p-4"
-            adapterClassName="relative h-full w-[46%]"
-            cableClassName="relative h-full w-[46%]"
-            imageClassName="object-contain group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-        ) : (
-          <ProductImage
-            src={imageSrc}
-            category={categoryId}
-            alt={title}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-          />
-        )}
+      <div className="h-48 sm:h-56 rounded-xl mb-4 sm:mb-5 overflow-hidden relative border border-white/5 bg-gradient-to-br from-purple-500/5 to-transparent">
+        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3">
+          <div className="relative h-full w-full min-h-0">
+            {isBundle ? (
+              <BundleProductImages
+                productId={productId}
+                imageClassName="object-contain object-center group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            ) : (
+              <ProductImage
+                src={imageSrc}
+                category={categoryId}
+                alt={title}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-contain object-center group-hover:scale-105 transition-transform duration-500"
+              />
+            )}
+          </div>
+        </div>
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
           {bestseller && (
             <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-600/90 to-orange-500/85 border border-amber-500/40 text-white shadow-lg">
