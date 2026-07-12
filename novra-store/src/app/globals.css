@@ -157,4 +157,53 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
+
+  .prose-novra {
+    @apply text-gray-300 leading-relaxed;
+  }
+
+  .prose-novra h2 {
+    @apply text-2xl font-bold text-white mt-10 mb-4 tracking-tight;
+  }
+
+  .prose-novra h3 {
+    @apply text-xl font-semibold text-white mt-8 mb-3;
+  }
+
+  .prose-novra h4 {
+    @apply text-lg font-semibold text-gray-200 mt-6 mb-2;
+  }
+
+  .prose-novra p {
+    @apply text-gray-300 leading-relaxed mb-5 text-[1.05rem];
+  }
+
+  .prose-novra ul {
+    @apply list-disc list-outside ml-5 space-y-2.5 text-gray-300 my-5;
+  }
+
+  .prose-novra li {
+    @apply pl-1 leading-relaxed;
+  }
+
+  .prose-novra strong {
+    @apply text-white font-semibold;
+  }
+
+  .prose-novra em {
+    @apply text-purple-200/90 italic;
+  }
+
+  .prose-novra a {
+    @apply text-purple-400 hover:text-purple-300 underline underline-offset-2 transition;
+  }
+
+  .blog-hero-gradient {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(19, 17, 28, 0.4) 40%,
+      rgba(19, 17, 28, 0.92) 100%
+    );
+  }
 }

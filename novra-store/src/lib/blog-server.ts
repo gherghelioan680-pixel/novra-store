@@ -1,6 +1,7 @@
 import "server-only";
 
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
+import { DEFAULT_BLOG_ARTICLE_TEMPLATES } from "@/lib/blog-seed";
 import { BLOG_STORAGE_FILE, normalizeBlogSlug, type BlogArticle } from "@/lib/blog-types";
 
 function nowIso(): string {
@@ -11,8 +12,24 @@ function buildArticleId(): string {
   return `blog-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function seedArticles(): BlogArticle[] {
+  const ts = nowIso();
+  return DEFAULT_BLOG_ARTICLE_TEMPLATES.map((template, index) => ({
+    ...template,
+    id: `blog-seed-${template.slug}`,
+    createdAt: new Date(Date.now() - index * 86_400_000).toISOString(),
+    updatedAt: ts,
+  }));
+}
+
 export async function readBlogArticles(): Promise<BlogArticle[]> {
-  return readJsonFile<BlogArticle[]>(BLOG_STORAGE_FILE, []);
+  const stored = await readJsonFile<BlogArticle[]>(BLOG_STORAGE_FILE, []);
+  if (stored.length === 0) {
+    const seeded = seedArticles();
+    await writeBlogArticles(seeded);
+    return seeded;
+  }
+  return stored;
 }
 
 export async function writeBlogArticles(articles: BlogArticle[]): Promise<void> {

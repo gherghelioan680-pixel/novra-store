@@ -4,15 +4,25 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getPublishedArticles } from "@/lib/blog-server";
-import { BookOpen, ArrowRight, Tag } from "lucide-react";
+import { estimateReadingTime, formatReadingTime } from "@/lib/blog-utils";
+import { BookOpen, ArrowRight, Tag, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Ghiduri & Blog — NOVRA",
   description: "Ghiduri, sfaturi și noutăți despre cabluri premium, încărcare rapidă și accesorii NOVRA.",
 };
 
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ro-RO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default async function BlogListingPage() {
   const articles = await getPublishedArticles();
+  const [featured, ...rest] = articles;
 
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
@@ -32,56 +42,117 @@ export default async function BlogListingPage() {
         {articles.length === 0 ? (
           <p className="text-center text-gray-500 py-16">Articolele vor apărea în curând.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
-            {articles.map((article) => (
+          <div className="space-y-8">
+            {featured && (
               <Link
-                key={article.id}
-                href={`/blog/${article.slug}`}
-                className="group rounded-2xl border border-white/10 bg-novra-card/30 overflow-hidden transition hover:border-purple-500/30 hover:bg-novra-card/50"
+                href={`/blog/${featured.slug}`}
+                className="group block rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-950/40 via-novra-card/40 to-novra-bg overflow-hidden transition hover:border-purple-500/40"
               >
-                {article.coverImageUrl && (
-                  <div className="relative aspect-[16/9] bg-novra-bg/50">
-                    <Image
-                      src={article.coverImageUrl}
-                      alt={article.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 50vw"
-                    />
-                  </div>
-                )}
-                <div className="p-5">
-                  {article.categories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {article.categories.slice(0, 2).map((cat) => (
-                        <span
-                          key={cat}
-                          className="inline-flex items-center gap-1 rounded-full bg-purple-600/15 px-2 py-0.5 text-[10px] font-medium text-purple-300"
-                        >
-                          <Tag size={10} />
-                          {cat}
-                        </span>
-                      ))}
+                <div className="grid md:grid-cols-2 gap-0">
+                  {featured.coverImageUrl && (
+                    <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[280px] bg-novra-bg/50">
+                      <Image
+                        src={featured.coverImageUrl}
+                        alt={featured.title}
+                        fill
+                        className="object-cover transition duration-500 group-hover:scale-[1.02]"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-novra-bg/60 via-transparent to-transparent md:hidden" />
                     </div>
                   )}
-                  <h2 className="text-lg font-semibold text-white group-hover:text-purple-300 transition">
-                    {article.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-400 line-clamp-2">{article.excerpt}</p>
-                  <p className="mt-3 text-xs text-gray-500">
-                    {new Date(article.createdAt).toLocaleDateString("ro-RO", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-sm text-purple-400 group-hover:gap-2 transition-all">
-                    Citește articolul
-                    <ArrowRight size={14} />
-                  </span>
+                  <div className="p-6 sm:p-8 flex flex-col justify-center">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-400 mb-3">
+                      Articol recomandat
+                    </span>
+                    {featured.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {featured.categories.slice(0, 2).map((cat) => (
+                          <span
+                            key={cat}
+                            className="inline-flex items-center gap-1 rounded-full bg-purple-600/15 px-2.5 py-0.5 text-[10px] font-medium text-purple-300"
+                          >
+                            <Tag size={10} />
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white group-hover:text-purple-200 transition leading-tight">
+                      {featured.title}
+                    </h2>
+                    <p className="mt-3 text-gray-400 line-clamp-3 leading-relaxed">{featured.excerpt}</p>
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                      <span>{formatDate(featured.createdAt)}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={12} />
+                        {formatReadingTime(estimateReadingTime(featured.content))}
+                      </span>
+                    </div>
+                    <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-purple-400 group-hover:gap-2 transition-all">
+                      Citește ghidul complet
+                      <ArrowRight size={14} />
+                    </span>
+                  </div>
                 </div>
               </Link>
-            ))}
+            )}
+
+            {rest.length > 0 && (
+              <div className="grid gap-6 sm:grid-cols-2">
+                {rest.map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/blog/${article.slug}`}
+                    className="group rounded-2xl border border-white/10 bg-novra-card/30 overflow-hidden transition hover:border-purple-500/30 hover:bg-novra-card/50"
+                  >
+                    {article.coverImageUrl && (
+                      <div className="relative aspect-[16/9] bg-novra-bg/50 overflow-hidden">
+                        <Image
+                          src={article.coverImageUrl}
+                          alt={article.title}
+                          fill
+                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-novra-bg/70 via-transparent to-transparent opacity-60" />
+                      </div>
+                    )}
+                    <div className="p-5">
+                      {article.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {article.categories.slice(0, 2).map((cat) => (
+                            <span
+                              key={cat}
+                              className="inline-flex items-center gap-1 rounded-full bg-purple-600/15 px-2 py-0.5 text-[10px] font-medium text-purple-300"
+                            >
+                              <Tag size={10} />
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <h2 className="text-lg font-semibold text-white group-hover:text-purple-300 transition">
+                        {article.title}
+                      </h2>
+                      <p className="mt-2 text-sm text-gray-400 line-clamp-2">{article.excerpt}</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                        <span>{formatDate(article.createdAt)}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock size={11} />
+                          {formatReadingTime(estimateReadingTime(article.content))}
+                        </span>
+                      </div>
+                      <span className="mt-3 inline-flex items-center gap-1 text-sm text-purple-400 group-hover:gap-2 transition-all">
+                        Citește articolul
+                        <ArrowRight size={14} />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
