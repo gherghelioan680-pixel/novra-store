@@ -491,11 +491,26 @@ export default function AdminSetariPage() {
               />
               <span className="text-sm text-gray-300">Activează „Plată cu cardul” la checkout</span>
             </label>
+            {!integrations?.stripe.configured && (
+              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90 leading-relaxed">
+                Adaugă cheile în Vercel Environment Variables (sau în <code className="text-amber-100">.env.local</code>{" "}
+                local), apoi redeploy:
+                <br />
+                <code className="text-amber-100">STRIPE_SECRET_KEY</code> (secret, server) și{" "}
+                <code className="text-amber-100">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> (publishable, client).
+              </p>
+            )}
             <p className="text-xs text-gray-500 leading-relaxed">
-              Cheile Stripe se configurează prin variabile de mediu:{" "}
-              <code className="text-purple-300">STRIPE_SECRET_KEY</code> și{" "}
-              <code className="text-purple-300">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>.
-              Dacă lipsesc, opțiunea card rămâne dezactivată fără a afecta checkout-ul.
+              Cheile se obțin din{" "}
+              <a
+                href="https://dashboard.stripe.com/apikeys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-400 hover:text-purple-300 underline"
+              >
+                Stripe Dashboard → API keys
+              </a>
+              . Dacă lipsesc, opțiunea card rămâne indisponibilă; rambursul funcționează normal.
             </p>
             <button
               type="button"

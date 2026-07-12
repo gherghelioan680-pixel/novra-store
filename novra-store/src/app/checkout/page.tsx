@@ -490,7 +490,8 @@ function CheckoutPageContent() {
               </div>
               {cardPaymentEnabled && !cardAvailable && stripeConfig !== null && (
                 <p className="mt-2 text-xs text-amber-400/90">
-                  Plata cu cardul necesită configurarea cheilor Stripe (STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY).
+                  Plata cu cardul nu este disponibilă momentan. Administratorul trebuie să adauge cheile Stripe în
+                  Vercel Environment Variables.
                 </p>
               )}
             </div>
