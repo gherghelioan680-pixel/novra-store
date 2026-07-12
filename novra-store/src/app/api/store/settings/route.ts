@@ -10,7 +10,11 @@ const FILE = "settings.json";
 
 export async function GET() {
   const stored = await readJsonFile<Partial<SiteSettings>>(FILE, DEFAULT_SETTINGS);
-  return Response.json(mergeSettings(stored));
+  return Response.json(mergeSettings(stored), {
+    headers: {
+      "Cache-Control": "no-store, must-revalidate",
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
