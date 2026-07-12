@@ -13,14 +13,45 @@ export class StorageUnavailableError extends Error {
   }
 }
 
+function kvEnv(): { url: string | undefined; token: string | undefined } {
+  return {
+    url: process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN,
+  };
+}
+
 function isKvConfigured(): boolean {
-  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+  const { url, token } = kvEnv();
   return Boolean(url && token);
 }
 
-function isVercelRuntime(): boolean {
-  return Boolean(process.env.VERCEL);
+function isServerlessRuntime(): boolean {
+  return (
+    process.env.VERCEL === "1" ||
+    Boolean(process.env.VERCEL_ENV) ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    process.cwd().startsWith("/var/task")
+  );
+}
+
+function requireKvOnServerless(): void {
+  if (isServerlessRuntime() && !isKvConfigured()) {
+    const { url, token } = kvEnv();
+    const missing: string[] = [];
+    if (!url) missing.push("KV_REST_API_URL or UPSTASH_REDIS_REST_URL");
+    if (!token) missing.push("KV_REST_API_TOKEN or UPSTASH_REDIS_REST_TOKEN");
+    throw new StorageUnavailableError(
+      `Persistent storage requires Upstash Redis on Vercel. Missing: ${missing.join(", ")}.`
+    );
+  }
+}
+
+function assertNotServerlessFilesystem(): void {
+  if (isServerlessRuntime()) {
+    throw new StorageUnavailableError(
+      "Filesystem storage is not available on Vercel. Configure Upstash Redis (KV_REST_API_URL + KV_REST_API_TOKEN)."
+    );
+  }
 }
 
 function toKvKey(filename: string): string {
@@ -32,11 +63,12 @@ function getDataFilePath(filename: string): string {
 }
 
 async function ensureLocalDataDir(): Promise<void> {
+  assertNotServerlessFilesystem();
   await fs.mkdir(DATA_DIR, { recursive: true });
 }
 
 async function readFromFilesystem<T>(filename: string): Promise<T | null> {
-  await ensureLocalDataDir();
+  assertNotServerlessFilesystem();
   const filePath = getDataFilePath(filename);
 
   try {
@@ -50,14 +82,14 @@ async function readFromFilesystem<T>(filename: string): Promise<T | null> {
 }
 
 async function writeToFilesystem<T>(filename: string, data: T): Promise<void> {
+  assertNotServerlessFilesystem();
   await ensureLocalDataDir();
   const filePath = getDataFilePath(filename);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
 }
 
 async function getRedisClient() {
-  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+  const { url, token } = kvEnv();
   if (!url || !token) return null;
 
   const { Redis } = await import("@upstash/redis");
@@ -66,7 +98,11 @@ async function getRedisClient() {
 
 async function readFromKv<T>(filename: string): Promise<T | null> {
   const redis = await getRedisClient();
-  if (!redis) return null;
+  if (!redis) {
+    throw new StorageUnavailableError(
+      "Upstash Redis client could not be initialized. Check KV_REST_API_URL and KV_REST_API_TOKEN."
+    );
+  }
   return redis.get<T>(toKvKey(filename));
 }
 
@@ -74,36 +110,24 @@ async function writeToKv<T>(filename: string, data: T): Promise<void> {
   const redis = await getRedisClient();
   if (!redis) {
     throw new StorageUnavailableError(
-      "KV_REST_API_URL and KV_REST_API_TOKEN must be set on Vercel for persistent storage."
+      "Upstash Redis client could not be initialized. Check KV_REST_API_URL and KV_REST_API_TOKEN."
     );
   }
   await redis.set(toKvKey(filename), data);
 }
 
-function assertWritableStorage(): void {
-  if (isVercelRuntime() && !isKvConfigured()) {
-    throw new StorageUnavailableError(
-      "KV_REST_API_URL and KV_REST_API_TOKEN must be set on Vercel for persistent storage."
-    );
-  }
-}
-
 export async function storageGet<T>(filename: string): Promise<T | null> {
+  requireKvOnServerless();
+
   if (isKvConfigured()) {
     return readFromKv<T>(filename);
-  }
-
-  if (isVercelRuntime()) {
-    throw new StorageUnavailableError(
-      "KV_REST_API_URL and KV_REST_API_TOKEN must be set on Vercel for persistent storage."
-    );
   }
 
   return readFromFilesystem<T>(filename);
 }
 
 export async function storageSet<T>(filename: string, data: T): Promise<void> {
-  assertWritableStorage();
+  requireKvOnServerless();
 
   if (isKvConfigured()) {
     await writeToKv(filename, data);
@@ -117,6 +141,6 @@ export function usesKvStorage(): boolean {
   return isKvConfigured();
 }
 
-export function isServerlessRuntime(): boolean {
-  return isVercelRuntime();
+export function isVercelRuntime(): boolean {
+  return isServerlessRuntime();
 }

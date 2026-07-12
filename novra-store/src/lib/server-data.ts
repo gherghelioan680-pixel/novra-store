@@ -1,6 +1,6 @@
 import "server-only";
 
-import { storageGet, storageSet, usesKvStorage } from "@/lib/storage";
+import { isVercelRuntime, storageGet, storageSet, usesKvStorage } from "@/lib/storage";
 
 export async function readJsonFile<T>(filename: string, defaultValue: T): Promise<T> {
   const stored = await storageGet<T>(filename);
@@ -8,7 +8,8 @@ export async function readJsonFile<T>(filename: string, defaultValue: T): Promis
     return stored;
   }
 
-  if (!usesKvStorage()) {
+  // Seed local dev files only — never write to disk on Vercel/serverless.
+  if (!usesKvStorage() && !isVercelRuntime()) {
     await storageSet(filename, defaultValue);
   }
 
