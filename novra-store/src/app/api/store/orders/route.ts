@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     orders.unshift(order);
     await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
 
-    if (order.userEmail) {
+    if (order.userEmail && !order.isGuest && !order.userId.startsWith("guest-")) {
       await addOrderToUser(order.id, order.userEmail);
     }
 

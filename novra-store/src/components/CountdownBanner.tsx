@@ -106,9 +106,9 @@ export default function CountdownBanner() {
 
   if (mounted && !campaignActive) return null;
 
-  const promoParts = settings.campaignDiscountText.split(" — ");
-  const promoTitle = promoParts[0] || settings.campaignDiscountText;
-  const promoSubtitle = promoParts.slice(1).join(" — ");
+  const offer = settings.limitedOffer;
+  const promoTitle = offer.title;
+  const promoSubtitle = offer.subtitle;
 
   return (
     <div className="relative z-[52] w-full shrink-0 overflow-hidden border-b border-purple-500/25 bg-gradient-to-r from-fuchsia-950/90 via-purple-900/95 to-violet-950/90">
@@ -129,7 +129,7 @@ export default function CountdownBanner() {
           <span className="inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[9px] min-[360px]:text-[10px] sm:text-xs font-bold uppercase tracking-wider px-1.5 min-[360px]:px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-lg shadow-orange-500/20 shrink-0 whitespace-nowrap">
             <Flame size={10} className="shrink-0 min-[360px]:hidden" aria-hidden />
             <Flame size={11} className="shrink-0 hidden min-[360px]:block" aria-hidden />
-            Ofertă limitată
+            {offer.badgeLabel}
           </span>
           <p className="text-[9px] min-[360px]:text-[10px] sm:text-sm text-purple-100/90 min-w-0 truncate">
             <span className="font-semibold text-white">{promoTitle}</span>
@@ -145,7 +145,7 @@ export default function CountdownBanner() {
               <Clock size={11} className="shrink-0 sm:hidden" aria-hidden />
               <Clock size={12} className="shrink-0 hidden sm:block" aria-hidden />
               <span className="text-[8px] min-[360px]:text-[9px] sm:text-xs font-medium uppercase tracking-wide whitespace-nowrap">
-                Timp rămas
+                {offer.countdownLabel}
               </span>
             </div>
 
@@ -179,10 +179,10 @@ export default function CountdownBanner() {
           </div>
 
           <Link
-            href="/promotii"
+            href={offer.ctaHref}
             className="inline-flex items-center justify-center gap-1 bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/15 text-white text-[9px] min-[360px]:text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1.5 sm:py-1.5 rounded-full transition-colors duration-200 shrink-0 touch-manipulation whitespace-nowrap min-h-9 min-w-[4.5rem] sm:min-h-0 sm:min-w-0"
           >
-            Vezi ofertele
+            {offer.ctaText}
           </Link>
         </div>
       </div>

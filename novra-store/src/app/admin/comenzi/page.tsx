@@ -11,6 +11,7 @@ import {
   updateOrderStatus,
   updateOrderAwb,
   deleteOrder,
+  isGuestOrder,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
   type Order,
@@ -116,6 +117,11 @@ export default function AdminComenziPage() {
                     >
                       {order.purchaseCode}
                     </Link>
+                    {isGuestOrder(order) && (
+                      <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-300">
+                        Guest
+                      </span>
+                    )}
                     <CopyButton text={order.purchaseCode} label="Copiază cod" />
                   </div>
                   <p className="mt-2 font-mono text-xs text-purple-300">{order.id}</p>

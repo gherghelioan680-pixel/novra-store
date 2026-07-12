@@ -7,8 +7,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CopyButton from "@/components/CopyButton";
 import type { Order } from "@/lib/orders";
-import { normalizeOrder } from "@/lib/orders";
+import { normalizeOrder, isGuestOrder } from "@/lib/orders";
 import { useCart } from "@/context/CartContext";
+import { getCurrentUser } from "@/lib/auth";
+import GuestAccountPrompt from "@/components/checkout/GuestAccountPrompt";
 
 function CheckoutSuccessContent() {
   const router = useRouter();
@@ -79,6 +81,9 @@ function CheckoutSuccessContent() {
               <p className="text-gray-400 text-sm mb-8">
                 Plata a fost procesată. Dacă nu primești emailul de confirmare în câteva minute, contactează-ne.
               </p>
+            )}
+            {order && isGuestOrder(order) && !getCurrentUser() && (
+              <GuestAccountPrompt order={order} />
             )}
             <button
               type="button"

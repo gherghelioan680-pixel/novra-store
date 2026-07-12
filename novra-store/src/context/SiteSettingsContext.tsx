@@ -16,6 +16,12 @@ function settingsEqual(a: SiteSettings, b: SiteSettings): boolean {
     a.campaignEndDate === b.campaignEndDate &&
     a.campaignActive === b.campaignActive &&
     a.campaignDiscountText === b.campaignDiscountText &&
+    a.limitedOffer.badgeLabel === b.limitedOffer.badgeLabel &&
+    a.limitedOffer.title === b.limitedOffer.title &&
+    a.limitedOffer.subtitle === b.limitedOffer.subtitle &&
+    a.limitedOffer.countdownLabel === b.limitedOffer.countdownLabel &&
+    a.limitedOffer.ctaText === b.limitedOffer.ctaText &&
+    a.limitedOffer.ctaHref === b.limitedOffer.ctaHref &&
     a.whatsappNumber === b.whatsappNumber &&
     a.freeShippingThreshold === b.freeShippingThreshold &&
     a.deliveryCost === b.deliveryCost &&

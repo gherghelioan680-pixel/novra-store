@@ -10,10 +10,29 @@ export type ComingSoonSettings = {
   showNewsletter?: boolean;
 };
 
+export type LimitedOfferSettings = {
+  badgeLabel: string;
+  title: string;
+  subtitle: string;
+  countdownLabel: string;
+  ctaText: string;
+  ctaHref: string;
+};
+
+export const DEFAULT_LIMITED_OFFER: LimitedOfferSettings = {
+  badgeLabel: "Ofertă limitată",
+  title: "1 lună live",
+  subtitle: "reduceri exclusive la produsele NOVRA",
+  countdownLabel: "Timp rămas",
+  ctaText: "Vezi ofertele",
+  ctaHref: "/promotii",
+};
+
 export type SiteSettings = {
   campaignEndDate: string;
   campaignActive: boolean;
   campaignDiscountText: string;
+  limitedOffer: LimitedOfferSettings;
   whatsappNumber: string;
   freeShippingThreshold: number;
   deliveryCost: number;
@@ -44,10 +63,37 @@ export const DEFAULT_MARKETING_TICKER_MESSAGES = [
   "Pachet Cablu + Adaptor de la 159,99 Lei",
 ];
 
+function parseLegacyDiscountText(text: string): { title: string; subtitle: string } {
+  const parts = text.split(" — ");
+  return {
+    title: parts[0]?.trim() || text.trim(),
+    subtitle: parts.slice(1).join(" — ").trim(),
+  };
+}
+
+function mergeLimitedOffer(
+  partial?: Partial<LimitedOfferSettings>,
+  legacyDiscountText?: string
+): LimitedOfferSettings {
+  const legacy = parseLegacyDiscountText(legacyDiscountText ?? DEFAULT_SETTINGS.campaignDiscountText);
+  const merged: LimitedOfferSettings = {
+    ...DEFAULT_LIMITED_OFFER,
+    title: legacy.title,
+    subtitle: legacy.subtitle,
+    ...partial,
+  };
+
+  if (!merged.title.trim()) merged.title = DEFAULT_LIMITED_OFFER.title;
+  if (!merged.ctaHref.startsWith("/")) merged.ctaHref = `/${merged.ctaHref.replace(/^\//, "")}`;
+
+  return merged;
+}
+
 const DEFAULT_SETTINGS: SiteSettings = {
   campaignEndDate: "2026-08-11T23:59:59+03:00",
   campaignActive: true,
   campaignDiscountText: "1 lună live — reduceri exclusive la produsele NOVRA",
+  limitedOffer: DEFAULT_LIMITED_OFFER,
   whatsappNumber: "40743033323",
   freeShippingThreshold: 200,
   deliveryCost: 19.99,
@@ -76,7 +122,7 @@ function isBrowser() {
 }
 
 function mergeSettings(partial: Partial<SiteSettings>): SiteSettings {
-  return {
+  const merged = {
     ...DEFAULT_SETTINGS,
     ...partial,
     comingSoon: mergeComingSoon(partial.comingSoon),
@@ -85,6 +131,17 @@ function mergeSettings(partial: Partial<SiteSettings>): SiteSettings {
         ? partial.marketingTickerMessages
         : DEFAULT_SETTINGS.marketingTickerMessages,
   };
+
+  merged.limitedOffer = mergeLimitedOffer(
+    partial.limitedOffer,
+    partial.campaignDiscountText ?? merged.campaignDiscountText
+  );
+
+  merged.campaignDiscountText = merged.limitedOffer.subtitle
+    ? `${merged.limitedOffer.title} — ${merged.limitedOffer.subtitle}`
+    : merged.limitedOffer.title;
+
+  return merged;
 }
 
 function cacheSettings(settings: SiteSettings): void {
@@ -185,4 +242,8 @@ export function getComingSoonCountdownDate(): Date | null {
   return parseIsoDate(comingSoon.countdownDate ?? getSiteSettings().campaignEndDate);
 }
 
-export { DEFAULT_SETTINGS, mergeSettings };
+export function getLimitedOfferSettings(): LimitedOfferSettings {
+  return mergeLimitedOffer(getSiteSettings().limitedOffer, getSiteSettings().campaignDiscountText);
+}
+
+export { DEFAULT_SETTINGS, mergeSettings, mergeLimitedOffer };

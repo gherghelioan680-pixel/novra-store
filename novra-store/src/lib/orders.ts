@@ -29,6 +29,8 @@ export type Order = {
   userId: string;
   userEmail: string;
   userName: string;
+  /** Comandă plasată fără cont (guest checkout). */
+  isGuest?: boolean;
   items: OrderItem[];
   total: number;
   shipping: number;
@@ -126,6 +128,7 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     discountCode: raw.discountCode,
     discountAmount: raw.discountAmount,
     discountFreeShipping: raw.discountFreeShipping,
+    isGuest: raw.isGuest ?? raw.userId?.startsWith("guest-"),
     awbTracking: raw.awbTracking,
     stripeSessionId: raw.stripeSessionId,
     confirmationEmailSent: raw.confirmationEmailSent,
@@ -313,6 +316,10 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   } catch {
     return false;
   }
+}
+
+export function isGuestOrder(order: Pick<Order, "isGuest" | "userId">): boolean {
+  return Boolean(order.isGuest || order.userId.startsWith("guest-"));
 }
 
 export function getOrderStats() {

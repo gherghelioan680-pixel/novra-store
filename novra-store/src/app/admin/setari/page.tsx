@@ -17,6 +17,7 @@ import {
   saveSiteSettings,
   DEFAULT_MARKETING_TICKER_MESSAGES,
   DEFAULT_COMING_SOON,
+  DEFAULT_LIMITED_OFFER,
   type SiteSettings,
 } from "@/lib/site-settings";
 import { subscribeToStoreUpdates } from "@/lib/store";
@@ -130,6 +131,9 @@ export default function AdminSetariPage() {
 
     const result = await saveSiteSettings({
       ...settings,
+      campaignDiscountText: settings.limitedOffer.subtitle
+        ? `${settings.limitedOffer.title} — ${settings.limitedOffer.subtitle}`
+        : settings.limitedOffer.title,
       comingSoon: {
         ...settings.comingSoon,
         ...(parsedCountdown
@@ -417,6 +421,9 @@ export default function AdminSetariPage() {
 
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">Campanie / Ofertă limitată</h2>
+          <p className="mb-4 text-sm text-gray-400">
+            Conținutul bannerului „Ofertă limitată” de pe site. Modificările apar imediat în CountdownBanner.
+          </p>
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -452,22 +459,136 @@ export default function AdminSetariPage() {
                 }}
                 className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
               />
+              <div className="mt-3">
+                <CountdownPreview countdownDate={settings.campaignEndDate} />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                Text promoție (CountdownBanner)
+                Etichetă badge
               </label>
               <input
                 type="text"
-                value={settings.campaignDiscountText}
+                value={settings.limitedOffer.badgeLabel}
                 onChange={(e) => {
                   markDirty();
-                  setSettings((prev) => ({ ...prev, campaignDiscountText: e.target.value }));
+                  setSettings((prev) => ({
+                    ...prev,
+                    limitedOffer: { ...prev.limitedOffer, badgeLabel: e.target.value },
+                  }));
                 }}
+                placeholder={DEFAULT_LIMITED_OFFER.badgeLabel}
                 className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
               />
             </div>
+
+            <div>
+              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                Titlu promoție
+              </label>
+              <input
+                type="text"
+                value={settings.limitedOffer.title}
+                onChange={(e) => {
+                  markDirty();
+                  setSettings((prev) => ({
+                    ...prev,
+                    limitedOffer: { ...prev.limitedOffer, title: e.target.value },
+                  }));
+                }}
+                placeholder={DEFAULT_LIMITED_OFFER.title}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                Subtitlu / descriere
+              </label>
+              <input
+                type="text"
+                value={settings.limitedOffer.subtitle}
+                onChange={(e) => {
+                  markDirty();
+                  setSettings((prev) => ({
+                    ...prev,
+                    limitedOffer: { ...prev.limitedOffer, subtitle: e.target.value },
+                  }));
+                }}
+                placeholder={DEFAULT_LIMITED_OFFER.subtitle}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                Etichetă countdown
+              </label>
+              <input
+                type="text"
+                value={settings.limitedOffer.countdownLabel}
+                onChange={(e) => {
+                  markDirty();
+                  setSettings((prev) => ({
+                    ...prev,
+                    limitedOffer: { ...prev.limitedOffer, countdownLabel: e.target.value },
+                  }));
+                }}
+                placeholder={DEFAULT_LIMITED_OFFER.countdownLabel}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                  Text buton CTA
+                </label>
+                <input
+                  type="text"
+                  value={settings.limitedOffer.ctaText}
+                  onChange={(e) => {
+                    markDirty();
+                    setSettings((prev) => ({
+                      ...prev,
+                      limitedOffer: { ...prev.limitedOffer, ctaText: e.target.value },
+                    }));
+                  }}
+                  placeholder={DEFAULT_LIMITED_OFFER.ctaText}
+                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                  Link CTA
+                </label>
+                <input
+                  type="text"
+                  value={settings.limitedOffer.ctaHref}
+                  onChange={(e) => {
+                    markDirty();
+                    setSettings((prev) => ({
+                      ...prev,
+                      limitedOffer: { ...prev.limitedOffer, ctaHref: e.target.value },
+                    }));
+                  }}
+                  placeholder={DEFAULT_LIMITED_OFFER.ctaHref}
+                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                handleSaveSettings("Oferta limitată a fost salvată. Bannerul este actualizat pe site.")
+              }
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
+            >
+              <Save size={16} />
+              Salvează oferta limitată
+            </button>
           </div>
         </section>
 

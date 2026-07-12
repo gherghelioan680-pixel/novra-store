@@ -930,6 +930,62 @@ export async function addAdminNote(
   }
 }
 
+export async function createAccountFromGuestOrder(orderId: string, password: string) {
+  const trimmedPassword = password.trim();
+
+  if (!orderId.trim() || !trimmedPassword) {
+    return { success: false, message: "Completează parola pentru a crea contul." };
+  }
+
+  if (trimmedPassword.length < 6) {
+    return { success: false, message: "Parola trebuie să aibă cel puțin 6 caractere." };
+  }
+
+  if (!canUseLocalStorage()) {
+    return { success: false, message: STORAGE_UNAVAILABLE_MSG };
+  }
+
+  try {
+    const response = await fetch("/api/store/auth/guest-register", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ orderId: orderId.trim(), password: trimmedPassword }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      user?: SafeUser;
+    };
+
+    if (!response.ok || !data.success || !data.user) {
+      return {
+        success: false,
+        message: data.message ?? "Nu s-a putut crea contul. Încearcă din nou.",
+      };
+    }
+
+    const newUser = mergeServerUserWithPassword(data.user, trimmedPassword);
+    const savedUsers = upsertLocalUser(newUser);
+    if (!savedUsers.ok) {
+      return { success: false, message: savedUsers.message };
+    }
+
+    const savedSession = setCurrentUser(newUser);
+    if (!savedSession.ok) {
+      return { success: false, message: savedSession.message };
+    }
+
+    return {
+      success: true,
+      message: data.message ?? "Cont creat cu succes.",
+      user: newUser,
+    };
+  } catch {
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
+  }
+}
+
 export function addOrderIdToLocalUser(email: string, orderId: string): void {
   if (!isBrowser()) return;
 

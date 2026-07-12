@@ -9,7 +9,9 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
 import CopyButton from "@/components/CopyButton";
-import { getCurrentUser, addOrderIdToLocalUser } from "@/lib/auth";
+import { getCurrentUser, addOrderIdToLocalUser, type User } from "@/lib/auth";
+import CheckoutAuthSection, { type CheckoutAuthMode } from "@/components/checkout/CheckoutAuthSection";
+import GuestAccountPrompt from "@/components/checkout/GuestAccountPrompt";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   calculateDiscountAmount,
@@ -69,6 +71,13 @@ function CheckoutPageContent() {
   const [discountError, setDiscountError] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
   const [stripeError, setStripeError] = useState("");
+  const [authMode, setAuthMode] = useState<CheckoutAuthMode>("guest");
+  const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(() =>
+    typeof window !== "undefined" ? getCurrentUser() : null
+  );
+
+  const currentUser = authenticatedUser ?? getCurrentUser();
+  const canShowCheckoutForm = Boolean(currentUser) || authMode === "guest";
 
   const cancelled = searchParams.get("cancelled") === "1";
   const cardAvailable = Boolean(stripeConfig?.available && cardPaymentEnabled);
@@ -196,10 +205,11 @@ function CheckoutPageContent() {
 
   const buildOrder = async (): Promise<Order> => {
     const now = new Date().toISOString();
-    const currentUser = getCurrentUser();
-    const userEmail = (currentUser?.email ?? formData.email).trim().toLowerCase();
-    const userId = currentUser?.id ?? userEmail;
+    const activeUser = getCurrentUser();
+    const userEmail = (activeUser?.email ?? formData.email).trim().toLowerCase();
     const userName = formData.name.trim();
+    const isGuest = !activeUser && authMode === "guest";
+    const userId = isGuest ? `guest-${Date.now()}` : (activeUser?.id ?? userEmail);
 
     const existingOrders = await loadOrders();
     const purchaseCode = generatePurchaseCode(existingOrders.map((o) => o.purchaseCode));
@@ -209,6 +219,7 @@ function CheckoutPageContent() {
       userId,
       userEmail,
       userName,
+      isGuest: isGuest || undefined,
       createdAt: now,
       updatedAt: now,
       purchaseCode,
@@ -235,8 +246,8 @@ function CheckoutPageContent() {
     setStatus("sending");
     setStripeError("");
 
-    const currentUser = getCurrentUser();
-    const userEmail = (currentUser?.email ?? formData.email).trim().toLowerCase();
+    const activeUser = getCurrentUser();
+    const userEmail = (activeUser?.email ?? formData.email).trim().toLowerCase();
     const order = await buildOrder();
 
     const savedOrder = await saveOrder(order);
@@ -248,7 +259,7 @@ function CheckoutPageContent() {
 
     const finalOrder = savedOrder;
 
-    if (currentUser) {
+    if (activeUser) {
       addOrderIdToLocalUser(userEmail, finalOrder.id);
     }
 
@@ -321,6 +332,9 @@ function CheckoutPageContent() {
               <p className="text-xs text-gray-500">Păstrează acest cod pentru referință</p>
             </div>
           )}
+          {placedOrder?.isGuest && !getCurrentUser() && (
+            <GuestAccountPrompt order={placedOrder} />
+          )}
           <button
             type="button"
             onClick={() => router.push("/produse")}
@@ -361,7 +375,25 @@ function CheckoutPageContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          <form onSubmit={handleSubmit} className="space-y-5 order-2 lg:order-1">
+          <div className="order-2 lg:order-1">
+            <CheckoutAuthSection
+              mode={authMode}
+              onModeChange={setAuthMode}
+              onAuthSuccess={(user) => {
+                setAuthenticatedUser(user);
+                setFormData({
+                  name: user.name,
+                  email: user.email,
+                  phone: user.phone ?? user.shippingAddress?.phone ?? "",
+                  address: user.shippingAddress?.addressLine ?? user.address ?? "",
+                  city: user.shippingAddress?.city ?? "",
+                  notes: "",
+                });
+              }}
+            />
+
+            {canShowCheckoutForm ? (
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* form fields - same as before */}
             <div>
               <label htmlFor="checkout-name" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
@@ -602,6 +634,12 @@ function CheckoutPageContent() {
                     : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
             </button>
           </form>
+            ) : (
+              <p className="rounded-xl border border-white/10 bg-novra-card/20 px-4 py-4 text-sm text-gray-400">
+                Autentifică-te sau creează un cont pentru a continua, sau alege „Continuă fără cont”.
+              </p>
+            )}
+          </div>
 
           <div className="bg-novra-card/30 border border-white/8 rounded-2xl p-5 sm:p-6 h-fit order-1 lg:order-2">
             <h2 className="text-sm uppercase tracking-widest text-gray-500 font-semibold mb-4">
