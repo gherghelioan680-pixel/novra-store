@@ -3,13 +3,13 @@
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CheckCircle, CreditCard, Banknote, Tag, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, CreditCard, Banknote, Tag, Loader2, Coins } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
 import CopyButton from "@/components/CopyButton";
-import { getCurrentUser, addOrderIdToLocalUser, type User } from "@/lib/auth";
+import { getCurrentUser, addOrderIdToLocalUser, getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import CheckoutAuthSection, { type CheckoutAuthMode } from "@/components/checkout/CheckoutAuthSection";
 import GuestAccountPrompt from "@/components/checkout/GuestAccountPrompt";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -75,8 +75,12 @@ function CheckoutPageContent() {
   const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(() =>
     typeof window !== "undefined" ? getCurrentUser() : null
   );
+  const [useCredits, setUseCredits] = useState(false);
 
   const currentUser = authenticatedUser ?? getCurrentUser();
+  const userCredits = getNovraCredits(currentUser);
+  const canUseCredits = Boolean(currentUser) && userCredits > 0;
+
   const canShowCheckoutForm = Boolean(currentUser) || authMode === "guest";
 
   const cancelled = searchParams.get("cancelled") === "1";
@@ -140,7 +144,13 @@ function CheckoutPageContent() {
   const thresholdFreeShipping = subtotalAfterDiscount >= freeShippingThreshold;
   const shippingCost =
     freeShippingFromCode || thresholdFreeShipping ? 0 : deliveryCost;
-  const orderTotal = subtotalAfterDiscount + shippingCost;
+  const totalBeforeCredits = subtotalAfterDiscount + shippingCost;
+  const creditsToApply =
+    useCredits && canUseCredits
+      ? Math.min(userCredits, Math.round(totalBeforeCredits * 100) / 100)
+      : 0;
+  const orderTotal = Math.max(0, totalBeforeCredits - creditsToApply);
+  const fullyPaidWithCredits = creditsToApply > 0 && orderTotal === 0;
 
   const formatOrderMessage = (purchaseCode?: string) => {
     const lines = items.map(
@@ -161,9 +171,16 @@ function CheckoutPageContent() {
       freeShippingFromCode && appliedDiscount
         ? `Livrare gratuită (cod ${appliedDiscount.code})`
         : `Livrare: ${shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}`,
+      creditsToApply > 0 ? `NovraCredits: -${creditsToApply.toFixed(2)} RON` : "",
       `Total: ${orderTotal.toFixed(2)} RON`,
       "",
-      `Metodă plată: ${paymentMethod === "card" ? "Plată cu cardul" : "Ramburs (numerar la livrare)"}`,
+      `Metodă plată: ${
+        fullyPaidWithCredits
+          ? "NovraCredits"
+          : paymentMethod === "card"
+            ? "Plată cu cardul"
+            : "Ramburs (numerar la livrare)"
+      }`,
       "",
       "Date livrare:",
       `Nume: ${formData.name}`,
@@ -210,6 +227,7 @@ function CheckoutPageContent() {
     const userName = formData.name.trim();
     const isGuest = !activeUser && authMode === "guest";
     const userId = isGuest ? `guest-${Date.now()}` : (activeUser?.id ?? userEmail);
+    const effectivePaymentMethod = fullyPaidWithCredits ? "credits" : paymentMethod;
 
     const existingOrders = await loadOrders();
     const purchaseCode = generatePurchaseCode(existingOrders.map((o) => o.purchaseCode));
@@ -231,8 +249,14 @@ function CheckoutPageContent() {
       })),
       total: orderTotal,
       shipping: shippingCost,
-      paymentMethod,
-      paymentStatus: paymentMethod === "card" ? "pending" : undefined,
+      paymentMethod: effectivePaymentMethod,
+      paymentStatus:
+        effectivePaymentMethod === "credits"
+          ? "paid"
+          : effectivePaymentMethod === "card"
+            ? "pending"
+            : undefined,
+      creditsUsed: creditsToApply > 0 ? creditsToApply : undefined,
       discountCode: appliedDiscount?.code,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
       discountFreeShipping: freeShippingFromCode || undefined,
@@ -252,7 +276,11 @@ function CheckoutPageContent() {
 
     const savedOrder = await saveOrder(order);
     if (!savedOrder) {
-      setStripeError("Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou.");
+      setStripeError(
+        creditsToApply > 0
+          ? "Comanda nu a putut fi salvată. Verifică soldul NovraCredits și conexiunea."
+          : "Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou."
+      );
       setStatus("error");
       return;
     }
@@ -261,9 +289,12 @@ function CheckoutPageContent() {
 
     if (activeUser) {
       addOrderIdToLocalUser(userEmail, finalOrder.id);
+      if (creditsToApply > 0) {
+        await refreshCurrentUserFromServer();
+      }
     }
 
-    if (paymentMethod === "card" && cardAvailable) {
+    if (paymentMethod === "card" && cardAvailable && !fullyPaidWithCredits) {
       try {
         const response = await fetch("/api/store/stripe/create-session", {
           method: "POST",
@@ -529,6 +560,34 @@ function CheckoutPageContent() {
               {discountError && <p className="mt-2 text-xs text-red-400">{discountError}</p>}
             </div>
 
+            {canUseCredits && (
+              <div className="rounded-xl border border-purple-500/20 bg-purple-600/5 p-4">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={useCredits}
+                    onChange={(e) => setUseCredits(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-white/20 bg-novra-surface text-purple-600 focus:ring-purple-500"
+                  />
+                  <div className="flex-1">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Coins size={16} className="text-purple-400" />
+                      Folosește NovraCredits
+                    </span>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Sold disponibil: {userCredits} NovraCredits
+                      {useCredits && creditsToApply > 0 && (
+                        <span className="text-emerald-400">
+                          {" "}
+                          · Se aplică {creditsToApply.toFixed(2)} Lei
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </label>
+              </div>
+            )}
+
             <div>
               <span className="text-xs uppercase tracking-widest text-gray-500 block mb-3">
                 Metodă de plată *
@@ -536,9 +595,12 @@ function CheckoutPageContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("ramburs")}
+                  onClick={() => !fullyPaidWithCredits && setPaymentMethod("ramburs")}
+                  disabled={fullyPaidWithCredits}
                   className={`flex items-center gap-3 p-4 min-h-11 rounded-xl border text-left transition-all touch-manipulation ${
-                    paymentMethod === "ramburs"
+                    fullyPaidWithCredits ? "opacity-50 cursor-not-allowed" : ""
+                  } ${
+                    paymentMethod === "ramburs" || fullyPaidWithCredits
                       ? "bg-purple-600/10 border-purple-500 text-white"
                       : "bg-novra-surface/70 border-white/10 text-gray-300 hover:border-white/20"
                   }`}
@@ -552,12 +614,12 @@ function CheckoutPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => cardAvailable && setPaymentMethod("card")}
-                  disabled={!cardAvailable}
+                  onClick={() => !fullyPaidWithCredits && cardAvailable && setPaymentMethod("card")}
+                  disabled={!cardAvailable || fullyPaidWithCredits}
                   className={`flex items-center gap-3 p-4 min-h-11 rounded-xl border text-left transition-all touch-manipulation ${
-                    !cardAvailable ? "opacity-50 cursor-not-allowed" : ""
+                    !cardAvailable || fullyPaidWithCredits ? "opacity-50 cursor-not-allowed" : ""
                   } ${
-                    paymentMethod === "card"
+                    paymentMethod === "card" && !fullyPaidWithCredits
                       ? "bg-purple-600/10 border-purple-500 text-white"
                       : "bg-novra-surface/70 border-white/10 text-gray-300 hover:border-white/20"
                   }`}
@@ -571,7 +633,12 @@ function CheckoutPageContent() {
                   </div>
                 </button>
               </div>
-              {cardPaymentEnabled && !cardAvailable && stripeConfig !== null && (
+              {fullyPaidWithCredits && (
+                <p className="mt-2 text-xs text-emerald-400">
+                  Comanda va fi plătită integral cu NovraCredits.
+                </p>
+              )}
+              {cardPaymentEnabled && !cardAvailable && !fullyPaidWithCredits && stripeConfig !== null && (
                 <p className="mt-2 text-xs text-amber-400/90">
                   Plata cu cardul nu este disponibilă momentan. Administratorul trebuie să adauge cheile Stripe în
                   Vercel Environment Variables.
@@ -629,9 +696,11 @@ function CheckoutPageContent() {
                 ? "Redirecționare către Stripe..."
                 : status === "sending"
                   ? "Se procesează..."
-                  : paymentMethod === "card" && cardAvailable
-                    ? `Plătește acum (${orderTotal.toFixed(2)} RON)`
-                    : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
+                  : fullyPaidWithCredits
+                    ? `Plătește cu NovraCredits`
+                    : paymentMethod === "card" && cardAvailable && !fullyPaidWithCredits
+                      ? `Plătește acum (${orderTotal.toFixed(2)} RON)`
+                      : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
             </button>
           </form>
             ) : (
@@ -685,9 +754,21 @@ function CheckoutPageContent() {
                   Livrare gratuită pentru comenzi peste {freeShippingThreshold} RON
                 </p>
               )}
+              {creditsToApply > 0 && (
+                <div className="flex justify-between text-sm text-emerald-400">
+                  <span>NovraCredits</span>
+                  <span>−{creditsToApply.toFixed(2)} RON</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-gray-300">
                 <span>Plată</span>
-                <span>{paymentMethod === "card" ? "Plată cu cardul" : "Ramburs"}</span>
+                <span>
+                  {fullyPaidWithCredits
+                    ? "NovraCredits"
+                    : paymentMethod === "card"
+                      ? "Plată cu cardul"
+                      : "Ramburs"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Total</span>

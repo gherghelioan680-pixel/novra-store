@@ -14,6 +14,7 @@ import {
   X,
   ExternalLink,
   Search,
+  Coins,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/admin/comenzi", label: "Comenzi", icon: ShoppingBag },
   { href: "/admin/cautare", label: "Căutare", icon: Search },
   { href: "/admin/clienti", label: "Clienți", icon: Users },
+  { href: "/admin/credite", label: "Gift Cards & Credite", icon: Coins },
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   { href: "/admin/coduri-reducere", label: "Coduri reducere", icon: Tag },
   { href: "/admin/recenzii", label: "Recenzii", icon: Star },

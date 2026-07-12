@@ -15,6 +15,11 @@ import {
   type SafeUser,
 } from "@/lib/auth";
 import {
+  loadAllCreditPurchasesAdmin,
+  type CreditPurchaseClient,
+} from "@/lib/credits";
+import { apiFetch } from "@/lib/api-client";
+import {
   loadOrders,
   updateOrderStatus,
   ORDER_STATUS_COLORS,
@@ -35,6 +40,10 @@ export default function AdminClientDetailPage() {
 
   const [customer, setCustomer] = useState<SafeUser | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [creditPurchases, setCreditPurchases] = useState<CreditPurchaseClient[]>([]);
+  const [coupons, setCoupons] = useState<
+    Array<{ code: string; valueLabel: string; status: string }>
+  >([]);
   const [creditsAmount, setCreditsAmount] = useState("50");
   const [creditsReason, setCreditsReason] = useState("");
   const [adminNote, setAdminNote] = useState("");
@@ -66,10 +75,20 @@ export default function AdminClientDetailPage() {
 
     const allOrders = await loadOrders(email);
     setOrders(allOrders);
+
+    const allPurchases = await loadAllCreditPurchasesAdmin();
+    setCreditPurchases(
+      allPurchases.filter((p) => p.userEmail.toLowerCase() === email.toLowerCase())
+    );
+
+    const couponData = await apiFetch<{
+      coupons: Array<{ code: string; valueLabel: string; status: string }>;
+    }>(`/api/store/coupons?email=${encodeURIComponent(email)}`);
+    setCoupons(couponData?.coupons ?? []);
   };
 
   useEffect(() => {
-    return createStoreRefreshEffect(refresh, { scopes: ["users", "orders"] });
+    return createStoreRefreshEffect(refresh, { scopes: ["users", "orders", "credits", "discountCodes"] });
   }, [email]);
 
   if (!admin) return null;
@@ -277,7 +296,48 @@ export default function AdminClientDetailPage() {
             <Mail size={18} className="text-purple-400" />
             <h2 className="font-semibold text-white">Cupoane & Gift Cards</h2>
           </div>
-          <p className="text-sm text-gray-500">Funcționalitate în dezvoltare — 0 cupoane, 0 gift cards.</p>
+          {coupons.length === 0 && creditPurchases.length === 0 ? (
+            <p className="text-sm text-gray-500">Niciun cupon sau achiziție Gift Card.</p>
+          ) : (
+            <div className="space-y-4">
+              {coupons.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs uppercase tracking-widest text-gray-500">
+                    Cupoane ({coupons.length})
+                  </p>
+                  <div className="space-y-2">
+                    {coupons.map((c) => (
+                      <div
+                        key={c.code}
+                        className="flex items-center justify-between rounded-lg bg-novra-bg/30 px-3 py-2 text-sm"
+                      >
+                        <span className="font-mono text-purple-300">{c.code}</span>
+                        <span className="text-xs text-gray-500">{c.valueLabel} · {c.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {creditPurchases.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs uppercase tracking-widest text-gray-500">
+                    Achiziții Gift Card ({creditPurchases.length})
+                  </p>
+                  <div className="space-y-2">
+                    {creditPurchases.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between rounded-lg bg-novra-bg/30 px-3 py-2 text-sm"
+                      >
+                        <span className="text-white">{p.amount} Lei</span>
+                        <span className="text-xs text-gray-500">{p.status} · {formatDate(p.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">

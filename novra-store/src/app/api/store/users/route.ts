@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import type { User } from "@/lib/auth";
+import { adminAdjustCredits } from "@/lib/credits-server";
 
 export const runtime = "nodejs";
 
@@ -88,13 +89,19 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    const current = users[index];
+    let user = users[index];
 
-    if (typeof body.creditsDelta === "number") {
-      const currentCredits = current.novraCredits ?? current.loyalty?.points ?? 0;
-      const newCredits = Math.max(0, currentCredits + body.creditsDelta);
-      current.novraCredits = newCredits;
-      current.loyalty = { ...current.loyalty, points: newCredits, discount: current.loyalty?.discount ?? "0%" };
+    if (typeof body.creditsDelta === "number" && body.creditsDelta !== 0) {
+      const adjustResult = await adminAdjustCredits(
+        email,
+        body.creditsDelta,
+        typeof body.adminNote === "string" ? body.adminNote : undefined
+      );
+      if (!adjustResult.ok) {
+        return Response.json({ error: adjustResult.message }, { status: 400 });
+      }
+      user = adjustResult.user;
+      users[index] = user;
     }
 
     const profileFields = [
@@ -112,25 +119,28 @@ export async function PATCH(request: NextRequest) {
 
     for (const field of profileFields) {
       if (body[field] !== undefined) {
-        (current as Record<string, unknown>)[field] = body[field];
+        (user as Record<string, unknown>)[field] = body[field];
       }
     }
 
-    if (current.firstName || current.lastName) {
-      current.name = [current.firstName, current.lastName].filter(Boolean).join(" ").trim() || current.name;
+    if (user.firstName || user.lastName) {
+      user.name = [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.name;
     }
 
-    if (typeof body.adminNote === "string" && body.adminNote.trim()) {
-      const existing = current.adminNotes ?? "";
+    const creditsNoteUsed =
+      typeof body.creditsDelta === "number" && body.creditsDelta !== 0 && typeof body.adminNote === "string";
+
+    if (typeof body.adminNote === "string" && body.adminNote.trim() && !creditsNoteUsed) {
+      const existing = user.adminNotes ?? "";
       const timestamp = new Date().toLocaleString("ro-RO");
-      current.adminNotes = existing
+      user.adminNotes = existing
         ? `${existing}\n[${timestamp}] ${body.adminNote.trim()}`
         : `[${timestamp}] ${body.adminNote.trim()}`;
     }
 
-    users[index] = current;
+    users[index] = user;
     await writeJsonFile(FILE, users);
-    return Response.json({ ok: true, user: stripPassword(current) });
+    return Response.json({ ok: true, user: stripPassword(user) });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

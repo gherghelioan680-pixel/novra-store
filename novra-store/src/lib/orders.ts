@@ -35,8 +35,10 @@ export type Order = {
   total: number;
   shipping: number;
   status: OrderStatus;
-  paymentMethod: "card" | "ramburs";
+  paymentMethod: "card" | "ramburs" | "credits";
   paymentStatus?: PaymentStatus;
+  /** NovraCredits aplicați la această comandă. */
+  creditsUsed?: number;
   address: OrderAddress;
   purchaseCode: string;
   discountCode?: string;
@@ -141,6 +143,7 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     status: normalizeStatus(raw.status),
     paymentMethod: raw.paymentMethod ?? "ramburs",
     paymentStatus: raw.paymentStatus ?? (raw.paymentMethod === "card" ? "pending" : undefined),
+    creditsUsed: raw.creditsUsed,
     discountCode: raw.discountCode,
     discountAmount: raw.discountAmount,
     discountFreeShipping: raw.discountFreeShipping,

@@ -5,6 +5,7 @@ import { normalizeOrder, generatePurchaseCode, type Order, type OrderStatus } fr
 import { trySendOrderConfirmationEmail, sendTrackingEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
+import { spendCredits } from "@/lib/credits-server";
 
 export const runtime = "nodejs";
 
@@ -148,8 +149,38 @@ export async function POST(request: NextRequest) {
       order.purchaseCode = generatePurchaseCode(existingCodes);
     }
 
+    const session = getSessionFromRequest(request);
+    const creditsUsed = typeof order.creditsUsed === "number" ? Math.round(order.creditsUsed) : 0;
+
+    if (creditsUsed > 0) {
+      if (!session?.email) {
+        return Response.json(
+          { error: "Trebuie să fii autentificat pentru a folosi NovraCredits." },
+          { status: 401 }
+        );
+      }
+      if (order.userEmail.toLowerCase() !== session.email.toLowerCase()) {
+        return Response.json({ error: "Email comandă invalid." }, { status: 400 });
+      }
+      if (order.isGuest || order.userId.startsWith("guest-")) {
+        return Response.json(
+          { error: "NovraCredits sunt disponibile doar pentru conturi înregistrate." },
+          { status: 400 }
+        );
+      }
+    }
+
     orders.unshift(order);
     await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
+
+    if (creditsUsed > 0 && session?.email) {
+      const spendResult = await spendCredits(session.email, creditsUsed, order.id);
+      if (!spendResult.ok) {
+        orders.shift();
+        await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
+        return Response.json({ error: spendResult.message }, { status: 400 });
+      }
+    }
 
     if (order.userEmail && !order.isGuest && !order.userId.startsWith("guest-")) {
       await addOrderToUser(order.id, order.userEmail);

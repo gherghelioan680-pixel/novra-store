@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCurrentUser, logoutUser, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -20,12 +21,38 @@ import GiftCardsView from "./views/GiftCardsView";
 import EmailPreferencesView from "./views/EmailPreferencesView";
 import SupportCenterView from "./views/SupportCenterView";
 
-export default function AccountDashboard() {
+const VALID_SECTIONS: AccountSection[] = [
+  "overview",
+  "my-profile",
+  "my-orders",
+  "my-returns",
+  "manage-account",
+  "shipping-address",
+  "my-coupons",
+  "my-novra-credits",
+  "gift-cards",
+  "email-preferences",
+  "support-center",
+];
+
+function isAccountSection(value: string | null): value is AccountSection {
+  return Boolean(value && VALID_SECTIONS.includes(value as AccountSection));
+}
+
+function AccountDashboardContent() {
+  const searchParams = useSearchParams();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState<AccountSection>("overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    const sectionParam = searchParams.get("section");
+    if (isAccountSection(sectionParam)) {
+      setActiveSection(sectionParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const init = async () => {
@@ -40,7 +67,7 @@ export default function AccountDashboard() {
     return createStoreRefreshEffect(async () => {
       const refreshed = await refreshCurrentUserFromServer();
       if (refreshed) setCurrentUser(refreshed);
-    }, { scopes: ["users"] });
+    }, { scopes: ["users", "credits"] });
   }, []);
 
   const handleAuthSuccess = (user: User, message: string) => {
@@ -194,5 +221,13 @@ export default function AccountDashboard() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function AccountDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-novra-bg" />}>
+      <AccountDashboardContent />
+    </Suspense>
   );
 }
