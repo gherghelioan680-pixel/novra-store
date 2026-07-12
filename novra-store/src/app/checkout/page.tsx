@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
+import { getAffiliateRef } from "@/lib/affiliate-attribution";
 import { loadProductOverrides, validateCartStock } from "@/lib/catalog";
 import CopyButton from "@/components/CopyButton";
 import { getCurrentUser, addOrderIdToLocalUser, getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
@@ -232,6 +233,7 @@ function CheckoutPageContent() {
 
     const existingOrders = await loadOrders();
     const purchaseCode = generatePurchaseCode(existingOrders.map((o) => o.purchaseCode));
+    const affiliateRef = getAffiliateRef();
 
     return {
       id: `order-${Date.now()}`,
@@ -264,6 +266,7 @@ function CheckoutPageContent() {
       discountFreeShipping: freeShippingFromCode || undefined,
       address: { ...formData, name: userName, email: userEmail },
       status: "pending",
+      affiliateCode: affiliateRef ?? undefined,
     };
   };
 

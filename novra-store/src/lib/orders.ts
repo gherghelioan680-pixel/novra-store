@@ -46,6 +46,8 @@ export type Order = {
   discountAmount?: number;
   /** Livrare gratuită aplicată prin cod reducere. */
   discountFreeShipping?: boolean;
+  /** Cod afiliat care a generat această comandă. */
+  affiliateCode?: string;
   awbTracking?: string;
   stripeSessionId?: string;
   confirmationEmailSent?: boolean;
@@ -148,6 +150,7 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     discountCode: raw.discountCode,
     discountAmount: raw.discountAmount,
     discountFreeShipping: raw.discountFreeShipping,
+    affiliateCode: raw.affiliateCode,
     isGuest: raw.isGuest ?? raw.userId?.startsWith("guest-"),
     awbTracking: raw.awbTracking,
     stripeSessionId: raw.stripeSessionId,

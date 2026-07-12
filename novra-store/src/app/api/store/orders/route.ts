@@ -7,6 +7,10 @@ import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { spendCredits } from "@/lib/credits-server";
 import { decrementStockForOrderItems, restoreStockForOrderItems } from "@/lib/stock-server";
+import {
+  getAffiliateRefFromRequest,
+  recordAffiliateConversion,
+} from "@/lib/affiliates-server";
 
 export const runtime = "nodejs";
 
@@ -143,6 +147,11 @@ export async function POST(request: NextRequest) {
     }
 
     const order = normalizeOrder(body.order as Partial<Order>);
+    const cookieRef = getAffiliateRefFromRequest(request);
+    if (!order.affiliateCode && cookieRef) {
+      order.affiliateCode = cookieRef;
+    }
+
     const orders = await readOrders();
     const existingCodes = orders.map((o) => o.purchaseCode).filter(Boolean);
 
@@ -211,6 +220,10 @@ export async function POST(request: NextRequest) {
         orders[0] = { ...orders[0], confirmationEmailSent: true };
         await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
       }
+    }
+
+    if (order.affiliateCode && order.paymentMethod !== "card") {
+      await recordAffiliateConversion(orders[0]);
     }
 
     return Response.json({ ok: true, order: orders[0] });

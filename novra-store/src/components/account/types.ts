@@ -9,7 +9,8 @@ export type AccountSection =
   | "my-novra-credits"
   | "gift-cards"
   | "email-preferences"
-  | "support-center";
+  | "support-center"
+  | "affiliate-program";
 
 export type OrderFilterType = "all" | "regular" | "subscription";
 export type OrderStatusFilter = "all" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";

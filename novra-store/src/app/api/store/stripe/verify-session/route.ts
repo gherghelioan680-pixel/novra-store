@@ -5,6 +5,7 @@ import { normalizeOrder, type Order } from "@/lib/orders";
 import { trySendOrderConfirmationEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
+import { recordAffiliateConversion } from "@/lib/affiliates-server";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,10 @@ export async function GET(request: NextRequest) {
 
       if (order.discountCode) {
         await markDiscountCodeUsed(order.discountCode, order.id, order.userEmail);
+      }
+
+      if (order.affiliateCode) {
+        await recordAffiliateConversion(order);
       }
     }
 

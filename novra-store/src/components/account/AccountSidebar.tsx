@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  Link2,
 } from "lucide-react";
 import type { AccountSection } from "./types";
 import AccountLogo from "./AccountLogo";
@@ -58,6 +59,7 @@ const navGroups: NavGroup[] = [
       { id: "my-coupons", label: "My Coupons", icon: Ticket },
       { id: "my-novra-credits", label: "My NovraCredits", icon: Coins },
       { id: "gift-cards", label: "Gift Cards", icon: Gift },
+      { id: "affiliate-program", label: "Program Afiliere", icon: Link2 },
     ],
   },
   {

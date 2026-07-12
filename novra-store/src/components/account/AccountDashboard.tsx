@@ -20,6 +20,7 @@ import NovraCreditsView from "./views/NovraCreditsView";
 import GiftCardsView from "./views/GiftCardsView";
 import EmailPreferencesView from "./views/EmailPreferencesView";
 import SupportCenterView from "./views/SupportCenterView";
+import AffiliateProgramView from "./views/AffiliateProgramView";
 
 const VALID_SECTIONS: AccountSection[] = [
   "overview",
@@ -33,6 +34,7 @@ const VALID_SECTIONS: AccountSection[] = [
   "gift-cards",
   "email-preferences",
   "support-center",
+  "affiliate-program",
 ];
 
 function isAccountSection(value: string | null): value is AccountSection {
@@ -164,6 +166,8 @@ function AccountDashboardContent() {
         );
       case "support-center":
         return <SupportCenterView />;
+      case "affiliate-program":
+        return <AffiliateProgramView user={currentUser} onToast={showToast} />;
       default:
         return null;
     }
