@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
+import { getSessionFromRequest, isAdminRequest } from "@/lib/server-auth";
 import type { User } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -18,6 +19,44 @@ function stripPassword(user: StoredUser): Omit<StoredUser, "password"> {
 
 function findUserIndex(users: StoredUser[], email: string): number {
   return users.findIndex((user) => user.email.toLowerCase() === email.toLowerCase());
+}
+
+function buildAdminUser(name: string, email: string, password: string): StoredUser {
+  const nameParts = name.split(/\s+/);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ");
+
+  return {
+    id: `admin-${Date.now()}`,
+    name,
+    firstName,
+    lastName: lastName || undefined,
+    email,
+    password,
+    role: "admin",
+    phone: "",
+    address: "",
+    country: "Romania",
+    paymentMethod: "",
+    favoriteItems: [],
+    orders: [],
+    addresses: [],
+    paymentMethods: [],
+    novraCredits: 0,
+    signupBonusClaimed: true,
+    profileCompleted: true,
+    subscribedToNewsletter: false,
+    loyalty: {
+      points: 0,
+      discount: "0%",
+    },
+    preferences: {
+      offers: false,
+      orders: true,
+      recommendations: false,
+    },
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function buildRegisterUser(name: string, email: string, password: string): StoredUser {
@@ -121,6 +160,104 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Autentificare reușită!",
         user: stripPassword(user),
+      });
+    }
+
+    if (action === "admin-login") {
+      const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+      const password = typeof body?.password === "string" ? body.password.trim() : "";
+
+      if (!email || !password) {
+        return Response.json(
+          { success: false, message: "Completează emailul și parola." },
+          { status: 400 }
+        );
+      }
+
+      const users = await readJsonFile<StoredUser[]>(FILE, []);
+      const user = users.find(
+        (item) =>
+          item.email.toLowerCase() === email &&
+          item.password === password &&
+          item.role === "admin"
+      );
+
+      if (!user) {
+        return Response.json(
+          { success: false, message: "Acces refuzat. Doar administratorii pot intra aici." },
+          { status: 401 }
+        );
+      }
+
+      return Response.json({
+        success: true,
+        message: "Autentificare admin reușită!",
+        user: stripPassword(user),
+      });
+    }
+
+    if (action === "create-admin") {
+      if (!isAdminRequest(request)) {
+        return Response.json(
+          { success: false, message: "Acces refuzat. Doar administratorii pot crea conturi admin." },
+          { status: 401 }
+        );
+      }
+
+      const name = typeof body?.name === "string" ? body.name.trim() : "";
+      const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+      const password = typeof body?.password === "string" ? body.password.trim() : "";
+
+      if (!name || !email || !password) {
+        return Response.json(
+          { success: false, message: "Completează numele, emailul și parola." },
+          { status: 400 }
+        );
+      }
+
+      if (password.length < 6) {
+        return Response.json(
+          { success: false, message: "Parola trebuie să aibă cel puțin 6 caractere." },
+          { status: 400 }
+        );
+      }
+
+      const users = await readJsonFile<StoredUser[]>(FILE, []);
+      const existingIndex = findUserIndex(users, email);
+
+      if (existingIndex !== -1) {
+        const existing = users[existingIndex];
+        if (existing.role === "admin") {
+          return Response.json(
+            { success: false, message: "Există deja un administrator cu acest email." },
+            { status: 409 }
+          );
+        }
+
+        existing.role = "admin";
+        existing.password = password;
+        existing.name = name;
+        const nameParts = name.split(/\s+/);
+        existing.firstName = nameParts[0] ?? name;
+        existing.lastName = nameParts.slice(1).join(" ") || undefined;
+        existing.profileCompleted = true;
+
+        await writeJsonFile(FILE, users);
+        return Response.json({
+          success: true,
+          message: "Contul existent a fost promovat la administrator.",
+          user: stripPassword(existing),
+        });
+      }
+
+      const newAdmin = buildAdminUser(name, email, password);
+      users.push(newAdmin);
+      await writeJsonFile(FILE, users);
+
+      return Response.json({
+        success: true,
+        message: "Administrator creat cu succes.",
+        user: stripPassword(newAdmin),
       });
     }
 

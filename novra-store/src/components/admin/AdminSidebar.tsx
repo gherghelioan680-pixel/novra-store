@@ -120,7 +120,7 @@ export default function AdminSidebar({
       <button
         type="button"
         onClick={onMobileToggle}
-        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-novra-card lg:hidden"
+        className="fixed left-4 top-4 z-50 flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/10 bg-novra-card lg:hidden"
         aria-label="Meniu admin"
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}

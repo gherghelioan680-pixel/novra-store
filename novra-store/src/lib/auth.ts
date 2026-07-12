@@ -434,7 +434,7 @@ export async function loginUser(email: string, password: string) {
   }
 }
 
-export function loginAdmin(email: string, password: string) {
+export async function loginAdmin(email: string, password: string) {
   ensureAdminUser();
 
   const trimmedEmail = email.trim().toLowerCase();
@@ -444,28 +444,148 @@ export function loginAdmin(email: string, password: string) {
     return { success: false, message: "Completează emailul și parola." };
   }
 
-  const users = getStoredUsers();
-  const user = users.find(
-    (item) =>
-      item.email.toLowerCase() === trimmedEmail &&
-      item.password === trimmedPassword &&
-      getUserRole(item) === "admin"
-  );
-
-  if (!user) {
-    return { success: false, message: "Acces refuzat. Doar administratorii pot intra aici." };
-  }
-
   if (!canUseLocalStorage()) {
     return { success: false, message: STORAGE_UNAVAILABLE_MSG };
   }
 
-  const savedSession = setCurrentUser(user);
-  if (!savedSession.ok) {
-    return { success: false, message: savedSession.message };
+  try {
+    const response = await fetch("/api/store/auth", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "admin-login",
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      user?: SafeUser;
+    };
+
+    if (!response.ok || !data.success || !data.user) {
+      const users = getStoredUsers();
+      const localUser = users.find(
+        (item) =>
+          item.email.toLowerCase() === trimmedEmail &&
+          item.password === trimmedPassword &&
+          getUserRole(item) === "admin"
+      );
+
+      if (!localUser) {
+        return {
+          success: false,
+          message: data.message ?? "Acces refuzat. Doar administratorii pot intra aici.",
+        };
+      }
+
+      const savedSession = setCurrentUser(localUser);
+      if (!savedSession.ok) {
+        return { success: false, message: savedSession.message };
+      }
+
+      return { success: true, message: "Autentificare admin reușită!", user: localUser };
+    }
+
+    const user = mergeServerUserWithPassword(data.user, trimmedPassword);
+    const savedUsers = upsertLocalUser(user);
+    if (!savedUsers.ok) {
+      return { success: false, message: savedUsers.message };
+    }
+
+    const savedSession = setCurrentUser(user);
+    if (!savedSession.ok) {
+      return { success: false, message: savedSession.message };
+    }
+
+    return {
+      success: true,
+      message: data.message ?? "Autentificare admin reușită!",
+      user,
+    };
+  } catch {
+    const users = getStoredUsers();
+    const localUser = users.find(
+      (item) =>
+        item.email.toLowerCase() === trimmedEmail &&
+        item.password === trimmedPassword &&
+        getUserRole(item) === "admin"
+    );
+
+    if (!localUser) {
+      return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
+    }
+
+    const savedSession = setCurrentUser(localUser);
+    if (!savedSession.ok) {
+      return { success: false, message: savedSession.message };
+    }
+
+    return { success: true, message: "Autentificare admin reușită!", user: localUser };
+  }
+}
+
+export async function createAdminUser(name: string, email: string, password: string) {
+  if (!requireAdmin()) {
+    return { success: false, message: "Acces refuzat." };
   }
 
-  return { success: true, message: "Autentificare admin reușită!", user };
+  const trimmedName = name.trim();
+  const trimmedEmail = email.trim().toLowerCase();
+  const trimmedPassword = password.trim();
+
+  if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+    return { success: false, message: "Completează numele, emailul și parola." };
+  }
+
+  if (trimmedPassword.length < 6) {
+    return { success: false, message: "Parola trebuie să aibă cel puțin 6 caractere." };
+  }
+
+  try {
+    const response = await fetch("/api/store/auth", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "create-admin",
+        name: trimmedName,
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
+    });
+
+    const data = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      user?: SafeUser;
+    };
+
+    if (!response.ok || !data.success || !data.user) {
+      return {
+        success: false,
+        message: data.message ?? "Nu s-a putut crea administratorul.",
+      };
+    }
+
+    const newAdmin = mergeServerUserWithPassword(data.user, trimmedPassword);
+    upsertLocalUser(newAdmin);
+    dispatchStoreUpdate({ scope: "users" });
+
+    return {
+      success: true,
+      message: data.message ?? "Administrator creat cu succes.",
+      user: newAdmin,
+    };
+  } catch {
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
+  }
+}
+
+export async function loadAdminUsers(): Promise<SafeUser[]> {
+  const users = await loadAllUsersFromServer();
+  return users.filter((user) => user.role === "admin");
 }
 
 export function updateCurrentUserProfile(updates: Partial<User>) {
@@ -631,6 +751,8 @@ export function changePassword(currentPassword: string, newPassword: string) {
   if (!savedSession.ok) {
     return { success: false, message: savedSession.message };
   }
+
+  void syncUserToServer(updatedUser);
 
   return { success: true, message: "Parola a fost schimbată cu succes.", user: updatedUser };
 }
