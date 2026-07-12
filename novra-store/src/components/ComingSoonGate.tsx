@@ -18,6 +18,26 @@ function isExemptPath(pathname: string): boolean {
   );
 }
 
+function getRequestPathname(headersList: Headers): string {
+  const fromProxy =
+    headersList.get("x-pathname") ??
+    headersList.get("x-invoke-path") ??
+    headersList.get("x-middleware-request-x-pathname");
+
+  if (fromProxy) return fromProxy;
+
+  const urlHeader = headersList.get("x-url") ?? headersList.get("next-url");
+  if (urlHeader) {
+    try {
+      return new URL(urlHeader, "https://novra.ro").pathname;
+    } catch {
+      /* ignore malformed header */
+    }
+  }
+
+  return "/";
+}
+
 async function getSessionFromCookies(): Promise<SessionData | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get("novra-session")?.value;
@@ -27,7 +47,7 @@ async function getSessionFromCookies(): Promise<SessionData | null> {
 
 export default async function ComingSoonGate({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? "/";
+  const pathname = getRequestPathname(headersList);
 
   if (isExemptPath(pathname)) {
     return children;

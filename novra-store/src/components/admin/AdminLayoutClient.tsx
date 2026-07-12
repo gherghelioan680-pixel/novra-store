@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -36,6 +37,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
       const user = requireAdmin();
       if (!user) {
         router.replace("/admin/login");
+        setChecking(false);
         return;
       }
 
@@ -50,10 +52,24 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     return <>{children}</>;
   }
 
-  if (checking || !admin) {
+  if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-novra-bg text-gray-400">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-novra-bg text-gray-400">
         <p className="text-sm">Se verifică accesul...</p>
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-novra-bg px-4 text-center text-gray-400">
+        <p className="text-sm">Autentificare necesară pentru panoul admin.</p>
+        <Link
+          href="/admin/login"
+          className="rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
+        >
+          Mergi la autentificare
+        </Link>
       </div>
     );
   }
