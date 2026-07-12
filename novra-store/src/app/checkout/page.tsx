@@ -57,7 +57,8 @@ function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const { items, totalPrice, clearCart, hydrated } = useCart();
   const { freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "redirecting" | "success" | "error">("idle");
+  const [stripeRedirectUrl, setStripeRedirectUrl] = useState<string | null>(null);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
   const [formData, setFormData] = useState(buildInitialFormData);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ramburs">("ramburs");
@@ -80,7 +81,7 @@ function CheckoutPageContent() {
   }, [cardPaymentEnabled]);
 
   useEffect(() => {
-    if (hydrated && items.length === 0 && status !== "success") {
+    if (hydrated && items.length === 0 && status !== "success" && status !== "redirecting") {
       router.replace("/cos");
     }
   }, [hydrated, items.length, status, router]);
@@ -266,8 +267,11 @@ function CheckoutPageContent() {
           return;
         }
 
-        clearCart();
-        window.location.href = data.url;
+        // Defer clearCart until payment succeeds — clearing here races with redirect on
+        // mobile (empty cart triggers router.replace("/cos") before Stripe navigation).
+        setStripeRedirectUrl(data.url);
+        setStatus("redirecting");
+        window.location.assign(data.url);
         return;
       } catch {
         setStripeError("Eroare de rețea la conectarea cu Stripe. Încearcă din nou.");
@@ -562,17 +566,40 @@ function CheckoutPageContent() {
               </p>
             )}
 
+            {status === "redirecting" && stripeRedirectUrl && (
+              <div className="rounded-xl border border-purple-500/30 bg-purple-600/10 px-4 py-3 text-sm text-purple-100">
+                <p className="inline-flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin shrink-0" />
+                  Redirecționare către Stripe...
+                </p>
+                <p className="mt-2 text-xs text-gray-400">
+                  Dacă nu ești redirecționat automat,{" "}
+                  <a
+                    href={stripeRedirectUrl}
+                    className="text-purple-300 underline underline-offset-2 touch-manipulation"
+                  >
+                    apasă aici pentru plată
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={status === "sending"}
+              disabled={status === "sending" || status === "redirecting"}
               className="w-full min-h-11 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold py-4 rounded-xl text-sm uppercase tracking-wider transition-all shadow-xl touch-manipulation inline-flex items-center justify-center gap-2"
             >
-              {status === "sending" && <Loader2 size={16} className="animate-spin" />}
-              {status === "sending"
-                ? "Se procesează..."
-                : paymentMethod === "card" && cardAvailable
-                  ? `Plătește acum (${orderTotal.toFixed(2)} RON)`
-                  : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
+              {(status === "sending" || status === "redirecting") && (
+                <Loader2 size={16} className="animate-spin" />
+              )}
+              {status === "redirecting"
+                ? "Redirecționare către Stripe..."
+                : status === "sending"
+                  ? "Se procesează..."
+                  : paymentMethod === "card" && cardAvailable
+                    ? `Plătește acum (${orderTotal.toFixed(2)} RON)`
+                    : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
             </button>
           </form>
 

@@ -8,10 +8,12 @@ import Footer from "@/components/Footer";
 import CopyButton from "@/components/CopyButton";
 import type { Order } from "@/lib/orders";
 import { normalizeOrder } from "@/lib/orders";
+import { useCart } from "@/context/CartContext";
 
 function CheckoutSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { clearCart } = useCart();
   const sessionId = searchParams.get("session_id");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [order, setOrder] = useState<Order | null>(null);
@@ -40,6 +42,12 @@ function CheckoutSuccessContent() {
       })
       .catch(() => setStatus("error"));
   }, [sessionId]);
+
+  useEffect(() => {
+    if (status === "success") {
+      clearCart();
+    }
+  }, [status, clearCart]);
 
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
