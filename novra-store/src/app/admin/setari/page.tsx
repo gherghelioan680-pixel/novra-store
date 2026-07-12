@@ -211,6 +211,81 @@ export default function AdminSetariPage() {
         </div>
       )}
 
+      <section
+        id="administratori"
+        className="mb-6 scroll-mt-24 rounded-2xl border-2 border-purple-500/40 bg-gradient-to-br from-purple-600/10 to-novra-card/40 p-5 sm:p-6"
+      >
+        <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold text-white">
+          <Shield size={22} className="text-purple-400" />
+          Administratori
+        </h2>
+        <p className="mb-5 text-sm text-gray-300">
+          Fiecare administrator se autentifică separat de pe telefon sau calculator la{" "}
+          <code className="rounded bg-black/30 px-1.5 py-0.5 text-purple-300">/admin/login</code>{" "}
+          cu emailul și parola proprie.
+        </p>
+
+        {adminUsers.length > 0 && (
+          <div className="mb-6 overflow-x-auto rounded-xl border border-white/10 bg-novra-bg/30">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-gray-500">
+                  <th className="px-4 py-3 font-medium">Nume</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminUsers.map((adminUser) => (
+                  <tr key={adminUser.id} className="border-b border-white/5 last:border-0">
+                    <td className="px-4 py-3 text-white">{adminUser.name}</td>
+                    <td className="px-4 py-3 text-gray-400">{adminUser.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+          <UserPlus size={16} className="text-purple-400" />
+          Adaugă administrator
+        </h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <input
+            type="text"
+            placeholder="Nume complet"
+            value={newAdminName}
+            onChange={(e) => setNewAdminName(e.target.value)}
+            className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="off"
+            value={newAdminEmail}
+            onChange={(e) => setNewAdminEmail(e.target.value)}
+            className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
+          />
+          <input
+            type="password"
+            placeholder="Parolă (min. 6 caractere)"
+            autoComplete="new-password"
+            value={newAdminPassword}
+            onChange={(e) => setNewAdminPassword(e.target.value)}
+            className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleCreateAdmin}
+          disabled={creatingAdmin}
+          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50"
+        >
+          <UserPlus size={16} />
+          {creatingAdmin ? "Se creează..." : "Adaugă administrator"}
+        </button>
+      </section>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
@@ -658,148 +733,6 @@ export default function AdminSetariPage() {
               Salvează reducere
             </button>
           </div>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6 lg:col-span-2">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-            <Shield size={20} className="text-purple-400" />
-            Administratori
-          </h2>
-          <p className="mb-4 text-sm text-gray-400">
-            Fiecare administrator se autentifică separat de pe telefon sau calculator la{" "}
-            <code className="text-purple-300">/admin/login</code> cu emailul și parola proprie.
-          </p>
-
-          {adminUsers.length > 0 && (
-            <div className="mb-6 overflow-x-auto rounded-xl border border-white/10 bg-novra-bg/30">
-              <table className="w-full min-w-[480px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-gray-500">
-                    <th className="px-4 py-3 font-medium">Nume</th>
-                    <th className="px-4 py-3 font-medium">Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminUsers.map((adminUser) => (
-                    <tr key={adminUser.id} className="border-b border-white/5 last:border-0">
-                      <td className="px-4 py-3 text-white">{adminUser.name}</td>
-                      <td className="px-4 py-3 text-gray-400">{adminUser.email}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-            <UserPlus size={16} className="text-purple-400" />
-            Adaugă administrator
-          </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <input
-              type="text"
-              placeholder="Nume complet"
-              value={newAdminName}
-              onChange={(e) => setNewAdminName(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              autoComplete="off"
-              value={newAdminEmail}
-              onChange={(e) => setNewAdminEmail(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-            <input
-              type="password"
-              placeholder="Parolă (min. 6 caractere)"
-              autoComplete="new-password"
-              value={newAdminPassword}
-              onChange={(e) => setNewAdminPassword(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleCreateAdmin}
-            disabled={creatingAdmin}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/15 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-600/25 disabled:opacity-50"
-          >
-            <UserPlus size={16} />
-            {creatingAdmin ? "Se creează..." : "Adaugă administrator"}
-          </button>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6 lg:col-span-2">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-            <Shield size={20} className="text-purple-400" />
-            Administratori
-          </h2>
-          <p className="mb-4 text-sm text-gray-400">
-            Fiecare administrator se autentifică separat de pe telefon sau calculator la{" "}
-            <code className="text-purple-300">/admin/login</code> cu emailul și parola proprie.
-          </p>
-
-          {adminUsers.length > 0 && (
-            <div className="mb-6 overflow-x-auto rounded-xl border border-white/10 bg-novra-bg/30">
-              <table className="w-full min-w-[480px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-xs uppercase tracking-widest text-gray-500">
-                    <th className="px-4 py-3 font-medium">Nume</th>
-                    <th className="px-4 py-3 font-medium">Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminUsers.map((adminUser) => (
-                    <tr key={adminUser.id} className="border-b border-white/5 last:border-0">
-                      <td className="px-4 py-3 text-white">{adminUser.name}</td>
-                      <td className="px-4 py-3 text-gray-400">{adminUser.email}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-            <UserPlus size={16} className="text-purple-400" />
-            Adaugă administrator
-          </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <input
-              type="text"
-              placeholder="Nume complet"
-              value={newAdminName}
-              onChange={(e) => setNewAdminName(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              autoComplete="off"
-              value={newAdminEmail}
-              onChange={(e) => setNewAdminEmail(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-            <input
-              type="password"
-              placeholder="Parolă (min. 6 caractere)"
-              autoComplete="new-password"
-              value={newAdminPassword}
-              onChange={(e) => setNewAdminPassword(e.target.value)}
-              className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none focus:border-purple-500/50"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleCreateAdmin}
-            disabled={creatingAdmin}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/15 px-5 py-3 text-sm font-semibold text-purple-200 transition hover:bg-purple-600/25 disabled:opacity-50"
-          >
-            <UserPlus size={16} />
-            {creatingAdmin ? "Se creează..." : "Adaugă administrator"}
-          </button>
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6 lg:col-span-2">

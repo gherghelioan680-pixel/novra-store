@@ -9,6 +9,7 @@ import {
   Package,
   ArrowRight,
   Clock,
+  Shield,
 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import StatCard from "@/components/admin/StatCard";
@@ -18,6 +19,7 @@ import { getCatalogProducts } from "@/lib/catalog";
 import { createStoreRefreshEffect } from "@/lib/store";
 
 const quickLinks = [
+  { href: "/admin/setari#administratori", label: "Administratori", desc: "Adaugă conturi admin pentru echipă", icon: Shield },
   { href: "/admin/produse", label: "Gestionează produse", desc: "Editează prețuri și catalog" },
   { href: "/admin/comenzi", label: "Vezi comenzi", desc: "Procesează și expediază" },
   { href: "/admin/clienti", label: "Clienți înregistrați", desc: "Utilizatori și NovraCredits" },
@@ -137,22 +139,34 @@ export default function AdminDashboardPage() {
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">Acces rapid</h2>
           <div className="space-y-3">
-            {quickLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group flex items-center justify-between rounded-xl border border-white/8 bg-novra-bg/30 p-4 transition hover:border-purple-500/30 hover:bg-novra-card/50"
-              >
-                <div>
-                  <p className="font-medium text-white">{link.label}</p>
-                  <p className="mt-0.5 text-xs text-gray-500">{link.desc}</p>
-                </div>
-                <ArrowRight
-                  size={16}
-                  className="text-gray-500 transition group-hover:translate-x-1 group-hover:text-purple-400"
-                />
-              </Link>
-            ))}
+            {quickLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`group flex items-center justify-between rounded-xl border p-4 transition hover:border-purple-500/30 hover:bg-novra-card/50 ${
+                    link.href.includes("#administratori")
+                      ? "border-purple-500/30 bg-purple-600/10"
+                      : "border-white/8 bg-novra-bg/30"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {Icon ? (
+                      <Icon size={18} className="mt-0.5 shrink-0 text-purple-400" />
+                    ) : null}
+                    <div>
+                      <p className="font-medium text-white">{link.label}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{link.desc}</p>
+                    </div>
+                  </div>
+                  <ArrowRight
+                    size={16}
+                    className="text-gray-500 transition group-hover:translate-x-1 group-hover:text-purple-400"
+                  />
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>
