@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getStripeClient } from "@/lib/stripe-server";
 import { normalizeOrder, type Order } from "@/lib/orders";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 
@@ -51,44 +51,40 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const existing = orders[index];
+    let order = orders[index];
+    const alreadyPaid = order.paymentStatus === "paid";
 
-    if (existing.paymentStatus === "paid") {
-      return Response.json({
-        ok: true,
-        paid: true,
-        purchaseCode: existing.purchaseCode,
-        order: existing,
-        alreadyProcessed: true,
-      });
-    }
+    if (!alreadyPaid) {
+      order = {
+        ...order,
+        paymentStatus: "paid",
+        status: order.status === "pending" ? "processing" : order.status,
+        stripeSessionId: sessionId,
+        updatedAt: new Date().toISOString(),
+      };
+      orders[index] = order;
+      await writeJsonFile(ORDERS_FILE, orders);
 
-    const updated: Order = {
-      ...existing,
-      paymentStatus: "paid",
-      status: existing.status === "pending" ? "processing" : existing.status,
-      stripeSessionId: sessionId,
-      updatedAt: new Date().toISOString(),
-    };
-
-    orders[index] = updated;
-    await writeJsonFile(ORDERS_FILE, orders);
-
-    if (updated.discountCode) {
-      await markDiscountCodeUsed(updated.discountCode, updated.id, updated.userEmail);
-    }
-
-    const settings = await getServerSiteSettings();
-    if (settings.orderEmailsEnabled && !updated.confirmationEmailSent) {
-      const sent = await sendOrderConfirmationEmail(updated);
-      if (sent) {
-        orders[index] = { ...orders[index], confirmationEmailSent: true };
-        await writeJsonFile(ORDERS_FILE, orders);
-        updated.confirmationEmailSent = true;
+      if (order.discountCode) {
+        await markDiscountCodeUsed(order.discountCode, order.id, order.userEmail);
       }
     }
 
-    return Response.json({ ok: true, paid: true, purchaseCode: updated.purchaseCode, order: updated });
+    const settings = await getServerSiteSettings();
+    const sent = await trySendOrderConfirmationEmail(order, settings.orderEmailsEnabled);
+    if (sent) {
+      order = { ...order, confirmationEmailSent: true };
+      orders[index] = order;
+      await writeJsonFile(ORDERS_FILE, orders);
+    }
+
+    return Response.json({
+      ok: true,
+      paid: true,
+      purchaseCode: order.purchaseCode,
+      order,
+      alreadyProcessed: alreadyPaid,
+    });
   } catch (err) {
     console.error("[stripe] verify-session error:", err);
     return Response.json({ error: "Verificarea plății a eșuat." }, { status: 500 });

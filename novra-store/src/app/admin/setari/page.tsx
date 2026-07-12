@@ -560,8 +560,10 @@ export default function AdminSetariPage() {
               <span className="text-sm text-gray-300">Trimite email confirmare la plasarea comenzii</span>
             </label>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Necesită <code className="text-purple-300">RESEND_API_KEY</code> și opțional{" "}
-              <code className="text-purple-300">RESEND_FROM_EMAIL</code> în .env.local.
+              Necesită <code className="text-purple-300">RESEND_API_KEY</code> și{" "}
+              <code className="text-purple-300">RESEND_FROM_EMAIL</code> (domeniu verificat în Resend) în
+              Vercel Environment Variables sau <code className="text-purple-300">.env.local</code>.
+              Ramburs: email imediat la plasare. Card: email după confirmarea plății Stripe.
               La salvarea AWB în Comenzi se trimite automat email de tracking.
             </p>
             <button

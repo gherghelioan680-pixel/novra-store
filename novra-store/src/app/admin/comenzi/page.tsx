@@ -195,7 +195,7 @@ export default function AdminComenziPage() {
                     }`}
                   >
                     {order.confirmationEmailSent ? <MailCheck size={10} /> : <Mail size={10} />}
-                    Confirmare {order.confirmationEmailSent ? "trimisă" : "netrimisă"}
+                    Email {order.confirmationEmailSent ? "trimis" : "netrimis"}
                   </span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${

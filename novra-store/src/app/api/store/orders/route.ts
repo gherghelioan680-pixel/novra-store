@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import { normalizeOrder, generatePurchaseCode, type Order, type OrderStatus } from "@/lib/orders";
-import { sendOrderConfirmationEmail, sendTrackingEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail, sendTrackingEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 
@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
     }
 
     const settings = await getServerSiteSettings();
-    if (settings.orderEmailsEnabled && order.paymentMethod !== "card") {
-      const sent = await sendOrderConfirmationEmail(order);
+    if (order.paymentMethod !== "card") {
+      const sent = await trySendOrderConfirmationEmail(order, settings.orderEmailsEnabled);
       if (sent) {
         orders[0] = { ...orders[0], confirmationEmailSent: true };
         await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
