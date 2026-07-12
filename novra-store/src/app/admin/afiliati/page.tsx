@@ -111,23 +111,49 @@ export default function AdminAfiliatiPage() {
   const pendingApplications = applications.filter((a) => a.status === "pending");
   const pendingPayouts = payouts.filter((p) => p.status === "pending");
 
-  const maskAccount = (payout: AffiliatePayout) => {
-    if (payout.iban) {
-      const iban = payout.iban;
-      return iban.length > 8 ? `${iban.slice(0, 4)}****${iban.slice(-4)}` : iban;
-    }
-    if (payout.cardNumber) {
-      const card = payout.cardNumber;
-      return card.length > 4 ? `****${card.slice(-4)}` : card;
-    }
-    return "—";
+  const buildTransferDetails = (payout: AffiliatePayout) => {
+    const lines = [
+      `Titular: ${payout.beneficiaryName}`,
+      payout.iban ? `IBAN: ${payout.iban}` : null,
+      payout.cardNumber ? `Card: ${payout.cardNumber}` : null,
+      payout.bankName ? `Bancă: ${payout.bankName}` : null,
+      `Sumă: ${payout.amount.toFixed(2)} RON`,
+      `Afiliat: ${payout.affiliateName} (${payout.affiliateEmail})`,
+    ].filter(Boolean);
+    return lines.join("\n");
   };
 
-  const payoutAccountDetail = (payout: AffiliatePayout) => {
-    if (payout.iban) return `IBAN: ${payout.iban}`;
-    if (payout.cardNumber) return `Card: ${payout.cardNumber}`;
-    return "—";
-  };
+  const PayoutBankDetails = ({ payout }: { payout: AffiliatePayout }) => (
+    <div className="space-y-2">
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-gray-500">Titular cont</p>
+        <p className="font-medium text-white">{payout.beneficiaryName}</p>
+      </div>
+      {payout.iban && (
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500">IBAN</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="font-mono text-sm text-purple-200">{payout.iban}</code>
+            <CopyButton text={payout.iban} label="Copiază IBAN" />
+          </div>
+        </div>
+      )}
+      {payout.cardNumber && (
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500">Număr card</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="font-mono text-sm text-purple-200">{payout.cardNumber}</code>
+            <CopyButton text={payout.cardNumber} label="Copiază card" />
+          </div>
+        </div>
+      )}
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-gray-500">Bancă</p>
+        <p className="text-gray-300">{payout.bankName ?? "—"}</p>
+      </div>
+      <CopyButton text={buildTransferDetails(payout)} label="Copiază tot pentru transfer" />
+    </div>
+  );
 
   const stats = {
     affiliates: affiliates.length,
@@ -323,61 +349,55 @@ export default function AdminAfiliatiPage() {
             <Banknote size={18} />
             Cereri retragere ({pendingPayouts.length})
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-white/10">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
-                <tr>
-                  <th className="px-4 py-3">Afiliat</th>
-                  <th className="px-4 py-3">Sumă</th>
-                  <th className="px-4 py-3">Titular</th>
-                  <th className="px-4 py-3">Cont</th>
-                  <th className="px-4 py-3">Bancă</th>
-                  <th className="px-4 py-3">Data</th>
-                  <th className="px-4 py-3">Acțiuni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingPayouts.map((payout) => (
-                  <tr key={payout.id} className="border-b border-white/5">
-                    <td className="px-4 py-3">
+          <p className="mb-5 text-sm text-gray-400">
+            Date complete pentru transfer manual — copiază IBAN-ul sau toate detaliile direct din fiecare cerere.
+          </p>
+          <div className="space-y-4">
+            {pendingPayouts.map((payout) => (
+              <div
+                key={payout.id}
+                className="rounded-xl border border-white/10 bg-black/25 p-5"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="grid flex-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Afiliat</p>
                       <p className="font-medium text-white">{payout.affiliateName}</p>
                       <p className="text-xs text-gray-500">{payout.affiliateEmail}</p>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-amber-300">
-                      {formatMoney(payout.amount)}
-                    </td>
-                    <td className="px-4 py-3">{payout.beneficiaryName}</td>
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-xs text-purple-200" title={payoutAccountDetail(payout)}>
-                        {maskAccount(payout)}
+                      <p className="mt-2 text-xs text-gray-500">{formatDate(payout.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Sumă solicitată</p>
+                      <p className="text-2xl font-bold text-amber-300">{formatMoney(payout.amount)}</p>
+                      <span className="mt-2 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-300">
+                        În așteptare
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">{payout.bankName ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(payout.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          disabled={actionId === payout.id}
-                          onClick={() => handleMarkPayoutPaid(payout)}
-                          className="rounded px-2 py-1 text-xs text-emerald-300 hover:bg-white/5 disabled:opacity-50"
-                        >
-                          Plătit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={actionId === payout.id}
-                          onClick={() => handleRejectPayout(payout)}
-                          className="rounded px-2 py-1 text-xs text-red-300 hover:bg-white/5 disabled:opacity-50"
-                        >
-                          Respinge
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <div className="sm:col-span-2 lg:col-span-1">
+                      <PayoutBankDetails payout={payout} />
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-2 lg:flex-col">
+                    <button
+                      type="button"
+                      disabled={actionId === payout.id}
+                      onClick={() => handleMarkPayoutPaid(payout)}
+                      className="rounded-lg bg-emerald-600/20 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
+                    >
+                      Marchează plătit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionId === payout.id}
+                      onClick={() => handleRejectPayout(payout)}
+                      className="rounded-lg bg-red-600/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
+                    >
+                      Respinge
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -727,49 +747,49 @@ export default function AdminAfiliatiPage() {
             Niciun payout încă.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-white/10">
-            <table className="w-full min-w-[800px] text-left text-sm">
-              <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
-                <tr>
-                  <th className="px-4 py-3">Afiliat</th>
-                  <th className="px-4 py-3">Sumă</th>
-                  <th className="px-4 py-3">Cont</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payouts.slice(0, 50).map((payout) => (
-                  <tr key={payout.id} className="border-b border-white/5">
-                    <td className="px-4 py-3">
-                      <span className="text-purple-300">{payout.affiliateName}</span>
-                    </td>
-                    <td className="px-4 py-3">{formatMoney(payout.amount)}</td>
-                    <td className="px-4 py-3 font-mono text-xs" title={payoutAccountDetail(payout)}>
-                      {maskAccount(payout)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ${
-                          payout.status === "paid"
-                            ? "bg-emerald-500/15 text-emerald-300"
-                            : payout.status === "rejected"
-                              ? "bg-red-500/15 text-red-300"
-                              : "bg-amber-500/15 text-amber-300"
-                        }`}
-                      >
-                        {payout.status === "paid"
-                          ? "Plătit"
-                          : payout.status === "rejected"
-                            ? "Respins"
-                            : "În așteptare"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(payout.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {payouts.slice(0, 50).map((payout) => (
+              <div
+                key={payout.id}
+                className="rounded-xl border border-white/10 bg-black/15 p-4"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Afiliat</p>
+                      <p className="font-medium text-purple-300">{payout.affiliateName}</p>
+                      <p className="text-xs text-gray-500">{payout.affiliateEmail}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">Sumă</p>
+                      <p className="font-medium text-white">{formatMoney(payout.amount)}</p>
+                      <p className="mt-1 text-xs text-gray-500">{formatDate(payout.createdAt)}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <PayoutBankDetails payout={payout} />
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 self-start rounded-full px-2.5 py-1 text-xs ${
+                      payout.status === "paid"
+                        ? "bg-emerald-500/15 text-emerald-300"
+                        : payout.status === "rejected"
+                          ? "bg-red-500/15 text-red-300"
+                          : "bg-amber-500/15 text-amber-300"
+                    }`}
+                  >
+                    {payout.status === "paid"
+                      ? "Plătit"
+                      : payout.status === "rejected"
+                        ? "Respins"
+                        : "În așteptare"}
+                  </span>
+                </div>
+                {payout.status === "rejected" && payout.adminNote && (
+                  <p className="mt-3 text-xs text-red-400/80">Motiv: {payout.adminNote}</p>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </section>

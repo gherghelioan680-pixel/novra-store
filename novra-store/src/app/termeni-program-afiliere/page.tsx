@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Ban,
   Banknote,
+  Shield,
 } from "lucide-react";
 
 import { fadeUp } from "@/lib/motion";
@@ -147,6 +148,47 @@ const sections = [
   },
   {
     num: 6,
+    icon: Shield,
+    title: "Date personale și confidențialitate",
+    content: (
+      <>
+        <p className="mb-4">
+          Participarea la Program implică prelucrarea unor date personale în conformitate cu GDPR (Regulament UE
+          2016/679) și{" "}
+          <Link href="/politica-confidentialitate" className="text-purple-400 hover:underline">
+            Politica de confidențialitate NOVRA
+          </Link>
+          :
+        </p>
+        <ul className="space-y-2 text-gray-400">
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            La aplicare: nume, email, confirmări de eligibilitate.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            În contul de afiliat: cod referință, statistici click-uri și comenzi atribuite.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Cookie de atribuire <code className="text-purple-300">?ref=</code> (30 zile) pentru legarea comenzilor de
+            link-ul tău.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            La retragere comision: titular cont, IBAN sau număr card, bancă (opțional) — exclusiv pentru efectuarea
+            plății.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Datele bancare sunt accesibile doar personalului autorizat NOVRA, pentru procesarea transferului manual.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    num: 7,
     icon: Ban,
     title: "Conduite interzise",
     content: (
@@ -171,7 +213,7 @@ const sections = [
     ),
   },
   {
-    num: 7,
+    num: 8,
     icon: Scale,
     title: "Modificări și reziliere",
     content: (

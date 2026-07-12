@@ -27,6 +27,7 @@ import {
 } from "@/lib/catalog";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useReviews } from "@/hooks/useReviews";
+import AffiliateProgramSection from "@/components/AffiliateProgramSection";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
@@ -576,6 +577,8 @@ export default function Home() {
           </div>
         </div>
       </motion.section>
+
+      <AffiliateProgramSection />
 
       {/* Newsletter Premium */}
       <motion.section
