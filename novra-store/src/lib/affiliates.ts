@@ -3,6 +3,7 @@ import { dispatchStoreUpdate } from "./store";
 import type {
   Affiliate,
   AffiliateApplication,
+  AffiliatePayout,
   AffiliateReferral,
   AffiliateRequirements,
   AffiliateStatus,
@@ -12,6 +13,8 @@ export type AffiliateDashboardData = {
   affiliate: Affiliate | null;
   application: AffiliateApplication | null;
   referrals: AffiliateReferral[];
+  payouts: AffiliatePayout[];
+  availableBalance: number;
 };
 
 export async function loadAffiliateDashboard(): Promise<AffiliateDashboardData | null> {
@@ -23,6 +26,7 @@ export async function loadAffiliatesAdmin(): Promise<{
   affiliates: Affiliate[];
   applications: AffiliateApplication[];
   referrals: AffiliateReferral[];
+  payouts: AffiliatePayout[];
 } | null> {
   return apiFetch("/api/store/affiliates?scope=admin");
 }
@@ -191,6 +195,57 @@ export async function deleteAffiliateAdmin(
     const data = (await response.json()) as { message?: string; error?: string };
     if (!response.ok) {
       return { ok: false, message: data.message ?? data.error ?? "Ștergere eșuată." };
+    }
+    dispatchStoreUpdate({ scope: "affiliates" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function submitAffiliatePayout(input: {
+  beneficiaryName: string;
+  iban?: string;
+  cardNumber?: string;
+  bankName?: string;
+  amount: number;
+  confirmed: boolean;
+}): Promise<{ ok: true; payout: AffiliatePayout } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/affiliates/payouts", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify(input),
+    });
+    const data = (await response.json()) as {
+      payout?: AffiliatePayout;
+      message?: string;
+      error?: string;
+    };
+    if (!response.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Cererea nu a putut fi trimisă." };
+    }
+    dispatchStoreUpdate({ scope: "affiliates" });
+    return { ok: true, payout: data.payout! };
+  } catch {
+    return { ok: false, message: "Eroare de rețea. Încearcă din nou." };
+  }
+}
+
+export async function updatePayoutStatusAdmin(
+  payoutId: string,
+  status: "paid" | "rejected",
+  adminNote?: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/affiliates/payouts", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ payoutId, status, adminNote }),
+    });
+    const data = (await response.json()) as { message?: string; error?: string };
+    if (!response.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Actualizare eșuată." };
     }
     dispatchStoreUpdate({ scope: "affiliates" });
     return { ok: true };

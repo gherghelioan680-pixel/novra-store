@@ -2,7 +2,11 @@ export const AFFILIATE_STORAGE_FILES = {
   affiliates: "affiliates.json",
   applications: "affiliate-applications.json",
   referrals: "affiliate-referrals.json",
+  payouts: "affiliate-payouts.json",
 } as const;
+
+/** Suma minimă pentru o cerere de retragere comision afiliat (RON). */
+export const MIN_AFFILIATE_PAYOUT_AMOUNT = 50;
 
 export const AFFILIATE_REF_COOKIE = "novra-affiliate-ref";
 export const AFFILIATE_REF_STORAGE_KEY = "novra-affiliate-ref";
@@ -21,6 +25,7 @@ export const DEFAULT_AFFILIATE_COMMISSION_RATE = 8;
 export type AffiliateStatus = "active" | "inactive";
 export type AffiliateApplicationStatus = "pending" | "approved" | "rejected";
 export type AffiliateReferralStatus = "pending" | "paid";
+export type AffiliatePayoutStatus = "pending" | "paid" | "rejected";
 
 export type AffiliateRequirementKey =
   | "hasAccount"
@@ -75,6 +80,22 @@ export type AffiliateReferral = {
   status: AffiliateReferralStatus;
   createdAt: string;
   paidAt?: string;
+  adminNote?: string;
+};
+
+export type AffiliatePayout = {
+  id: string;
+  affiliateId: string;
+  affiliateName: string;
+  affiliateEmail: string;
+  beneficiaryName: string;
+  iban?: string;
+  cardNumber?: string;
+  bankName?: string;
+  amount: number;
+  status: AffiliatePayoutStatus;
+  createdAt: string;
+  processedAt?: string;
   adminNote?: string;
 };
 

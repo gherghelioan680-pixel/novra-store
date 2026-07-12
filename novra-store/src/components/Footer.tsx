@@ -174,6 +174,16 @@ export default function Footer() {
                 Termeni și condiții
               </Link>
             </li>
+            <li>
+              <Link href="/politica-cookies" className="hover:text-purple-400 transition">
+                Politica cookie-uri
+              </Link>
+            </li>
+            <li>
+              <Link href="/termeni-program-afiliere" className="hover:text-purple-400 transition">
+                Termeni program afiliere
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

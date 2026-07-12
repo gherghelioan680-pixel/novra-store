@@ -15,6 +15,10 @@ import {
   Mail,
   Sparkles,
   Scale,
+  ShoppingCart,
+  CreditCard,
+  Gift,
+  Truck,
 } from "lucide-react";
 
 import { fadeUp } from "@/lib/motion";
@@ -54,6 +58,84 @@ const sections = [
   },
   {
     num: 3,
+    icon: ShoppingCart,
+    title: "Comenzi, cont client și checkout",
+    content: (
+      <>
+        <p className="mb-4">
+          NOVRA Store permite plasarea comenzilor cu sau fără cont (guest checkout). Prin finalizarea unei comenzi,
+          confirmi că datele furnizate sunt corecte și că ești autorizat să utilizezi metoda de plată aleasă.
+        </p>
+        <ul className="space-y-2 text-gray-400">
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Contul client permite vizualizarea comenzilor, AWB tracking, NovraCredits, carduri cadou și cupoane.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Prețurile afișate includ TVA; transportul se calculează la checkout.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Comanda devine fermă după confirmarea plății sau a metodei de plată alese.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    num: 4,
+    icon: CreditCard,
+    title: "Plăți Stripe",
+    content: (
+      <p>
+        Plățile online sunt procesate securizat prin Stripe. NOVRA nu stochează datele complete ale cardului. Acceptăm
+        plăți cu card bancar; tranzacțiile sunt supuse verificărilor antifraudă ale procesatorului de plăți.
+      </p>
+    ),
+  },
+  {
+    num: 5,
+    icon: Gift,
+    title: "NovraCredits, carduri cadou și cupoane",
+    content: (
+      <ul className="space-y-2 text-gray-400">
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          NovraCredits și cardurile cadou au termeni de utilizare proprii; nu sunt convertibile în numerar.
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          Cupoanele de reducere sunt personale, netransferabile și pot avea restricții (valabilitate, valoare minimă).
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          NOVRA poate modifica sau retrage promoțiile cu notificare rezonabilă.
+        </li>
+      </ul>
+    ),
+  },
+  {
+    num: 6,
+    icon: Truck,
+    title: "Livrare, AWB și retur",
+    content: (
+      <p>
+        Livrarea se face prin curieri parteneri; AWB-ul este comunicat prin email și în contul client. Condițiile de
+        retur și garanție sunt detaliate în paginile{" "}
+        <Link href="/livrare-si-plata" className="text-purple-400 hover:underline">
+          Livrare și plată
+        </Link>{" "}
+        și{" "}
+        <Link href="/garantie-si-retur" className="text-purple-400 hover:underline">
+          Garanție și retur
+        </Link>
+        .
+      </p>
+    ),
+  },
+  {
+    num: 7,
     icon: UserCheck,
     title: "Utilizarea corectă a Site-ului",
     content: (
@@ -77,7 +159,7 @@ const sections = [
     ),
   },
   {
-    num: 4,
+    num: 8,
     icon: AlertTriangle,
     title: "Limitarea răspunderii",
     content: (
@@ -95,20 +177,18 @@ const sections = [
     ),
   },
   {
-    num: 5,
+    num: 9,
     icon: ExternalLink,
     title: "Link-uri către terțe părți",
     content: (
       <p>
-        Site-ul nostru poate conține legături (link-uri) către alte pagini de internet (cum ar fi butoane de social media
-        sau platforma de trimitere formulare <span className="text-purple-400">Web3Forms</span>). Întrucât aceste site-uri
-        nu sunt sub controlul nostru, nu ne asumăm responsabilitatea pentru politicile, conținutul sau practicile acestora
-        de securitate.
+        Site-ul nostru poate conține legături către servicii terțe (Stripe, curieri, rețele sociale). Aceste servicii au
+        proprii termeni și politici de confidențialitate; NOVRA nu controlează conținutul lor.
       </p>
     ),
   },
   {
-    num: 6,
+    num: 10,
     icon: RefreshCw,
     title: "Modificarea Termenilor",
     content: (
@@ -121,7 +201,7 @@ const sections = [
     ),
   },
   {
-    num: 7,
+    num: 11,
     icon: Gavel,
     title: "Legea aplicabilă și litigii",
     content: (
@@ -156,8 +236,8 @@ export default function TermeniSiConditii() {
               </span>
             </h1>
             <p className="text-gray-400 text-sm font-light">
-              Ultima actualizare: Iunie 2026 · Te rugăm să citești cu atenție prezentul document înainte de a utiliza
-              site-ul.
+              Ultima actualizare: Iulie 2026 · Te rugăm să citești cu atenție prezentul document înainte de a utiliza
+              magazinul.
             </p>
           </motion.div>
         </section>
@@ -197,7 +277,7 @@ export default function TermeniSiConditii() {
                 <Scale size={18} className="text-purple-400" aria-hidden />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
-                8. Întrebări și clarificări
+                12. Întrebări și clarificări
               </h2>
             </div>
             <p className="text-sm text-gray-400 mb-4 sm:pl-14 relative">

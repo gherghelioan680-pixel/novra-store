@@ -10,6 +10,8 @@ import {
   ShoppingBag,
   Wallet,
   XCircle,
+  Banknote,
+  History,
 } from "lucide-react";
 import type { User } from "@/lib/auth";
 import {
@@ -18,11 +20,14 @@ import {
   buildAffiliateLink,
   DEFAULT_AFFILIATE_COMMISSION_RATE,
   formatCommissionLabel,
+  MIN_AFFILIATE_PAYOUT_AMOUNT,
+  type AffiliatePayout,
   type AffiliateRequirements,
 } from "@/lib/affiliates-types";
 import {
   loadAffiliateDashboard,
   submitAffiliateApplication,
+  submitAffiliatePayout,
   type AffiliateDashboardData,
 } from "@/lib/affiliates";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -44,6 +49,16 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [requirements, setRequirements] = useState<AffiliateRequirements>(defaultRequirements);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [payoutForm, setPayoutForm] = useState({
+    beneficiaryName: "",
+    iban: "",
+    cardNumber: "",
+    bankName: "",
+    amount: "",
+    confirmed: false,
+  });
+  const [payoutMethod, setPayoutMethod] = useState<"iban" | "card">("iban");
 
   const refresh = async () => {
     const result = await loadAffiliateDashboard();
@@ -94,6 +109,53 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
   const affiliate = data?.affiliate ?? null;
   const application = data?.application ?? null;
   const referrals = data?.referrals ?? [];
+  const payouts = data?.payouts ?? [];
+  const availableBalance = data?.availableBalance ?? 0;
+
+  const payoutStatusLabel = (status: AffiliatePayout["status"]) => {
+    if (status === "paid") return "Plătit";
+    if (status === "rejected") return "Respins";
+    return "În așteptare";
+  };
+
+  const payoutStatusClass = (status: AffiliatePayout["status"]) => {
+    if (status === "paid") return "bg-emerald-500/15 text-emerald-300";
+    if (status === "rejected") return "bg-red-500/15 text-red-300";
+    return "bg-amber-500/15 text-amber-300";
+  };
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!affiliate) return;
+
+    setWithdrawing(true);
+    const amount = Number(payoutForm.amount);
+    const result = await submitAffiliatePayout({
+      beneficiaryName: payoutForm.beneficiaryName,
+      iban: payoutMethod === "iban" ? payoutForm.iban : undefined,
+      cardNumber: payoutMethod === "card" ? payoutForm.cardNumber : undefined,
+      bankName: payoutForm.bankName || undefined,
+      amount,
+      confirmed: payoutForm.confirmed,
+    });
+    setWithdrawing(false);
+
+    if (!result.ok) {
+      onToast(result.message);
+      return;
+    }
+
+    onToast("Cererea de retragere a fost trimisă!");
+    setPayoutForm({
+      beneficiaryName: "",
+      iban: "",
+      cardNumber: "",
+      bankName: "",
+      amount: "",
+      confirmed: false,
+    });
+    await refresh();
+  };
 
   if (affiliate) {
     const affiliateLink = buildAffiliateLink(affiliate.code);
@@ -157,6 +219,9 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
             <p className="mt-2 text-2xl font-bold text-amber-200">
               {formatMoney(affiliate.pendingCommission)}
             </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Disponibil retragere: {formatMoney(availableBalance)}
+            </p>
           </div>
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
             <p className="text-xs uppercase tracking-widest text-emerald-300">Comision plătit</p>
@@ -164,6 +229,182 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
               {formatMoney(affiliate.paidCommission)}
             </p>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-novra-card/30 p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Banknote size={18} className="text-purple-300" />
+            <h3 className="text-lg font-semibold text-white">Retrage banii</h3>
+          </div>
+          {availableBalance < MIN_AFFILIATE_PAYOUT_AMOUNT ? (
+            <p className="text-sm text-gray-400">
+              Poți solicita retragerea când ai cel puțin {MIN_AFFILIATE_PAYOUT_AMOUNT} RON disponibili.
+              Sold curent: {formatMoney(availableBalance)}.
+            </p>
+          ) : (
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Titular cont *</label>
+                  <input
+                    type="text"
+                    required
+                    value={payoutForm.beneficiaryName}
+                    onChange={(e) =>
+                      setPayoutForm((p) => ({ ...p, beneficiaryName: e.target.value }))
+                    }
+                    placeholder="Nume complet titular"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Bancă (opțional)</label>
+                  <input
+                    type="text"
+                    value={payoutForm.bankName}
+                    onChange={(e) => setPayoutForm((p) => ({ ...p, bankName: e.target.value }))}
+                    placeholder="ex: BCR, ING, BT"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPayoutMethod("iban")}
+                  className={`rounded-lg px-3 py-1.5 text-xs ${
+                    payoutMethod === "iban"
+                      ? "bg-purple-600/30 text-purple-200"
+                      : "bg-white/5 text-gray-400"
+                  }`}
+                >
+                  IBAN (recomandat)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPayoutMethod("card")}
+                  className={`rounded-lg px-3 py-1.5 text-xs ${
+                    payoutMethod === "card"
+                      ? "bg-purple-600/30 text-purple-200"
+                      : "bg-white/5 text-gray-400"
+                  }`}
+                >
+                  Card bancar
+                </button>
+              </div>
+
+              {payoutMethod === "iban" ? (
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">IBAN *</label>
+                  <input
+                    type="text"
+                    required
+                    value={payoutForm.iban}
+                    onChange={(e) => setPayoutForm((p) => ({ ...p, iban: e.target.value.toUpperCase() }))}
+                    placeholder="RO49AAAA1B31007593840000"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 font-mono text-sm text-white placeholder:text-gray-500"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Număr card *</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    value={payoutForm.cardNumber}
+                    onChange={(e) =>
+                      setPayoutForm((p) => ({ ...p, cardNumber: e.target.value.replace(/\D/g, "") }))
+                    }
+                    placeholder="1234 5678 9012 3456"
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 font-mono text-sm text-white placeholder:text-gray-500"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">
+                  Sumă de retras (max {formatMoney(availableBalance)})
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={MIN_AFFILIATE_PAYOUT_AMOUNT}
+                  max={availableBalance}
+                  step={0.01}
+                  value={payoutForm.amount}
+                  onChange={(e) => setPayoutForm((p) => ({ ...p, amount: e.target.value }))}
+                  placeholder={`Minim ${MIN_AFFILIATE_PAYOUT_AMOUNT} RON`}
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white"
+                />
+              </div>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={payoutForm.confirmed}
+                  onChange={(e) =>
+                    setPayoutForm((p) => ({ ...p, confirmed: e.target.checked }))
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent text-purple-500 focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-300">
+                  Confirm că datele de plată sunt corecte și că sunt titularul contului/cardului indicat.
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={withdrawing || !payoutForm.confirmed}
+                className="w-full rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:opacity-50"
+              >
+                {withdrawing ? "Se trimite..." : "Trimite cererea de retragere"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <History size={18} className="text-gray-400" />
+            <h3 className="text-lg font-semibold text-white">Istoric retrageri</h3>
+          </div>
+          {payouts.length === 0 ? (
+            <p className="rounded-xl border border-white/10 bg-novra-card/30 px-4 py-8 text-center text-sm text-gray-400">
+              Nu ai cereri de retragere încă.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
+                  <tr>
+                    <th className="px-4 py-3">Sumă</th>
+                    <th className="px-4 py-3">Titular</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payouts.map((payout) => (
+                    <tr key={payout.id} className="border-b border-white/5">
+                      <td className="px-4 py-3 font-medium text-white">{formatMoney(payout.amount)}</td>
+                      <td className="px-4 py-3 text-gray-400">{payout.beneficiaryName}</td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${payoutStatusClass(payout.status)}`}>
+                          {payoutStatusLabel(payout.status)}
+                        </span>
+                        {payout.status === "rejected" && payout.adminNote && (
+                          <p className="mt-1 text-xs text-red-400/80">{payout.adminNote}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-400">{formatDate(payout.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div>
@@ -259,9 +500,13 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
           Program Afiliere
         </div>
         <h2 className="text-2xl font-bold text-white">Devino afiliat NOVRA</h2>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="text-sm text-gray-400">
           Câștigă {DEFAULT_AFFILIATE_COMMISSION_RATE}% din valoarea produselor pentru fiecare comandă generată prin
-          link-ul tău. Plățile se procesează lunar.
+          link-ul tău. Consultă{" "}
+          <a href="/termeni-program-afiliere" className="text-purple-400 hover:underline">
+            termenii programului
+          </a>
+          .
         </p>
       </div>
 

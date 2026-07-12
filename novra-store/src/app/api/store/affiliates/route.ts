@@ -10,8 +10,10 @@ import {
   deleteAffiliate,
   findAffiliateByEmail,
   findAffiliateByUserId,
+  getAvailablePayoutBalance,
   markReferralPaid,
   readAffiliateApplications,
+  readAffiliatePayouts,
   readAffiliateReferrals,
   readAffiliates,
   reviewAffiliateApplication,
@@ -28,21 +30,23 @@ export async function GET(request: NextRequest) {
 
   if (scope === "admin") {
     if (!isAdminRequest(request)) return unauthorizedResponse();
-    const [affiliates, applications, referrals] = await Promise.all([
+    const [affiliates, applications, referrals, payouts] = await Promise.all([
       readAffiliates(),
       readAffiliateApplications(),
       readAffiliateReferrals(),
+      readAffiliatePayouts(),
     ]);
-    return Response.json({ affiliates, applications, referrals });
+    return Response.json({ affiliates, applications, referrals, payouts });
   }
 
   if (!session?.email) return unauthorizedResponse();
 
-  const [affiliateByUser, affiliateByEmail, applications, referrals] = await Promise.all([
+  const [affiliateByUser, affiliateByEmail, applications, referrals, payouts] = await Promise.all([
     findAffiliateByUserId(session.userId),
     findAffiliateByEmail(session.email),
     readAffiliateApplications(),
     readAffiliateReferrals(),
+    readAffiliatePayouts(),
   ]);
 
   const affiliate = affiliateByUser ?? affiliateByEmail;
@@ -51,11 +55,19 @@ export async function GET(request: NextRequest) {
   const userReferrals = affiliate
     ? referrals.filter((r) => r.affiliateId === affiliate.id)
     : [];
+  const userPayouts = affiliate
+    ? payouts.filter((p) => p.affiliateId === affiliate.id)
+    : [];
+  const availableBalance = affiliate
+    ? getAvailablePayoutBalance(affiliate, payouts)
+    : 0;
 
   return Response.json({
     affiliate,
     application,
     referrals: userReferrals,
+    payouts: userPayouts,
+    availableBalance,
   });
 }
 

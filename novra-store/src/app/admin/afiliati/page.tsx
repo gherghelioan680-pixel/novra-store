@@ -12,6 +12,7 @@ import {
   Wallet,
   Wand2,
   X,
+  Banknote,
 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CopyButton from "@/components/CopyButton";
@@ -23,6 +24,7 @@ import {
   generateAffiliateCode,
   type Affiliate,
   type AffiliateApplication,
+  type AffiliatePayout,
   type AffiliateReferral,
   type AffiliateStatus,
 } from "@/lib/affiliates-types";
@@ -34,6 +36,7 @@ import {
   markReferralPaidAdmin,
   reviewApplicationAdmin,
   updateAffiliateAdmin,
+  updatePayoutStatusAdmin,
 } from "@/lib/affiliates";
 import { createStoreRefreshEffect } from "@/lib/store";
 
@@ -62,6 +65,7 @@ export default function AdminAfiliatiPage() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [applications, setApplications] = useState<AffiliateApplication[]>([]);
   const [referrals, setReferrals] = useState<AffiliateReferral[]>([]);
+  const [payouts, setPayouts] = useState<AffiliatePayout[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [createForm, setCreateForm] = useState<CreateForm>(defaultCreateForm);
@@ -77,6 +81,7 @@ export default function AdminAfiliatiPage() {
       setAffiliates(data.affiliates);
       setApplications(data.applications);
       setReferrals(data.referrals);
+      setPayouts(data.payouts ?? []);
     }
     setLoading(false);
   };
@@ -104,6 +109,25 @@ export default function AdminAfiliatiPage() {
   const formatMoney = (value: number) => `${value.toFixed(2)} RON`;
 
   const pendingApplications = applications.filter((a) => a.status === "pending");
+  const pendingPayouts = payouts.filter((p) => p.status === "pending");
+
+  const maskAccount = (payout: AffiliatePayout) => {
+    if (payout.iban) {
+      const iban = payout.iban;
+      return iban.length > 8 ? `${iban.slice(0, 4)}****${iban.slice(-4)}` : iban;
+    }
+    if (payout.cardNumber) {
+      const card = payout.cardNumber;
+      return card.length > 4 ? `****${card.slice(-4)}` : card;
+    }
+    return "—";
+  };
+
+  const payoutAccountDetail = (payout: AffiliatePayout) => {
+    if (payout.iban) return `IBAN: ${payout.iban}`;
+    if (payout.cardNumber) return `Card: ${payout.cardNumber}`;
+    return "—";
+  };
 
   const stats = {
     affiliates: affiliates.length,
@@ -236,6 +260,27 @@ export default function AdminAfiliatiPage() {
     if (result.ok) await refresh();
   };
 
+  const handleMarkPayoutPaid = async (payout: AffiliatePayout) => {
+    if (!window.confirm(`Marchezi ${payout.amount.toFixed(2)} RON ca plătit pentru ${payout.affiliateName}?`)) {
+      return;
+    }
+    setActionId(payout.id);
+    const result = await updatePayoutStatusAdmin(payout.id, "paid");
+    setActionId(null);
+    showMessage(result.ok ? "Retragere marcată ca plătită." : result.message);
+    if (result.ok) await refresh();
+  };
+
+  const handleRejectPayout = async (payout: AffiliatePayout) => {
+    const note = window.prompt("Motiv respingere (opțional):");
+    if (note === null) return;
+    setActionId(payout.id);
+    const result = await updatePayoutStatusAdmin(payout.id, "rejected", note || undefined);
+    setActionId(null);
+    showMessage(result.ok ? "Cerere respinsă." : result.message);
+    if (result.ok) await refresh();
+  };
+
   return (
     <div>
       <AdminHeader
@@ -271,6 +316,71 @@ export default function AdminAfiliatiPage() {
           );
         })}
       </div>
+
+      {pendingPayouts.length > 0 && (
+        <section className="mb-8 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5">
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+            <Banknote size={18} />
+            Cereri retragere ({pendingPayouts.length})
+          </h2>
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full min-w-[900px] text-left text-sm">
+              <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
+                <tr>
+                  <th className="px-4 py-3">Afiliat</th>
+                  <th className="px-4 py-3">Sumă</th>
+                  <th className="px-4 py-3">Titular</th>
+                  <th className="px-4 py-3">Cont</th>
+                  <th className="px-4 py-3">Bancă</th>
+                  <th className="px-4 py-3">Data</th>
+                  <th className="px-4 py-3">Acțiuni</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingPayouts.map((payout) => (
+                  <tr key={payout.id} className="border-b border-white/5">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-white">{payout.affiliateName}</p>
+                      <p className="text-xs text-gray-500">{payout.affiliateEmail}</p>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-amber-300">
+                      {formatMoney(payout.amount)}
+                    </td>
+                    <td className="px-4 py-3">{payout.beneficiaryName}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs text-purple-200" title={payoutAccountDetail(payout)}>
+                        {maskAccount(payout)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">{payout.bankName ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(payout.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          disabled={actionId === payout.id}
+                          onClick={() => handleMarkPayoutPaid(payout)}
+                          className="rounded px-2 py-1 text-xs text-emerald-300 hover:bg-white/5 disabled:opacity-50"
+                        >
+                          Plătit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionId === payout.id}
+                          onClick={() => handleRejectPayout(payout)}
+                          className="rounded px-2 py-1 text-xs text-red-300 hover:bg-white/5 disabled:opacity-50"
+                        >
+                          Respinge
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {pendingApplications.length > 0 && (
         <section className="mb-8 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
@@ -602,6 +712,62 @@ export default function AdminAfiliatiPage() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-4 text-lg font-semibold text-white">
+          Istoric retrageri ({payouts.length})
+        </h2>
+        {payouts.length === 0 ? (
+          <p className="rounded-xl border border-white/10 px-4 py-8 text-center text-sm text-gray-400">
+            Niciun payout încă.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full min-w-[800px] text-left text-sm">
+              <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
+                <tr>
+                  <th className="px-4 py-3">Afiliat</th>
+                  <th className="px-4 py-3">Sumă</th>
+                  <th className="px-4 py-3">Cont</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.slice(0, 50).map((payout) => (
+                  <tr key={payout.id} className="border-b border-white/5">
+                    <td className="px-4 py-3">
+                      <span className="text-purple-300">{payout.affiliateName}</span>
+                    </td>
+                    <td className="px-4 py-3">{formatMoney(payout.amount)}</td>
+                    <td className="px-4 py-3 font-mono text-xs" title={payoutAccountDetail(payout)}>
+                      {maskAccount(payout)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs ${
+                          payout.status === "paid"
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : payout.status === "rejected"
+                              ? "bg-red-500/15 text-red-300"
+                              : "bg-amber-500/15 text-amber-300"
+                        }`}
+                      >
+                        {payout.status === "paid"
+                          ? "Plătit"
+                          : payout.status === "rejected"
+                            ? "Respins"
+                            : "În așteptare"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(payout.createdAt)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

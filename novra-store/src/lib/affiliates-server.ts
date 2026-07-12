@@ -9,10 +9,13 @@ import {
   AFFILIATE_REF_COOKIE,
   DEFAULT_AFFILIATE_COMMISSION_RATE,
   generateAffiliateCode,
+  MIN_AFFILIATE_PAYOUT_AMOUNT,
   normalizeAffiliateCode,
   type Affiliate,
   type AffiliateApplication,
   type AffiliateApplicationStatus,
+  type AffiliatePayout,
+  type AffiliatePayoutStatus,
   type AffiliateReferral,
   type AffiliateRequirements,
   type AffiliateStatus,
@@ -40,6 +43,165 @@ export async function readAffiliateReferrals(): Promise<AffiliateReferral[]> {
 
 export async function writeAffiliateReferrals(referrals: AffiliateReferral[]): Promise<void> {
   await writeJsonFile(AFFILIATE_STORAGE_FILES.referrals, referrals);
+}
+
+export async function readAffiliatePayouts(): Promise<AffiliatePayout[]> {
+  return readJsonFile<AffiliatePayout[]>(AFFILIATE_STORAGE_FILES.payouts, []);
+}
+
+export async function writeAffiliatePayouts(payouts: AffiliatePayout[]): Promise<void> {
+  await writeJsonFile(AFFILIATE_STORAGE_FILES.payouts, payouts);
+}
+
+export function normalizeIban(raw: string): string {
+  return raw.replace(/\s+/g, "").toUpperCase();
+}
+
+export function maskPayoutAccount(payout: Pick<AffiliatePayout, "iban" | "cardNumber">): string {
+  if (payout.iban) {
+    const iban = payout.iban;
+    if (iban.length <= 8) return iban;
+    return `${iban.slice(0, 4)}****${iban.slice(-4)}`;
+  }
+  if (payout.cardNumber) {
+    const card = payout.cardNumber.replace(/\s+/g, "");
+    if (card.length <= 4) return card;
+    return `****${card.slice(-4)}`;
+  }
+  return "—";
+}
+
+export function getPendingPayoutTotal(
+  payouts: AffiliatePayout[],
+  affiliateId: string
+): number {
+  return payouts
+    .filter((p) => p.affiliateId === affiliateId && p.status === "pending")
+    .reduce((sum, p) => sum + p.amount, 0);
+}
+
+export function getAvailablePayoutBalance(
+  affiliate: Pick<Affiliate, "id" | "pendingCommission">,
+  payouts: AffiliatePayout[]
+): number {
+  const reserved = getPendingPayoutTotal(payouts, affiliate.id);
+  return Math.round(Math.max(0, affiliate.pendingCommission - reserved) * 100) / 100;
+}
+
+export async function submitAffiliatePayout(input: {
+  affiliateId: string;
+  beneficiaryName: string;
+  iban?: string;
+  cardNumber?: string;
+  bankName?: string;
+  amount: number;
+}): Promise<{ ok: true; payout: AffiliatePayout } | { ok: false; message: string }> {
+  const affiliates = await readAffiliates();
+  const affiliate = affiliates.find((a) => a.id === input.affiliateId);
+  if (!affiliate) return { ok: false, message: "Afiliat negăsit." };
+  if (affiliate.status !== "active") {
+    return { ok: false, message: "Contul tău de afiliat nu este activ." };
+  }
+
+  const beneficiaryName = input.beneficiaryName.trim();
+  if (!beneficiaryName) return { ok: false, message: "Numele titularului este obligatoriu." };
+
+  const iban = input.iban ? normalizeIban(input.iban) : undefined;
+  const cardNumber = input.cardNumber?.replace(/\s+/g, "") ?? undefined;
+  if (!iban && !cardNumber) {
+    return { ok: false, message: "Introdu IBAN sau numărul cardului." };
+  }
+  if (iban && !/^RO[0-9A-Z]{2,}$/.test(iban)) {
+    return { ok: false, message: "IBAN invalid." };
+  }
+  if (cardNumber && !/^[0-9]{13,19}$/.test(cardNumber)) {
+    return { ok: false, message: "Număr card invalid." };
+  }
+
+  const amount = Math.round(Math.max(0, input.amount) * 100) / 100;
+  if (amount < MIN_AFFILIATE_PAYOUT_AMOUNT) {
+    return {
+      ok: false,
+      message: `Suma minimă de retragere este ${MIN_AFFILIATE_PAYOUT_AMOUNT} RON.`,
+    };
+  }
+
+  const payouts = await readAffiliatePayouts();
+  const available = getAvailablePayoutBalance(affiliate, payouts);
+  if (amount > available) {
+    return {
+      ok: false,
+      message: `Suma depășește comisionul disponibil (${available.toFixed(2)} RON).`,
+    };
+  }
+
+  const payout: AffiliatePayout = {
+    id: `payout-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    affiliateId: affiliate.id,
+    affiliateName: affiliate.name,
+    affiliateEmail: affiliate.userEmail,
+    beneficiaryName,
+    iban,
+    cardNumber,
+    bankName: input.bankName?.trim() || undefined,
+    amount,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  };
+
+  payouts.unshift(payout);
+  await writeAffiliatePayouts(payouts.slice(0, 500));
+  return { ok: true, payout };
+}
+
+export async function updateAffiliatePayoutStatus(
+  payoutId: string,
+  status: Exclude<AffiliatePayoutStatus, "pending">,
+  adminNote?: string
+): Promise<{ ok: true; payout: AffiliatePayout } | { ok: false; message: string }> {
+  const payouts = await readAffiliatePayouts();
+  const index = payouts.findIndex((p) => p.id === payoutId);
+  if (index === -1) return { ok: false, message: "Cerere negăsită." };
+
+  const payout = payouts[index];
+  if (payout.status === status) {
+    return { ok: false, message: "Statusul cererii este deja setat." };
+  }
+  if (payout.status !== "pending") {
+    return { ok: false, message: "Cererea a fost deja procesată." };
+  }
+
+  const now = new Date().toISOString();
+
+  if (status === "paid") {
+    const affiliates = await readAffiliates();
+    const affIndex = affiliates.findIndex((a) => a.id === payout.affiliateId);
+    if (affIndex === -1) return { ok: false, message: "Afiliat negăsit." };
+
+    const affiliate = affiliates[affIndex];
+    if (payout.amount > affiliate.pendingCommission) {
+      return {
+        ok: false,
+        message: "Comisionul în așteptare al afiliatului este insuficient.",
+      };
+    }
+
+    affiliates[affIndex] = {
+      ...affiliate,
+      pendingCommission: Math.round((affiliate.pendingCommission - payout.amount) * 100) / 100,
+      paidCommission: Math.round((affiliate.paidCommission + payout.amount) * 100) / 100,
+    };
+    await writeAffiliates(affiliates);
+  }
+
+  payouts[index] = {
+    ...payout,
+    status,
+    processedAt: now,
+    adminNote: adminNote?.trim() || payout.adminNote,
+  };
+  await writeAffiliatePayouts(payouts);
+  return { ok: true, payout: payouts[index] };
 }
 
 export function getAffiliateRefFromRequest(request: NextRequest): string | undefined {

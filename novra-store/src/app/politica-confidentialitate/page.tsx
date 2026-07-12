@@ -15,6 +15,11 @@ import {
   Mail,
   Sparkles,
   FileText,
+  Cookie,
+  CreditCard,
+  Users,
+  Gift,
+  Truck,
 } from "lucide-react";
 
 import { fadeUp } from "@/lib/motion";
@@ -26,10 +31,11 @@ const sections = [
     title: "Informații generale",
     content: (
       <p>
-        Confidențialitatea vizitatorilor site-ului{" "}
-        <span className="text-white font-medium">NOVRA</span> este extrem de importantă pentru noi. Această politică
-        explică în mod transparent ce date colectăm, cum le utilizăm și cum le protejăm atunci când interacționezi cu
-        platforma noastră.
+        Confidențialitatea vizitatorilor și clienților site-ului{" "}
+        <span className="text-white font-medium">NOVRA Store</span> (www.novra.ro) este extrem de importantă pentru
+        noi. Această politică explică ce date personale colectăm, cum le utilizăm, cât timp le păstrăm și ce drepturi
+        ai în calitate de persoană vizată, în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația română
+        aplicabilă.
       </p>
     ),
   },
@@ -40,27 +46,56 @@ const sections = [
     content: (
       <>
         <p className="mb-4">
-          Atunci când folosești site-ul nostru (de exemplu, prin completarea formularului de contact), putem colecta
-          următoarele categorii de date:
+          În funcție de modul în care interacționezi cu NOVRA Store, putem colecta următoarele categorii de date:
         </p>
         <ul className="space-y-2 text-gray-400">
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
             <span>
-              <strong className="text-gray-200">Date de identificare:</strong> Numele și prenumele transmise voluntar.
+              <strong className="text-gray-200">Date de identificare:</strong> nume, prenume, adresă de email, număr de
+              telefon.
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
             <span>
-              <strong className="text-gray-200">Date de contact:</strong> Adresa de email și subiectul solicitării tale.
+              <strong className="text-gray-200">Date de livrare și facturare:</strong> adresă poștală, localitate, județ,
+              cod poștal, detalii comandă.
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
             <span>
-              <strong className="text-gray-200">Date tehnice (prin module cookie):</strong> Adresa IP, tipul de browser,
-              paginile vizitate și durata sesiunii pe site-ul nostru.
+              <strong className="text-gray-200">Date cont client:</strong> credențiale de autentificare (parolă stocată
+              criptat), istoric comenzi, preferințe, NovraCredits, carduri cadou, cupoane.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Date program afiliere:</strong> nume afiliat, email, cod de referință,
+              statistici click-uri și comenzi, IBAN sau date card bancar pentru retrageri comision.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Date plată:</strong> informații procesate de Stripe (fără stocarea
+              completă a datelor cardului pe serverele NOVRA).
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Newsletter:</strong> adresa de email și preferințe de comunicare
+              comercială (doar cu consimțământ).
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Date tehnice:</strong> adresă IP, tip browser, pagini vizitate, cookie-uri
+              de sesiune, cookie de atribuire afiliere (?ref=, 30 zile).
             </span>
           </li>
         </ul>
@@ -73,19 +108,48 @@ const sections = [
     title: "Scopul și temeiul prelucrării",
     content: (
       <>
-        <p className="mb-4">Prelucrăm datele tale cu caracter personal în mod legal, echitabil și transparent:</p>
+        <p className="mb-4">Prelucrăm datele tale în scopuri legitime și transparente:</p>
         <ul className="space-y-2 text-gray-400">
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-            Pentru a răspunde mesajelor, întrebărilor sau solicitărilor tale de asistență.
+            <span>
+              <strong className="text-gray-200">Executarea contractului:</strong> procesarea comenzilor (inclusiv checkout
+              fără cont), livrare, AWB tracking, gestionare retururi și garanții.
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-            Pentru a asigura buna funcționare, securitatea și optimizarea performanței site-ului NOVRA.
+            <span>
+              <strong className="text-gray-200">Cont client:</strong> crearea și administrarea contului, NovraCredits,
+              carduri cadou, cupoane de reducere.
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-            Pentru a respecta obligațiile legale aplicabile (dacă este cazul).
+            <span>
+              <strong className="text-gray-200">Plăți:</strong> procesarea tranzacțiilor prin Stripe.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Program afiliere:</strong> atribuirea comenzilor, calcul comision,
+              procesarea cererilor de retragere.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Marketing:</strong> newsletter și comunicări promoționale (cu consimțământ
+              explicit, retragibil oricând).
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Obligații legale:</strong> evidențe contabile, fiscalitate, răspuns la
+              solicitări ale autorităților.
+            </span>
           </li>
         </ul>
       </>
@@ -93,36 +157,102 @@ const sections = [
   },
   {
     num: 4,
-    icon: Clock,
-    title: "Cât timp stocăm datele tale",
+    icon: Cookie,
+    title: "Cookie-uri și tehnologii similare",
     content: (
-      <p>
-        Păstrăm datele tale personale doar atât timp cât este necesar pentru a îndeplini scopurile pentru care au fost
-        colectate (de exemplu, soluționarea completă a cererii tale trimise pe email), sau conform cerințelor legale în
-        vigoare. Dacă dorești ștergerea lor anticipată, ne poți contacta în orice moment.
-      </p>
+      <>
+        <p className="mb-4">Utilizăm cookie-uri și stocare locală pentru:</p>
+        <ul className="space-y-2 text-gray-400 mb-4">
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Funcționarea coșului de cumpărături și a sesiunii de autentificare.
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Atribuirea comenzilor în programul de afiliere (parametru ?ref=, cookie 30 zile).
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Preferințe site și securitate.
+          </li>
+        </ul>
+        <p>
+          Detalii complete în{" "}
+          <Link href="/politica-cookies" className="text-purple-400 hover:underline">
+            Politica de cookie-uri
+          </Link>
+          .
+        </p>
+      </>
     ),
   },
   {
     num: 5,
-    icon: Share2,
-    title: "Destinatarii datelor (Cui le transmitem)",
+    icon: Clock,
+    title: "Perioada de stocare",
     content: (
-      <p>
-        Nu vindem, nu închiriem și nu tranzacționăm datele tale personale către terți. Pentru procesarea securizată a
-        mesajelor din formularul de contact, utilizăm serviciul securizat terț{" "}
-        <span className="text-purple-400 font-medium">Web3Forms</span>, care acționează strict ca un procesator tehnic
-        de redirecționare a mesajului către adresa noastră oficială de email.
-      </p>
+      <ul className="space-y-2 text-gray-400">
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          Date cont și comenzi: pe durata relației contractuale + termene legale (de obicei 5–10 ani pentru documente
+          fiscale).
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          Cookie afiliere: maximum 30 zile de la ultimul click pe link.
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          Newsletter: până la dezabonare sau retragerea consimțământului.
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+          Date payout afiliat: pe durata programului + termene contabile aplicabile.
+        </li>
+      </ul>
+    ),
+  },
+  {
+    num: 6,
+    icon: Share2,
+    title: "Destinatari și procesatori",
+    content: (
+      <>
+        <p className="mb-4">Nu vindem datele tale. Le putem transmite doar către:</p>
+        <ul className="space-y-2 text-gray-400">
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Stripe</strong> — procesare plăți online (PCI-DSS).
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Curieri</strong> — livrare și AWB tracking (Fan Courier, Sameday etc.).
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            <span>
+              <strong className="text-gray-200">Upstash Redis / hosting</strong> — stocare securizată date aplicație.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
+            Autorități publice, când legea o impune.
+          </li>
+        </ul>
+      </>
     ),
   },
 ];
 
 const rights = [
-  { title: "Acces & Rectificare", desc: "Poți cere confirmarea prelucrării datelor tale și corectarea oricăror informații inexacte." },
-  { title: "Ștergerea datelor", desc: "Ai dreptul de a solicita eliminarea completă a datelor tale din sistemele noastre." },
-  { title: "Restricționare & Opoziție", desc: "Te poți opune prelucrării datelor în scopuri de marketing direct sau din motive legitime." },
-  { title: "Portabilitate & Plângeri", desc: "Poți solicita transferul datelor tale sau te poți adresa ANSPDCP în caz de nereguli." },
+  { title: "Acces & Rectificare", desc: "Poți solicita confirmarea prelucrării și corectarea datelor inexacte." },
+  { title: "Ștergere („dreptul de a fi uitat”)", desc: "Poți solicita ștergerea datelor, cu excepția cazurilor prevăzute legal." },
+  { title: "Restricționare & Opoziție", desc: "Te poți opune prelucrării în scop de marketing direct." },
+  { title: "Portabilitate & Plângeri", desc: "Poți solicita exportul datelor sau te poți adresa ANSPDCP (www.dataprotection.ro)." },
 ];
 
 export default function PoliticaConfidentialitate() {
@@ -131,7 +261,6 @@ export default function PoliticaConfidentialitate() {
       <Navbar />
 
       <main className="px-4 sm:px-6 md:px-12 max-w-4xl mx-auto pb-page">
-        {/* Hero */}
         <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 mb-8">
           <div className="absolute -top-8 right-0 w-48 h-48 bg-purple-500/8 blur-[80px] rounded-full pointer-events-none" />
           <motion.div {...fadeUp}>
@@ -146,12 +275,11 @@ export default function PoliticaConfidentialitate() {
               </span>
             </h1>
             <p className="text-gray-400 text-sm font-light">
-              Ultima actualizare: Iunie 2026 · În conformitate cu Regulamentul (UE) 2016/679 (GDPR)
+              Ultima actualizare: Iulie 2026 · GDPR (Regulament UE 2016/679)
             </p>
           </motion.div>
         </section>
 
-        {/* Numbered sections in cards */}
         <div className="space-y-4 sm:space-y-5">
           {sections.map((section, i) => (
             <motion.section
@@ -176,22 +304,15 @@ export default function PoliticaConfidentialitate() {
             </motion.section>
           ))}
 
-          {/* Rights grid */}
-          <motion.section
-            {...fadeUp}
-            className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40"
-          >
+          <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
             <div className="flex items-start gap-4 mb-6">
               <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
                 <Scale size={18} className="text-purple-400" aria-hidden />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
-                6. Drepturile tale în calitate de persoană vizată
+                7. Drepturile tale GDPR
               </h2>
             </div>
-            <p className="text-gray-300 font-light text-sm sm:text-base mb-6 sm:pl-14">
-              Conform GDPR, beneficiezi de drepturi extinse privind controlul asupra propriilor date personale:
-            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 sm:pl-14">
               {rights.map((right) => (
                 <div key={right.title} className="p-4 sm:p-5 rounded-xl bg-novra-bg/40 border border-white/8">
@@ -202,56 +323,89 @@ export default function PoliticaConfidentialitate() {
             </div>
           </motion.section>
 
-          <motion.section
-            {...fadeUp}
-            className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40"
-          >
+          <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
+                <CreditCard size={18} className="text-purple-400" aria-hidden />
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
+                8. Plăți Stripe
+              </h2>
+            </div>
+            <p className="text-gray-300 font-light leading-relaxed text-sm sm:text-base sm:pl-14">
+              Plățile online sunt procesate de Stripe Payments Europe Ltd. NOVRA nu stochează numărul complet al
+              cardului. Stripe prelucrează datele de plată conform propriei politici de confidențialitate. Tranzacțiile
+              sunt criptate SSL/TLS.
+            </p>
+          </motion.section>
+
+          <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
+                <Users size={18} className="text-purple-400" aria-hidden />
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
+                9. Program afiliere
+              </h2>
+            </div>
+            <p className="text-gray-300 font-light leading-relaxed text-sm sm:text-base sm:pl-14">
+              Afiliații furnizează date de identificare și plată (IBAN/card) pentru retrageri comision. Cookie-ul de
+              atribuire (?ref=) durează 30 zile. Detalii în{" "}
+              <Link href="/termeni-program-afiliere" className="text-purple-400 hover:underline">
+                Termenii Programului de Afiliere
+              </Link>
+              .
+            </p>
+          </motion.section>
+
+          <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
             <div className="flex items-start gap-4 mb-4">
               <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
                 <Lock size={18} className="text-purple-400" aria-hidden />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
-                7. Securitatea datelor
+                10. Securitatea datelor
               </h2>
             </div>
             <p className="text-gray-300 font-light leading-relaxed text-sm sm:text-base sm:pl-14">
-              Site-ul NOVRA utilizează un certificat de securitate SSL de ultimă generație pentru a cripta toate datele
-              transmise în tranzit prin formulare. Deși nicio metodă de transmisie pe internet nu este 100% sigură,
-              implementăm constant cele mai bune practici din industrie pentru a preveni accesul neautorizat, pierderea
-              sau alterarea datelor tale.
+              Implementăm măsuri tehnice și organizatorice: criptare SSL, parole hash, acces restricționat admin,
+              stocare securizată. Nicio metodă de transmisie pe internet nu este 100% sigură; depunem eforturi rezonabile
+              pentru protecția datelor.
             </p>
           </motion.section>
 
-          {/* Contact legal */}
           <motion.section
             {...fadeUp}
             className="p-6 sm:p-8 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-transparent relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none" />
             <div className="flex items-start gap-4 mb-4 relative">
               <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
                 <Shield size={18} className="text-purple-400" aria-hidden />
               </div>
               <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
-                8. Contact juridic
+                11. Contact DPO / confidențialitate
               </h2>
             </div>
             <p className="text-sm text-gray-400 mb-4 sm:pl-14 relative">
-              Pentru orice întrebări, exercitarea drepturilor tale GDPR sau solicitări legate de datele tale personale:
+              Pentru exercitarea drepturilor GDPR sau întrebări despre datele personale:
             </p>
             <div className="text-sm space-y-2 sm:pl-14 relative">
               <div className="flex items-center gap-2">
                 <Mail size={14} className="text-purple-500" aria-hidden />
-                <span className="text-gray-500">Email:</span>{" "}
                 <a href="mailto:contact@novra.ro" className="text-purple-400 hover:underline">
                   contact@novra.ro
                 </a>
               </div>
               <div className="flex items-center gap-2">
-                <FileText size={14} className="text-purple-500" aria-hidden />
-                <span className="text-gray-500">Website:</span>{" "}
-                <Link href="/" className="text-purple-400 hover:underline">
-                  www.novra.ro
+                <Gift size={14} className="text-purple-500" aria-hidden />
+                <Link href="/termeni-si-conditii" className="text-purple-400 hover:underline">
+                  Termeni și condiții magazin
+                </Link>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck size={14} className="text-purple-500" aria-hidden />
+                <Link href="/livrare-si-plata" className="text-purple-400 hover:underline">
+                  Livrare și plată
                 </Link>
               </div>
             </div>
