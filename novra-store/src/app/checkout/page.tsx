@@ -13,6 +13,8 @@ import { getCurrentUser, addOrderIdToLocalUser } from "@/lib/auth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   calculateDiscountAmount,
+  discountAppliesToProducts,
+  discountIncludesFreeShipping,
   formatDiscountValue,
   validateDiscountCode,
   type AppliedDiscount,
@@ -113,11 +115,21 @@ function CheckoutPageContent() {
     );
   }
 
-  const discountAmount = appliedDiscount
-    ? calculateDiscountAmount(totalPrice, appliedDiscount)
-    : 0;
+  const productDiscountApplies = appliedDiscount
+    ? discountAppliesToProducts(appliedDiscount)
+    : false;
+  const freeShippingFromCode = appliedDiscount
+    ? discountIncludesFreeShipping(appliedDiscount)
+    : false;
+
+  const discountAmount =
+    appliedDiscount && productDiscountApplies
+      ? calculateDiscountAmount(totalPrice, appliedDiscount)
+      : 0;
   const subtotalAfterDiscount = Math.max(0, totalPrice - discountAmount);
-  const shippingCost = subtotalAfterDiscount >= freeShippingThreshold ? 0 : deliveryCost;
+  const thresholdFreeShipping = subtotalAfterDiscount >= freeShippingThreshold;
+  const shippingCost =
+    freeShippingFromCode || thresholdFreeShipping ? 0 : deliveryCost;
   const orderTotal = subtotalAfterDiscount + shippingCost;
 
   const formatOrderMessage = (purchaseCode?: string) => {
@@ -133,8 +145,12 @@ function CheckoutPageContent() {
       ...lines,
       "",
       `Subtotal: ${totalPrice.toFixed(2)} RON`,
-      appliedDiscount ? `Reducere (${appliedDiscount.code}): -${discountAmount.toFixed(2)} RON` : "",
-      `Livrare: ${shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}`,
+      appliedDiscount && discountAmount > 0
+        ? `Reducere (${appliedDiscount.code}): -${discountAmount.toFixed(2)} RON`
+        : "",
+      freeShippingFromCode && appliedDiscount
+        ? `Livrare gratuită (cod ${appliedDiscount.code})`
+        : `Livrare: ${shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}`,
       `Total: ${orderTotal.toFixed(2)} RON`,
       "",
       `Metodă plată: ${paymentMethod === "card" ? "Plată cu cardul" : "Ramburs (numerar la livrare)"}`,
@@ -207,6 +223,7 @@ function CheckoutPageContent() {
       paymentStatus: paymentMethod === "card" ? "pending" : undefined,
       discountCode: appliedDiscount?.code,
       discountAmount: discountAmount > 0 ? discountAmount : undefined,
+      discountFreeShipping: freeShippingFromCode || undefined,
       address: { ...formData, name: userName, email: userEmail },
       status: "pending",
     };
@@ -457,9 +474,20 @@ function CheckoutPageContent() {
               </div>
               {appliedDiscount && (
                 <p className="mt-2 text-xs text-emerald-400">
-                  {discountSuccess || "Cod aplicat!"} Reducere{" "}
-                  {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
-                  {discountAmount.toFixed(2)} RON)
+                  {discountSuccess || "Cod aplicat!"}
+                  {productDiscountApplies && discountAmount > 0 && (
+                    <>
+                      {" "}
+                      Reducere {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
+                      {discountAmount.toFixed(2)} RON)
+                    </>
+                  )}
+                  {freeShippingFromCode && (
+                    <>
+                      {productDiscountApplies && discountAmount > 0 ? " · " : " "}
+                      Livrare gratuită
+                    </>
+                  )}
                 </p>
               )}
               {discountError && <p className="mt-2 text-xs text-red-400">{discountError}</p>}
@@ -577,10 +605,17 @@ function CheckoutPageContent() {
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">
-                <span>Livrare</span>
-                <span>{shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}</span>
+                <span>
+                  Livrare
+                  {freeShippingFromCode && appliedDiscount && (
+                    <span className="text-emerald-400"> (cod {appliedDiscount.code})</span>
+                  )}
+                </span>
+                <span className={freeShippingFromCode ? "text-emerald-400" : undefined}>
+                  {shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}
+                </span>
               </div>
-              {shippingCost > 0 && (
+              {shippingCost > 0 && !freeShippingFromCode && (
                 <p className="text-xs text-purple-300">
                   Livrare gratuită pentru comenzi peste {freeShippingThreshold} RON
                 </p>

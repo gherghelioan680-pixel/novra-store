@@ -8,6 +8,10 @@ export type DiscountCode = {
   code: string;
   type: DiscountCodeType;
   value: number;
+  /** Reducere procentuală/fixă la subtotal produse (implicit: true). */
+  applyToProducts?: boolean;
+  /** Livrare gratuită când codul este valid (implicit: false). */
+  freeShipping?: boolean;
   used: boolean;
   usedBy?: string;
   usedAt?: string;
@@ -27,7 +31,30 @@ export type AppliedDiscount = {
   code: string;
   type: DiscountCodeType;
   value: number;
+  applyToProducts?: boolean;
+  freeShipping?: boolean;
 };
+
+export function discountAppliesToProducts(
+  code: Pick<DiscountCode, "applyToProducts">
+): boolean {
+  return code.applyToProducts !== false;
+}
+
+export function discountIncludesFreeShipping(
+  code: Pick<DiscountCode, "freeShipping">
+): boolean {
+  return code.freeShipping === true;
+}
+
+export function formatDiscountOptions(
+  code: Pick<DiscountCode, "applyToProducts" | "freeShipping">
+): string {
+  const parts: string[] = [];
+  if (discountAppliesToProducts(code)) parts.push("Produse");
+  if (discountIncludesFreeShipping(code)) parts.push("Livrare gratuită");
+  return parts.length > 0 ? parts.join(" + ") : "—";
+}
 
 export const NEWSLETTER_DISCOUNT_PERCENT = 10;
 export const NEWSLETTER_DISCOUNT_PREFIX = "NOVRA10";
@@ -135,6 +162,8 @@ export async function validateDiscountCode(
       type?: DiscountCodeType;
       value?: number;
       code?: string;
+      applyToProducts?: boolean;
+      freeShipping?: boolean;
       message?: string;
     };
 
@@ -148,6 +177,8 @@ export async function validateDiscountCode(
         code: data.code ?? trimmed,
         type: data.type ?? "percent",
         value: data.value ?? NEWSLETTER_DISCOUNT_PERCENT,
+        applyToProducts: data.applyToProducts,
+        freeShipping: data.freeShipping,
       },
     };
   } catch {
@@ -169,6 +200,8 @@ export type CreateDiscountCodeInput = {
   code: string;
   type: DiscountCodeType;
   value: number;
+  applyToProducts?: boolean;
+  freeShipping?: boolean;
   maxUses?: number;
   expiresAt?: string;
   singleUsePerEmail?: boolean;

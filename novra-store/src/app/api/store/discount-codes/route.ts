@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
         type: result.type,
         value: result.value,
         code: result.code,
+        applyToProducts: result.applyToProducts,
+        freeShipping: result.freeShipping,
       });
     }
 
@@ -77,6 +79,8 @@ export async function POST(request: NextRequest) {
         code,
         type: type as DiscountCodeType,
         value,
+        applyToProducts: body?.applyToProducts !== false,
+        freeShipping: Boolean(body?.freeShipping),
         maxUses,
         expiresAt,
         singleUsePerEmail: Boolean(body?.singleUsePerEmail),

@@ -39,6 +39,8 @@ export type Order = {
   purchaseCode: string;
   discountCode?: string;
   discountAmount?: number;
+  /** Livrare gratuită aplicată prin cod reducere. */
+  discountFreeShipping?: boolean;
   awbTracking?: string;
   stripeSessionId?: string;
   confirmationEmailSent?: boolean;
@@ -123,6 +125,7 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     paymentStatus: raw.paymentStatus ?? (raw.paymentMethod === "card" ? "pending" : undefined),
     discountCode: raw.discountCode,
     discountAmount: raw.discountAmount,
+    discountFreeShipping: raw.discountFreeShipping,
     awbTracking: raw.awbTracking,
     stripeSessionId: raw.stripeSessionId,
     confirmationEmailSent: raw.confirmationEmailSent,

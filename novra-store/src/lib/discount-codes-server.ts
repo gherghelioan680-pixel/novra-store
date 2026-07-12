@@ -3,6 +3,8 @@ import "server-only";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import {
   generateNewsletterDiscountCode,
+  discountAppliesToProducts,
+  discountIncludesFreeShipping,
   type CreateDiscountCodeInput,
   type DiscountCode,
   type DiscountCodeType,
@@ -29,6 +31,8 @@ function normalizeDiscountCode(raw: LegacyDiscountCode): DiscountCode {
     code: raw.code,
     type,
     value,
+    applyToProducts: raw.applyToProducts ?? true,
+    freeShipping: raw.freeShipping ?? false,
     used: raw.used ?? (useCount > 0 && (raw.maxUses === 1 || (!raw.maxUses && useCount >= 1))),
     usedBy: raw.usedBy,
     usedAt: raw.usedAt,
@@ -73,6 +77,8 @@ export async function createNewsletterDiscountCode(email: string): Promise<Disco
     email,
     type: "percent",
     value: percentValue,
+    applyToProducts: true,
+    freeShipping: false,
     singleUsePerEmail: true,
     used: false,
     useCount: 0,
@@ -98,18 +104,24 @@ export async function createAdminDiscountCode(input: CreateDiscountCodeInput): P
     throw new Error("Acest cod există deja.");
   }
 
-  if (input.value <= 0) {
+  if (input.value <= 0 && discountAppliesToProducts(input)) {
     throw new Error("Valoarea reducerii trebuie să fie mai mare decât 0.");
   }
 
-  if (input.type === "percent" && input.value > 100) {
+  if (!discountAppliesToProducts(input) && !discountIncludesFreeShipping(input)) {
+    throw new Error("Selectează cel puțin o opțiune: reducere la produse sau livrare gratuită.");
+  }
+
+  if (input.type === "percent" && discountAppliesToProducts(input) && input.value > 100) {
     throw new Error("Reducerea procentuală nu poate depăși 100%.");
   }
 
   const entry: DiscountCode = {
     code: normalizedCode,
     type: input.type,
-    value: input.value,
+    value: discountAppliesToProducts(input) ? input.value : 0,
+    applyToProducts: discountAppliesToProducts(input),
+    freeShipping: discountIncludesFreeShipping(input),
     maxUses: input.maxUses,
     expiresAt: input.expiresAt,
     singleUsePerEmail: input.singleUsePerEmail ?? false,
@@ -139,7 +151,14 @@ export async function validateDiscountCodeServer(
   code: string,
   email?: string
 ): Promise<
-  | { valid: true; type: DiscountCodeType; value: number; code: string }
+  | {
+      valid: true;
+      type: DiscountCodeType;
+      value: number;
+      code: string;
+      applyToProducts: boolean;
+      freeShipping: boolean;
+    }
   | { valid: false; message: string }
 > {
   const normalized = code.trim().toUpperCase();
@@ -174,7 +193,14 @@ export async function validateDiscountCodeServer(
     }
   }
 
-  return { valid: true, type: match.type, value: match.value, code: match.code };
+  return {
+    valid: true,
+    type: match.type,
+    value: match.value,
+    code: match.code,
+    applyToProducts: discountAppliesToProducts(match),
+    freeShipping: discountIncludesFreeShipping(match),
+  };
 }
 
 export async function markDiscountCodeUsed(

@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/auth";
 import {
   createDiscountCode,
   deleteDiscountCode,
+  formatDiscountOptions,
   formatDiscountValue,
   generateAdminDiscountCode,
   loadDiscountCodes,
@@ -20,6 +21,8 @@ type FormState = {
   code: string;
   type: DiscountCodeType;
   value: string;
+  applyToProducts: boolean;
+  freeShipping: boolean;
   maxUses: string;
   expiresAt: string;
   singleUsePerEmail: boolean;
@@ -30,6 +33,8 @@ const defaultForm = (): FormState => ({
   code: "",
   type: "percent",
   value: "",
+  applyToProducts: true,
+  freeShipping: false,
   maxUses: "",
   expiresAt: "",
   singleUsePerEmail: false,
@@ -84,15 +89,28 @@ export default function AdminCoduriReducerePage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form.applyToProducts && !form.freeShipping) {
+      showMessage("Selectează cel puțin o opțiune: reducere la produse sau livrare gratuită.");
+      return;
+    }
+
+    if (form.applyToProducts && !form.value.trim()) {
+      showMessage("Introdu valoarea reducerii pentru produse.");
+      return;
+    }
+
     setLoading(true);
 
-    const value = Number(form.value);
+    const value = form.applyToProducts ? Number(form.value) : 0;
     const maxUses = form.maxUses.trim() ? Number(form.maxUses) : undefined;
 
     const result = await createDiscountCode({
       code: form.code,
       type: form.type,
       value,
+      applyToProducts: form.applyToProducts,
+      freeShipping: form.freeShipping,
       maxUses: maxUses && maxUses > 0 ? maxUses : undefined,
       expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : undefined,
       singleUsePerEmail: form.singleUsePerEmail,
@@ -209,10 +227,13 @@ export default function AdminCoduriReducerePage() {
           <div>
             <label htmlFor="discount-value" className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
               Valoare {form.type === "percent" ? "(%)" : "(RON)"}
+              {!form.applyToProducts && (
+                <span className="ml-1 normal-case text-gray-600">(opțional)</span>
+              )}
             </label>
             <input
               id="discount-value"
-              required
+              required={form.applyToProducts}
               type="number"
               min={0.01}
               max={form.type === "percent" ? 100 : undefined}
@@ -220,7 +241,8 @@ export default function AdminCoduriReducerePage() {
               value={form.value}
               onChange={(e) => setForm({ ...form, value: e.target.value })}
               placeholder={form.type === "percent" ? "15" : "25"}
-              className="min-h-11 w-full rounded-xl border border-white/10 bg-novra-surface/70 px-4 py-2.5 text-sm focus:border-purple-500/50 focus:outline-none"
+              disabled={!form.applyToProducts}
+              className="min-h-11 w-full rounded-xl border border-white/10 bg-novra-surface/70 px-4 py-2.5 text-sm focus:border-purple-500/50 focus:outline-none disabled:opacity-50"
             />
           </div>
 
@@ -256,6 +278,24 @@ export default function AdminCoduriReducerePage() {
             <label className="flex items-center gap-2 text-sm text-gray-300">
               <input
                 type="checkbox"
+                checked={form.applyToProducts}
+                onChange={(e) => setForm({ ...form, applyToProducts: e.target.checked })}
+                className="rounded border-white/20 bg-novra-surface"
+              />
+              Reducere la produse
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300">
+              <input
+                type="checkbox"
+                checked={form.freeShipping}
+                onChange={(e) => setForm({ ...form, freeShipping: e.target.checked })}
+                className="rounded border-white/20 bg-novra-surface"
+              />
+              Livrare gratuită (fără cost livrare)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-300">
+              <input
+                type="checkbox"
                 checked={form.singleUsePerEmail}
                 onChange={(e) => setForm({ ...form, singleUsePerEmail: e.target.checked })}
                 className="rounded border-white/20 bg-novra-surface"
@@ -277,7 +317,7 @@ export default function AdminCoduriReducerePage() {
         <div className="mt-5 flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={loading || !form.code.trim() || !form.value}
+            disabled={loading || !form.code.trim() || (form.applyToProducts && !form.value) || (!form.applyToProducts && !form.freeShipping)}
             className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50"
           >
             <Plus size={16} />
@@ -304,11 +344,12 @@ export default function AdminCoduriReducerePage() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500">
                 <th className="px-4 py-3 sm:px-6">Cod</th>
                 <th className="px-4 py-3">Reducere</th>
+                <th className="px-4 py-3">Aplicare</th>
                 <th className="px-4 py-3">Sursă</th>
                 <th className="px-4 py-3">Utilizări</th>
                 <th className="px-4 py-3">Status</th>
@@ -330,7 +371,12 @@ export default function AdminCoduriReducerePage() {
                         <p className="mt-1 text-xs text-gray-500">{code.email}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3">{formatDiscountValue(code.type, code.value)}</td>
+                    <td className="px-4 py-3">
+                      {code.applyToProducts !== false
+                        ? formatDiscountValue(code.type, code.value)
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-xs">{formatDiscountOptions(code)}</td>
                     <td className="px-4 py-3 text-xs">{sourceLabel(code.source)}</td>
                     <td className="px-4 py-3 text-xs">
                       {code.useCount ?? 0}
