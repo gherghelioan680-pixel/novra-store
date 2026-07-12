@@ -6,6 +6,7 @@ import { trySendOrderConfirmationEmail, sendTrackingEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { spendCredits } from "@/lib/credits-server";
+import { decrementStockForOrderItems, restoreStockForOrderItems } from "@/lib/stock-server";
 
 export const runtime = "nodejs";
 
@@ -170,6 +171,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const stockItems = order.items
+      .filter((item) => item.productId)
+      .map((item) => ({
+        productId: item.productId as string,
+        quantity: item.quantity,
+      }));
+
+    const stockResult = await decrementStockForOrderItems(stockItems);
+    if (!stockResult.ok) {
+      return Response.json({ error: stockResult.message }, { status: 400 });
+    }
+
     orders.unshift(order);
     await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
 
@@ -178,6 +191,7 @@ export async function POST(request: NextRequest) {
       if (!spendResult.ok) {
         orders.shift();
         await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
+        await restoreStockForOrderItems(stockItems);
         return Response.json({ error: spendResult.message }, { status: 400 });
       }
     }

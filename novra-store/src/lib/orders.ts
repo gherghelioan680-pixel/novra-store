@@ -4,6 +4,7 @@ import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 export type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export type OrderItem = {
+  productId?: string;
   title: string;
   variantLabel: string;
   quantity: number;
@@ -271,8 +272,12 @@ export async function getOrdersForUserFromApi(email: string): Promise<Order[]> {
   return loadOrders(email);
 }
 
-export async function saveOrder(order: Order): Promise<Order | null> {
-  if (!isBrowser()) return null;
+export async function saveOrder(
+  order: Order
+): Promise<{ ok: true; order: Order } | { ok: false; message: string }> {
+  if (!isBrowser()) {
+    return { ok: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
+  }
 
   const normalized = normalizeOrder(order);
 
@@ -283,16 +288,29 @@ export async function saveOrder(order: Order): Promise<Order | null> {
       body: JSON.stringify({ order: normalized }),
     });
 
-    if (!response.ok) return null;
+    const data = (await response.json().catch(() => ({}))) as {
+      order?: Partial<Order>;
+      error?: string;
+    };
 
-    const data = (await response.json()) as { order?: Partial<Order> };
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: data.error ?? "Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou.",
+      };
+    }
+
     const saved = normalizeOrder(data.order ?? normalized);
 
     mergeOrdersIntoCache([saved]);
     dispatchStoreUpdate({ scope: "orders" });
-    return saved;
+    dispatchStoreUpdate({ scope: "products" });
+    return { ok: true, order: saved };
   } catch {
-    return null;
+    return {
+      ok: false,
+      message: "Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou.",
+    };
   }
 }
 

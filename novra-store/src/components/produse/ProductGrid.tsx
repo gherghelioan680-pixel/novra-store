@@ -1,3 +1,4 @@
+import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductImage from "@/components/produse/ProductImage";
 import Link from "next/link";
 import type { CatalogProduct } from "@/lib/catalog";
@@ -51,6 +52,7 @@ export function ProductGrid({ products }: ProductGridProps) {
               <span className="block">
                 <span className="text-[8px] uppercase tracking-widest text-gray-600 block font-medium">De la</span>
                 <span className="text-sm font-bold text-white tracking-tight">{product.basePrice.toFixed(2)} RON</span>
+                <ProductStockLabel product={product} className="mt-1 block" />
               </span>
               <span className="text-[11px] text-purple-400 group-hover:underline font-medium min-h-11 flex items-center">
                 Detalii →

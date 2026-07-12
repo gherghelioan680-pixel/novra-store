@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
+import { loadProductOverrides, validateCartStock } from "@/lib/catalog";
 import CopyButton from "@/components/CopyButton";
 import { getCurrentUser, addOrderIdToLocalUser, getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import CheckoutAuthSection, { type CheckoutAuthMode } from "@/components/checkout/CheckoutAuthSection";
@@ -242,6 +243,7 @@ function CheckoutPageContent() {
       updatedAt: now,
       purchaseCode,
       items: items.map((item) => ({
+        productId: item.productId,
         title: item.title,
         variantLabel: item.variantLabel,
         quantity: item.quantity,
@@ -270,22 +272,27 @@ function CheckoutPageContent() {
     setStatus("sending");
     setStripeError("");
 
-    const activeUser = getCurrentUser();
-    const userEmail = (activeUser?.email ?? formData.email).trim().toLowerCase();
-    const order = await buildOrder();
-
-    const savedOrder = await saveOrder(order);
-    if (!savedOrder) {
-      setStripeError(
-        creditsToApply > 0
-          ? "Comanda nu a putut fi salvată. Verifică soldul NovraCredits și conexiunea."
-          : "Comanda nu a putut fi salvată. Verifică conexiunea și încearcă din nou."
-      );
+    await loadProductOverrides();
+    const stockCheck = validateCartStock(items);
+    if (!stockCheck.ok) {
+      setStripeError(stockCheck.message);
       setStatus("error");
       return;
     }
 
-    const finalOrder = savedOrder;
+    const activeUser = getCurrentUser();
+    const userEmail = (activeUser?.email ?? formData.email).trim().toLowerCase();
+    const order = await buildOrder();
+
+    const saveResult = await saveOrder(order);
+    if (!saveResult.ok) {
+      setStripeError(saveResult.message);
+      setStatus("error");
+      return;
+    }
+
+    const finalOrder = saveResult.order;
+    await loadProductOverrides();
 
     if (activeUser) {
       addOrderIdToLocalUser(userEmail, finalOrder.id);

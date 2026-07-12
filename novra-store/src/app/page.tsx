@@ -21,6 +21,9 @@ import {
   loadProductOverrides,
   getBundleSavings,
   isBundleProduct,
+  getProductStockQuantity,
+  formatStockLabel,
+  isProductInStock,
 } from "@/lib/catalog";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useReviews } from "@/hooks/useReviews";
@@ -787,6 +790,9 @@ function buildHomepageProducts() {
       bestseller: product.bestseller,
       bundleSavings: getBundleSavings(product),
       isBundle: isBundleProduct(product.category),
+      stockQuantity: getProductStockQuantity(product),
+      stockLabel: formatStockLabel(getProductStockQuantity(product)),
+      inStock: isProductInStock(product),
     };
   }).filter(Boolean) as Array<{
     title: string;
@@ -800,6 +806,9 @@ function buildHomepageProducts() {
     bestseller?: boolean;
     bundleSavings: number | null;
     isBundle: boolean;
+    stockQuantity: number;
+    stockLabel: string;
+    inStock: boolean;
   }>;
 }
 
@@ -816,6 +825,8 @@ function ProductCard({
   bestseller,
   bundleSavings,
   isBundle,
+  stockLabel,
+  inStock,
   index = 0,
 }: {
   title: string;
@@ -830,6 +841,8 @@ function ProductCard({
   bestseller?: boolean;
   bundleSavings: number | null;
   isBundle: boolean;
+  stockLabel: string;
+  inStock: boolean;
   index?: number;
 }) {
   const { addItem } = useCart();
@@ -837,6 +850,7 @@ function ProductCard({
 
   const handleQuickAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    if (!inStock) return;
     addItem({ productId, title, variantLabel, unitPrice, imageSrc });
     setShowGoToCart(true);
   };
@@ -891,18 +905,26 @@ function ProductCard({
         <span className="text-xs text-gray-500 ml-1">(5.0)</span>
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-white/8">
-        <p className="text-purple-400 font-bold text-lg sm:text-xl">{price}</p>
+        <div>
+          <p className="text-purple-400 font-bold text-lg sm:text-xl">{price}</p>
+          <p className={`text-xs mt-1 ${inStock ? "text-emerald-400" : "text-red-400"}`}>{stockLabel}</p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={handleQuickAdd}
-            title="Adaugă rapid în coș"
-            aria-label={`Adaugă rapid ${title} în coș`}
-            className="relative z-10 min-h-11 inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors duration-300 shadow-lg shadow-purple-900/30 touch-manipulation text-[10px] sm:text-xs font-semibold whitespace-nowrap"
+            title={inStock ? "Adaugă rapid în coș" : "Stoc epuizat"}
+            aria-label={inStock ? `Adaugă rapid ${title} în coș` : `${title} — stoc epuizat`}
+            disabled={!inStock}
+            className={`relative z-10 min-h-11 inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-full transition-colors duration-300 shadow-lg touch-manipulation text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
+              inStock
+                ? "bg-purple-600 hover:bg-purple-700 shadow-purple-900/30"
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+            }`}
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
             <ShoppingBag size={14} aria-hidden />
-            Adaugă rapid
+            {inStock ? "Adaugă rapid" : "Stoc epuizat"}
           </button>
           {showGoToCart && (
             <Link

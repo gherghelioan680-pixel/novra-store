@@ -8,6 +8,7 @@ import {
   CATALOG_CATEGORIES,
   getCatalogProducts,
   getProductOverrides,
+  getProductStockQuantity,
   loadProductOverrides,
   saveProductOverride,
   saveProductPriceOverride,
@@ -25,6 +26,7 @@ type EditForm = {
   tag: string;
   description: string;
   basePrice: string;
+  stockQuantity: string;
   bestseller: boolean;
   bundleSavingsOverride: string;
   useAutoBundleSavings: boolean;
@@ -34,6 +36,7 @@ export default function AdminProdusePage() {
   const admin = requireAdmin();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [edits, setEdits] = useState<Record<string, string>>({});
+  const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({
@@ -41,6 +44,7 @@ export default function AdminProdusePage() {
     tag: "",
     description: "",
     basePrice: "",
+    stockQuantity: "",
     bestseller: false,
     bundleSavingsOverride: "",
     useAutoBundleSavings: true,
@@ -50,11 +54,14 @@ export default function AdminProdusePage() {
     const list = getCatalogProducts();
     const overrides = getProductOverrides();
     const initial: Record<string, string> = {};
+    const initialStock: Record<string, string> = {};
     list.forEach((p) => {
       initial[p.id] = (overrides[p.id]?.basePrice ?? p.basePrice).toFixed(2);
+      initialStock[p.id] = String(getProductStockQuantity(p));
     });
     setProducts(list);
     setEdits(initial);
+    setStockEdits(initialStock);
   };
 
   const reloadProducts = async () => {
@@ -101,6 +108,23 @@ export default function AdminProdusePage() {
     showMessage("Preț salvat! Modificarea este activă imediat pe site.");
   };
 
+  const handleSaveStock = async (productId: string) => {
+    const stock = parseInt(stockEdits[productId], 10);
+    if (isNaN(stock) || stock < 0) {
+      showMessage("Introdu o cantitate de stoc validă (0 sau mai mult).");
+      return;
+    }
+
+    const result = await saveProductOverride(productId, { stockQuantity: stock });
+    if (!result.ok) {
+      showMessage(result.message);
+      return;
+    }
+
+    await reloadProducts();
+    showMessage("Stoc salvat! Modificarea este activă imediat pe site.");
+  };
+
   const handleToggleBestseller = async (product: CatalogProduct) => {
     const next = !product.bestseller;
     const result = await saveProductOverride(product.id, { bestseller: next });
@@ -121,6 +145,7 @@ export default function AdminProdusePage() {
       tag: product.tag,
       description: product.description,
       basePrice: product.basePrice.toFixed(2),
+      stockQuantity: String(getProductStockQuantity(product)),
       bestseller: product.bestseller === true,
       bundleSavingsOverride:
         overrides?.bundleSavingsOverride != null
@@ -146,11 +171,18 @@ export default function AdminProdusePage() {
       return;
     }
 
+    const stock = parseInt(editForm.stockQuantity, 10);
+    if (isNaN(stock) || stock < 0) {
+      showMessage("Introdu o cantitate de stoc validă (0 sau mai mult).");
+      return;
+    }
+
     const updates: ProductOverride = {
       title: editForm.title.trim(),
       tag: editForm.tag.trim(),
       description: editForm.description.trim(),
       basePrice: price,
+      stockQuantity: stock,
       bestseller: editForm.bestseller,
     };
 
@@ -209,6 +241,7 @@ export default function AdminProdusePage() {
               <th className="px-4 py-4">Tag</th>
               <th className="px-4 py-4">Imagine</th>
               <th className="px-4 py-4">Bestseller</th>
+              <th className="px-4 py-4">Stoc</th>
               <th className="px-4 py-4">Preț (RON)</th>
               <th className="px-4 py-4 sm:px-6">Acțiuni</th>
             </tr>
@@ -254,6 +287,26 @@ export default function AdminProdusePage() {
                       <p className="mt-1 text-[10px] text-emerald-400">−{savings.toFixed(0)} lei</p>
                     ) : null;
                   })()}
+                </td>
+                <td className="px-4 py-4">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={stockEdits[product.id] ?? String(getProductStockQuantity(product))}
+                    onChange={(e) =>
+                      setStockEdits((prev) => ({ ...prev, [product.id]: e.target.value }))
+                    }
+                    className="w-24 rounded-lg border border-white/10 bg-novra-bg/50 px-3 py-2 text-sm text-white outline-none focus:border-purple-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveStock(product.id)}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-novra-bg/50 px-2 py-1 text-[10px] font-semibold text-gray-200 transition hover:border-purple-500/40"
+                  >
+                    <Save size={12} />
+                    Salvează stoc
+                  </button>
                 </td>
                 <td className="px-4 py-4">
                   <input
@@ -345,6 +398,17 @@ export default function AdminProdusePage() {
                   min="0"
                   value={editForm.basePrice}
                   onChange={(e) => setEditForm({ ...editForm, basePrice: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Stoc (bucăți)</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={editForm.stockQuantity}
+                  onChange={(e) => setEditForm({ ...editForm, stockQuantity: e.target.value })}
                   className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
                 />
               </div>

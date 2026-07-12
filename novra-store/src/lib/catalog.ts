@@ -1,12 +1,15 @@
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 
+export const DEFAULT_STOCK_QUANTITY = 100;
+
 export type CatalogProduct = {
   id: string;
   title: string;
   subtitle: string;
   category: string;
   basePrice: number;
+  stockQuantity: number;
   imageSrc: string;
   image: string;
   tag: string;
@@ -63,10 +66,16 @@ export function getProductImageFallback(category: string): string {
 }
 
 function withProductImages(
-  product: Omit<CatalogProduct, "image" | "imageSrc"> & Partial<Pick<CatalogProduct, "image" | "imageSrc">>
+  product: Omit<CatalogProduct, "image" | "imageSrc" | "stockQuantity"> &
+    Partial<Pick<CatalogProduct, "image" | "imageSrc" | "stockQuantity">>
 ): CatalogProduct {
   const imageSrc = product.imageSrc ?? getProductImagePath(product as Pick<CatalogProduct, "id" | "category">);
-  return { ...product, imageSrc, image: product.image ?? imageSrc };
+  return {
+    ...product,
+    stockQuantity: product.stockQuantity ?? DEFAULT_STOCK_QUANTITY,
+    imageSrc,
+    image: product.image ?? imageSrc,
+  };
 }
 
 export const CATALOG_PRODUCTS: CatalogProduct[] = [
@@ -291,11 +300,71 @@ export const getBundleVariantLabel = (adapterIdx: number, cableIdx: number) =>
   `Adaptor: ${BUNDLE_COLORS[adapterIdx]} / Cablu: ${BUNDLE_COLORS[cableIdx]}`;
 
 export type ProductOverride = Partial<
-  Pick<CatalogProduct, "title" | "description" | "tag" | "basePrice" | "bestseller">
+  Pick<
+    CatalogProduct,
+    "title" | "description" | "tag" | "basePrice" | "bestseller" | "stockQuantity"
+  >
 > & {
   /** Suprascrie economiile bundle calculate automat; null = folosește calculul automat */
   bundleSavingsOverride?: number | null;
 };
+
+export function getProductStockQuantity(
+  product: Pick<CatalogProduct, "id" | "stockQuantity">
+): number {
+  const override = getProductOverrides()[product.id]?.stockQuantity;
+  if (override !== undefined) return Math.max(0, Math.floor(override));
+  return product.stockQuantity ?? DEFAULT_STOCK_QUANTITY;
+}
+
+export function formatStockLabel(quantity: number): string {
+  const normalized = Math.max(0, Math.floor(quantity));
+  if (normalized <= 0) return "Stoc epuizat";
+  if (normalized === 1) return "1 bucată în stoc";
+  return `${normalized} bucăți în stoc`;
+}
+
+export function isProductInStock(product: Pick<CatalogProduct, "id" | "stockQuantity">): boolean {
+  return getProductStockQuantity(product) > 0;
+}
+
+export function getCartQuantityForProduct(
+  items: Array<{ productId: string; quantity: number }>,
+  productId: string
+): number {
+  return items
+    .filter((item) => item.productId === productId)
+    .reduce((sum, item) => sum + item.quantity, 0);
+}
+
+export function validateCartStock(
+  items: Array<{ productId: string; quantity: number }>
+): { ok: true } | { ok: false; message: string } {
+  const required = new Map<string, number>();
+
+  for (const item of items) {
+    required.set(item.productId, (required.get(item.productId) ?? 0) + item.quantity);
+  }
+
+  const shortages: string[] = [];
+
+  for (const [productId, quantity] of required) {
+    const product = getProductById(productId);
+    if (!product) {
+      return { ok: false, message: "Un produs din coș nu mai este disponibil." };
+    }
+
+    const available = getProductStockQuantity(product);
+    if (quantity > available) {
+      shortages.push(
+        `${product.title}: solicitat ${quantity}, disponibil ${available}`
+      );
+    }
+  }
+
+  if (shortages.length === 0) return { ok: true };
+  return { ok: false, message: `Stoc insuficient. ${shortages.join("; ")}` };
+}
 
 function isBrowser() {
   return typeof window !== "undefined";

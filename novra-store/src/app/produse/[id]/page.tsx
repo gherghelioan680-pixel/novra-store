@@ -21,8 +21,10 @@ import {
   isAdapterProduct,
   isBundleProduct,
   isUsbCCable,
+  getProductStockQuantity,
   type CatalogProduct,
 } from "@/lib/catalog";
+import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductBadges, { ProductBadgesOverlay } from "@/components/produse/ProductBadges";
 import { getWhatsAppNumber } from "@/lib/site-settings";
 import { buildWhatsAppUrl as buildWhatsAppLink, createStoreRefreshEffect } from "@/lib/store";
@@ -59,6 +61,8 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
   const getBundleSelection = (pid: string) => bundleSelections[pid] ?? { adapterIdx: 0, cableIdx: 0 };
   const bundleSelection = getBundleSelection(product.id);
   const isCurrentVariantUnavailable = isLockedVariant(product.id, activeOptionIdx);
+  const stockQuantity = getProductStockQuantity(product);
+  const isOutOfStock = stockQuantity <= 0;
 
   const handleOptionSelect = (pid: string, optionIndex: number) => {
     if (isLockedVariant(pid, optionIndex)) return;
@@ -120,7 +124,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
   };
 
   const handleAddToCart = () => {
-    if (isLockedVariant(product.id, activeOptionIdx)) return;
+    if (isLockedVariant(product.id, activeOptionIdx) || isOutOfStock) return;
 
     const now = Date.now();
     if (now - lastAddRef.current < 600) return;
@@ -136,7 +140,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
   };
 
   const addToCartButtonClass = `flex-1 flex items-center justify-center gap-2 bg-purple-600 text-white font-semibold px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors duration-200 shadow-xl touch-manipulation min-h-11 w-full cursor-pointer ${
-    isCurrentVariantUnavailable ? "opacity-50 cursor-not-allowed pointer-events-none" : "hover:bg-purple-700 active:bg-purple-800"
+    isCurrentVariantUnavailable || isOutOfStock ? "opacity-50 cursor-not-allowed pointer-events-none" : "hover:bg-purple-700 active:bg-purple-800"
   }`;
 
   const whatsAppUrl = buildWhatsAppUrl(product, activeOptionIdx);
@@ -177,6 +181,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
             <ProductBadges product={product} className="mb-2" />
             <p className="text-purple-500 text-[11px] uppercase tracking-widest font-semibold mb-2">{product.subtitle}</p>
             <p className="text-gray-400 text-sm font-light leading-relaxed mb-3">{product.description}</p>
+            <ProductStockLabel product={product} className="mb-3 block" />
 
             <div className="bg-novra-surface/70 border border-white/8 rounded-lg text-[11px] grid grid-cols-1 min-[400px]:grid-cols-2 gap-1.5 p-2.5 mb-3">
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
@@ -304,12 +309,12 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={isCurrentVariantUnavailable}
+                  disabled={isCurrentVariantUnavailable || isOutOfStock}
                   className={addToCartButtonClass}
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   <ShoppingBag size={15} />
-                  Adaugă în coș
+                  {isOutOfStock ? "Stoc epuizat" : "Adaugă în coș"}
                 </button>
                 {whatsAppUrl && (
                   <a
@@ -341,12 +346,12 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={isCurrentVariantUnavailable}
+            disabled={isCurrentVariantUnavailable || isOutOfStock}
             className={addToCartButtonClass}
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
             <ShoppingBag size={15} />
-            Adaugă în coș
+            {isOutOfStock ? "Stoc epuizat" : "Adaugă în coș"}
           </button>
           {whatsAppUrl && (
             <a

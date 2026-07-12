@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +8,14 @@ import { Minus, Plus, ShoppingBag, Trash2, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
-import { getProductById, loadProductOverrides } from "@/lib/catalog";
+import {
+  getProductById,
+  getProductStockQuantity,
+  formatStockLabel,
+  loadProductOverrides,
+  validateCartStock,
+} from "@/lib/catalog";
+import { subscribeToStoreUpdates } from "@/lib/store";
 
 function CartAddFromUrl() {
   const router = useRouter();
@@ -50,6 +57,15 @@ function CartAddFromUrl() {
 
 function CosPageContent() {
   const { items, updateQuantity, removeItem, totalPrice, totalItems, hydrated } = useCart();
+  const [, setStockTick] = useState(0);
+
+  useEffect(() => {
+    void loadProductOverrides();
+    const unsubscribe = subscribeToStoreUpdates(() => {
+      void loadProductOverrides().then(() => setStockTick((value) => value + 1));
+    });
+    return unsubscribe;
+  }, []);
 
   if (!hydrated) {
     return (
@@ -99,7 +115,15 @@ function CosPageContent() {
         ) : (
           <>
             <div className="space-y-4 mb-10">
-              {items.map((item) => (
+              {items.map((item) => {
+                const product = getProductById(item.productId);
+                const available = product ? getProductStockQuantity(product) : 0;
+                const totalForProduct = items
+                  .filter((entry) => entry.productId === item.productId)
+                  .reduce((sum, entry) => sum + entry.quantity, 0);
+                const canIncrease = totalForProduct < available;
+
+                return (
                 <div
                   key={item.id}
                   className="flex gap-4 p-4 bg-novra-card/30 border border-white/8 rounded-2xl"
@@ -120,6 +144,11 @@ function CosPageContent() {
                     <p className="text-purple-400 font-bold text-sm mt-2">
                       {item.unitPrice.toFixed(2)} RON
                     </p>
+                    {product && (
+                      <p className={`text-[11px] mt-1 ${available > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {formatStockLabel(available)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end justify-between gap-2">
@@ -145,7 +174,8 @@ function CosPageContent() {
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="min-w-11 min-h-11 flex items-center justify-center hover:text-purple-400 transition-colors touch-manipulation"
+                        disabled={!canIncrease}
+                        className="min-w-11 min-h-11 flex items-center justify-center hover:text-purple-400 transition-colors touch-manipulation disabled:opacity-40 disabled:cursor-not-allowed"
                         aria-label="Crește cantitatea"
                       >
                         <Plus size={14} />
@@ -153,7 +183,8 @@ function CosPageContent() {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

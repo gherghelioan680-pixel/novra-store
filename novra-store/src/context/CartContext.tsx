@@ -2,6 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
+import {
+  getCartQuantityForProduct,
+  getProductById,
+  getProductStockQuantity,
+} from "@/lib/catalog";
 
 export type CartItem = {
   id: string;
@@ -112,9 +117,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   const addItem = useCallback((input: AddItemInput) => {
+    const product = getProductById(input.productId);
+    if (!product) {
+      setToast("Produsul nu mai este disponibil.");
+      return;
+    }
+
+    const available = getProductStockQuantity(product);
+    if (available <= 0) {
+      setToast("Stoc epuizat pentru acest produs.");
+      return;
+    }
+
     const id = makeItemId(input.productId, input.variantLabel);
     setItems((prev) => {
       const existing = prev.find((item) => item.id === id);
+      const requestedQty = (existing?.quantity ?? 0) + (input.quantity ?? 1);
+      const totalForProduct = getCartQuantityForProduct(prev, input.productId) - (existing?.quantity ?? 0) + requestedQty;
+
+      if (totalForProduct > available) {
+        setToast(`Stoc insuficient. Disponibil: ${available} bucăți.`);
+        return prev;
+      }
+
       const next = existing
         ? prev.map((item) =>
             item.id === id
@@ -150,10 +175,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     setItems((prev) => {
-      const next =
-        quantity < 1
-          ? prev.filter((item) => item.id !== id)
-          : prev.map((item) => (item.id === id ? { ...item, quantity } : item));
+      const target = prev.find((item) => item.id === id);
+      if (!target) return prev;
+
+      if (quantity < 1) {
+        const next = prev.filter((item) => item.id !== id);
+        writeStoredCart(next);
+        return next;
+      }
+
+      const product = getProductById(target.productId);
+      if (!product) {
+        const next = prev.filter((item) => item.id !== id);
+        writeStoredCart(next);
+        return next;
+      }
+
+      const available = getProductStockQuantity(product);
+      const totalForProduct =
+        getCartQuantityForProduct(prev, target.productId) - target.quantity + quantity;
+
+      if (totalForProduct > available) {
+        setToast(`Stoc insuficient. Disponibil: ${available} bucăți.`);
+        return prev;
+      }
+
+      const next = prev.map((item) => (item.id === id ? { ...item, quantity } : item));
       writeStoredCart(next);
       return next;
     });
