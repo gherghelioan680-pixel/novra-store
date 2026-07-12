@@ -1,8 +1,9 @@
 import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductImage from "@/components/produse/ProductImage";
+import BundleProductImages from "@/components/produse/BundleProductImages";
 import Link from "next/link";
 import type { CatalogProduct } from "@/lib/catalog";
-import { buildProductUrl } from "@/lib/catalog";
+import { buildProductUrl, isBundleProduct } from "@/lib/catalog";
 import { ProductBadgesOverlay } from "@/components/produse/ProductBadges";
 
 export type { CatalogProduct };
@@ -30,15 +31,25 @@ export function ProductGrid({ products }: ProductGridProps) {
                   {product.tag}
                 </span>
                 <span className="relative w-28 h-28 sm:w-32 sm:h-32 block transition-transform duration-500 group-hover:scale-105">
-                  <ProductImage
-                    src={product.imageSrc}
-                    category={product.category}
-                    alt={product.title}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-contain rounded-lg"
-                    draggable={false}
-                  />
+                  {isBundleProduct(product.category) ? (
+                    <BundleProductImages
+                      productId={product.id}
+                      adapterClassName="relative h-full w-[46%]"
+                      cableClassName="relative h-full w-[46%]"
+                      imageClassName="object-contain rounded-lg"
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <ProductImage
+                      src={product.imageSrc}
+                      category={product.category}
+                      alt={product.title}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-contain rounded-lg"
+                      draggable={false}
+                    />
+                  )}
                 </span>
               </span>
               <span className="font-bold text-base text-white mb-0.5 group-hover:text-purple-400 transition-colors duration-300 block line-clamp-1">

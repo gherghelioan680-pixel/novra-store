@@ -32,15 +32,15 @@ export const PRODUCT_IMAGE_FOLDER: Record<string, string> = {
 };
 
 export const PRODUCT_IMAGE_FILES: Record<string, string> = {
-  "usb-c-100w": "novra-ultracharge-100w.jpg",
-  "usb-c-pro-240w": "novra-hyperpower-240w.jpg",
-  "usb-a-c-100w": "novra-hybrid-100w.jpg",
+  "usb-c-100w": "violet.png",
+  "usb-c-pro-240w": "albastru.png",
+  "usb-a-c-100w": "roz.png",
   "usb-c-lightning-pd": "violet.png",
   "usb-a-lightning-classic": "albastru.png",
   "usb-c-lightning-flex": "roz.png",
-  "incarcator-gan-65w": "novra-gan-nova-65w.jpg",
-  "incarcator-auto-metal": "novra-drivespeed-45w.jpg",
-  "bundle-travel-pack": "novra-travelpack-duo.jpg",
+  "incarcator-gan-65w": "novra-bundle-preview.png",
+  "incarcator-auto-metal": "novra-bundle-preview.png",
+  "bundle-travel-pack": "novra-bundle-preview.png",
 };
 
 /** Slug-uri fișiere pentru variantele de culoare (index aliniat cu BUNDLE_COLORS). */
