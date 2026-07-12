@@ -110,20 +110,20 @@ export default function AdminNewsletterPage() {
         subtitle={`${subscribers.length} abonați · ${discountCodes.length} coduri reducere`}
       />
 
-      {discountCodes.length > 0 && (
-        <div className="mb-8 overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
-          <div className="border-b border-white/10 px-4 py-3 sm:px-6">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Tag size={16} className="text-amber-400" />
-              Coduri reducere newsletter
-            </h3>
-            <p className="mt-1 text-xs text-gray-500">
-              Reducere implicită pentru coduri noi: {discountPercent}% · gestionează toate codurile în{" "}
-              <a href="/admin/coduri-reducere" className="text-purple-300 hover:text-white underline">
-                Coduri reducere
-              </a>
-            </p>
-          </div>
+      <div className="mb-8 overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
+        <div className="border-b border-white/10 px-4 py-3 sm:px-6">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+            <Tag size={16} className="text-amber-400" />
+            Coduri reducere newsletter
+          </h3>
+          <p className="mt-1 text-xs text-gray-500">
+            Reducere implicită pentru coduri noi: {discountPercent}% · gestionează toate codurile în{" "}
+            <a href="/admin/coduri-reducere" className="text-purple-300 hover:text-white underline">
+              Coduri reducere
+            </a>
+          </p>
+        </div>
+        {discountCodes.length > 0 ? (
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500">
@@ -161,18 +161,16 @@ export default function AdminNewsletterPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {discountCodes.length === 0 && (
-        <div className="mb-8 rounded-2xl border border-white/10 bg-novra-card/30 px-4 py-8 text-center sm:px-6">
-          <Tag size={28} className="mx-auto mb-3 text-gray-600" />
-          <p className="text-sm text-gray-500">Niciun cod de reducere generat încă.</p>
-          <p className="mt-2 text-xs text-gray-600">
-            Codurile apar automat la abonare newsletter ({discountPercent}% reducere implicită).
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className="px-4 py-8 text-center sm:px-6">
+            <Tag size={28} className="mx-auto mb-3 text-gray-600" />
+            <p className="text-sm text-gray-500">Niciun cod de reducere generat încă.</p>
+            <p className="mt-2 text-xs text-gray-600">
+              Codurile apar automat la abonare newsletter ({discountPercent}% reducere implicită).
+            </p>
+          </div>
+        )}
+      </div>
 
       {subscribers.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-novra-card/30 py-16 text-center">

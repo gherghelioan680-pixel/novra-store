@@ -21,6 +21,7 @@ const quickLinks = [
   { href: "/admin/produse", label: "Gestionează produse", desc: "Editează prețuri și catalog" },
   { href: "/admin/comenzi", label: "Vezi comenzi", desc: "Procesează și expediază" },
   { href: "/admin/clienti", label: "Clienți înregistrați", desc: "Utilizatori și NovraCredits" },
+  { href: "/admin/coduri-reducere", label: "Coduri reducere", desc: "Gestionează codurile promoționale" },
   { href: "/admin/setari", label: "Setări site", desc: "Countdown, WhatsApp, livrare" },
 ];
 
