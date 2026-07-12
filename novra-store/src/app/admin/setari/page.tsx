@@ -559,6 +559,17 @@ export default function AdminSetariPage() {
               />
               <span className="text-sm text-gray-300">Trimite email confirmare la plasarea comenzii</span>
             </label>
+            {!integrations?.email.configured && (
+              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90 leading-relaxed">
+                Adaugă cheile în Vercel Environment Variables (sau în <code className="text-amber-100">.env.local</code>{" "}
+                local), apoi redeploy:
+                <br />
+                <code className="text-amber-100">RESEND_API_KEY</code> (secret, server) și{" "}
+                <code className="text-amber-100">RESEND_FROM_EMAIL</code> (ex.{" "}
+                <code className="text-amber-100">NOVRA &lt;onboarding@resend.dev&gt;</code> pentru test, sau{" "}
+                <code className="text-amber-100">NOVRA &lt;comenzi@novra.ro&gt;</code> după verificarea domeniului).
+              </p>
+            )}
             <p className="text-xs text-gray-500 leading-relaxed">
               Necesită <code className="text-purple-300">RESEND_API_KEY</code> și{" "}
               <code className="text-purple-300">RESEND_FROM_EMAIL</code> (domeniu verificat în Resend) în
