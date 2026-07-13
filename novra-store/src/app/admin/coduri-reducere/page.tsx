@@ -394,17 +394,15 @@ export default function AdminCoduriReducerePage() {
                       )}
                     </td>
                     <td className="px-4 py-3 sm:px-6">
-                      {code.source === "admin" && (
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(code.code)}
-                          disabled={deletingCode === code.code}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                        >
-                          <Trash2 size={12} />
-                          {deletingCode === code.code ? "..." : "Șterge"}
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(code.code)}
+                        disabled={deletingCode === code.code}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        <Trash2 size={12} />
+                        {deletingCode === code.code ? "..." : "Șterge"}
+                      </button>
                     </td>
                   </tr>
                 );

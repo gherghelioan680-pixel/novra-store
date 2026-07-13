@@ -203,6 +203,26 @@ export async function deleteAffiliateAdmin(
   }
 }
 
+export async function deleteReferralAdmin(
+  referralId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/affiliates", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "delete-referral", referralId }),
+    });
+    const data = (await response.json()) as { message?: string; error?: string };
+    if (!response.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Ștergere eșuată." };
+    }
+    dispatchStoreUpdate({ scope: "affiliates" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
 export async function submitAffiliatePayout(input: {
   beneficiaryName: string;
   iban?: string;

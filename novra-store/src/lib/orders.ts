@@ -413,6 +413,58 @@ export function isGuestOrder(order: Pick<Order, "isGuest" | "userId">): boolean 
   return Boolean(order.isGuest || order.userId.startsWith("guest-"));
 }
 
+export async function bulkUpdateOrderStatus(
+  orderIds: string[],
+  status: OrderStatus
+): Promise<boolean> {
+  if (!isBrowser() || orderIds.length === 0) return false;
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      cache: "no-store",
+      body: JSON.stringify({ orderIds, status }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as { orders?: Partial<Order>[] };
+    if (data.orders) {
+      mergeOrdersIntoCache(data.orders.map(normalizeOrder));
+    }
+    dispatchStoreUpdate({ scope: "orders" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function bulkDeleteOrders(orderIds: string[]): Promise<boolean> {
+  if (!isBrowser() || orderIds.length === 0) return false;
+
+  try {
+    const response = await fetch("/api/store/orders", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ orderIds }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as { orders?: Partial<Order>[] };
+    if (data.orders) {
+      cacheOrders(data.orders.map(normalizeOrder));
+    } else {
+      cacheOrders(getStoredOrders().filter((order) => !orderIds.includes(order.id)));
+    }
+    dispatchStoreUpdate({ scope: "orders" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function getOrderStats() {
   const orders = getStoredOrders();
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Coins, Mail, ShoppingBag, User } from "lucide-react";
+import { ArrowLeft, Coins, Mail, ShoppingBag, User, Ban, ShieldOff, Trash2 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import {
   requireAdmin,
@@ -11,6 +11,8 @@ import {
   updateUserCreditsAdmin,
   updateUserProfileAdmin,
   addAdminNote,
+  setUserBannedAdmin,
+  deleteUserAdmin,
   getNovraCredits,
   type SafeUser,
 } from "@/lib/auth";
@@ -146,6 +148,31 @@ export default function AdminClientDetailPage() {
     await refresh();
   };
 
+  const handleBanToggle = async () => {
+    if (!customer) return;
+    setSaving(true);
+    const result = await setUserBannedAdmin(email, !customer.banned);
+    setSaving(false);
+    if (result.success && result.user) {
+      setCustomer(result.user);
+      setMessage(result.user.banned ? "Cont blocat." : "Cont deblocat.");
+    } else {
+      setMessage(result.message ?? "Eroare.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!customer || !window.confirm(`Ștergi definitiv contul ${customer.name}?`)) return;
+    setSaving(true);
+    const result = await deleteUserAdmin(email);
+    setSaving(false);
+    if (result.success) {
+      router.replace("/admin/utilizatori");
+    } else {
+      setMessage(result.message ?? "Ștergere eșuată.");
+    }
+  };
+
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("ro-RO", {
       day: "2-digit",
@@ -168,6 +195,44 @@ export default function AdminClientDetailPage() {
         title={customer.name}
         subtitle={customer.email}
       />
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        {customer.banned ? (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={handleBanToggle}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-600/10 px-4 py-2 text-sm text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-50"
+          >
+            <ShieldOff size={16} />
+            Deblochează cont
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={handleBanToggle}
+            className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-600/10 px-4 py-2 text-sm text-amber-300 hover:bg-amber-600/20 disabled:opacity-50"
+          >
+            <Ban size={16} />
+            Blochează cont
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={saving}
+          onClick={handleDeleteAccount}
+          className="inline-flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-600/10 px-4 py-2 text-sm text-red-300 hover:bg-red-600/20 disabled:opacity-50"
+        >
+          <Trash2 size={16} />
+          Șterge cont
+        </button>
+        {customer.banned && (
+          <span className="inline-flex items-center rounded-full bg-red-500/15 px-3 py-2 text-xs text-red-300">
+            Cont blocat — nu poate autentifica sau plasa comenzi
+          </span>
+        )}
+      </div>
 
       {message && (
         <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-600/10 px-4 py-3 text-sm text-purple-200">

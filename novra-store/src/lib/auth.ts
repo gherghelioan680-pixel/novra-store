@@ -57,6 +57,8 @@ export type User = {
     recommendations: boolean;
   };
   createdAt: string;
+  /** Cont blocat de admin — nu poate autentifica sau plasa comenzi. */
+  banned?: boolean;
 };
 
 export type SafeUser = Omit<User, "password"> & { adminNotes?: string };
@@ -931,6 +933,64 @@ export async function addAdminNote(
     const data = (await response.json()) as { user: SafeUser };
     dispatchStoreUpdate({ scope: "users" });
     return { success: true, user: data.user };
+  } catch {
+    return { success: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function setUserBannedAdmin(
+  email: string,
+  banned: boolean
+): Promise<{ success: boolean; user?: SafeUser; message?: string }> {
+  if (!isBrowser()) return { success: false, message: "Indisponibil." };
+
+  try {
+    const response = await fetch("/api/store/users", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ email, banned }),
+    });
+
+    if (!response.ok) {
+      return { success: false, message: banned ? "Blocarea contului a eșuat." : "Deblocarea contului a eșuat." };
+    }
+
+    const data = (await response.json()) as { user: SafeUser };
+    const users = getStoredUsers();
+    const index = users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (index !== -1 && data.user) {
+      users[index] = { ...users[index], ...data.user, password: users[index].password };
+      saveUsers(users);
+    }
+
+    dispatchStoreUpdate({ scope: "users" });
+    return { success: true, user: data.user };
+  } catch {
+    return { success: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function deleteUserAdmin(
+  email: string
+): Promise<{ success: boolean; message?: string }> {
+  if (!isBrowser()) return { success: false, message: "Indisponibil." };
+
+  try {
+    const response = await fetch("/api/store/users", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const data = (await response.json()) as { error?: string };
+      return { success: false, message: data.error ?? "Ștergerea contului a eșuat." };
+    }
+
+    const users = getStoredUsers().filter((u) => u.email.toLowerCase() !== email.toLowerCase());
+    saveUsers(users);
+    dispatchStoreUpdate({ scope: "users" });
+    return { success: true };
   } catch {
     return { success: false, message: "Eroare de rețea." };
   }

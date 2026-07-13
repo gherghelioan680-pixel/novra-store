@@ -115,6 +115,7 @@ export async function PATCH(request: NextRequest) {
       "shippingAddress",
       "subscribedToNewsletter",
       "preferences",
+      "banned",
     ] as const;
 
     for (const field of profileFields) {
@@ -141,6 +142,34 @@ export async function PATCH(request: NextRequest) {
     users[index] = user;
     await writeJsonFile(FILE, users);
     return Response.json({ ok: true, user: stripPassword(user) });
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!email) {
+      return Response.json({ error: "Missing email" }, { status: 400 });
+    }
+
+    const users = await readJsonFile<StoredUser[]>(FILE, []);
+    const index = findUserIndex(users, email);
+    if (index === -1) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (users[index].role === "admin") {
+      return Response.json({ error: "Nu poți șterge un cont de administrator." }, { status: 403 });
+    }
+
+    users.splice(index, 1);
+    await writeJsonFile(FILE, users);
+    return Response.json({ ok: true });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

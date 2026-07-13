@@ -18,6 +18,7 @@ import {
 } from "@/lib/campaigns-server";
 import { processReferralRewardsForOrder } from "@/lib/referrals-server";
 import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
+import { isEmailBanned, BANNED_USER_MESSAGE } from "@/lib/user-ban-server";
 
 export const runtime = "nodejs";
 
@@ -154,6 +155,12 @@ export async function POST(request: NextRequest) {
     }
 
     const order = normalizeOrder(body.order as Partial<Order>);
+
+    const checkoutEmail = (order.userEmail || order.address?.email || "").trim().toLowerCase();
+    if (checkoutEmail && (await isEmailBanned(checkoutEmail))) {
+      return Response.json({ error: BANNED_USER_MESSAGE }, { status: 403 });
+    }
+
     const cookieRef = getAffiliateRefFromRequest(request);
     if (!order.affiliateCode && cookieRef) {
       order.affiliateCode = cookieRef;
@@ -267,16 +274,58 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const bulkOrderIds = Array.isArray(body?.orderIds)
+      ? (body.orderIds as string[]).filter((id) => typeof id === "string" && id.trim())
+      : [];
     const orderId = body?.orderId as string | undefined;
+    const targetOrderIds = bulkOrderIds.length > 0 ? bulkOrderIds : orderId ? [orderId] : [];
     const status = body?.status as string | undefined;
     const awbTracking = body?.awbTracking as string | undefined;
 
-    if (!orderId) {
+    if (targetOrderIds.length === 0) {
       return Response.json({ error: "Missing orderId" }, { status: 400 });
     }
 
+    if (targetOrderIds.length > 1) {
+      const orders = await readOrders();
+      const settings = await getServerSiteSettings();
+      let updatedCount = 0;
+
+      for (const id of targetOrderIds) {
+        const index = orders.findIndex((order) => order.id === id);
+        if (index === -1) continue;
+
+        const previous = orders[index];
+        const updates: Partial<Order> = { updatedAt: new Date().toISOString() };
+
+        if (status) {
+          const normalizedStatus = status === "processed" ? "processing" : status;
+          if (
+            normalizedStatus === "pending" ||
+            normalizedStatus === "processing" ||
+            normalizedStatus === "shipped" ||
+            normalizedStatus === "delivered" ||
+            normalizedStatus === "cancelled"
+          ) {
+            updates.status = normalizedStatus as OrderStatus;
+          }
+        }
+
+        orders[index] = { ...previous, ...updates };
+        updatedCount += 1;
+
+        if (updates.status && updates.status !== previous.status) {
+          await trySendOrderStatusEmail(orders[index], previous.status, settings.orderEmailsEnabled);
+        }
+      }
+
+      await writeJsonFile(ORDERS_FILE, orders);
+      return Response.json({ orders, updatedCount });
+    }
+
+    const singleOrderId = targetOrderIds[0];
     const orders = await readOrders();
-    const index = orders.findIndex((order) => order.id === orderId);
+    const index = orders.findIndex((order) => order.id === singleOrderId);
     if (index === -1) {
       return Response.json({ error: "Order not found" }, { status: 404 });
     }
@@ -360,26 +409,31 @@ export async function DELETE(request: NextRequest) {
   try {
     const orderIdFromQuery = request.nextUrl.searchParams.get("id");
     const body = orderIdFromQuery ? null : await request.json();
-    const orderId = orderIdFromQuery ?? (body?.orderId as string | undefined);
+    const bulkOrderIds = Array.isArray(body?.orderIds)
+      ? (body.orderIds as string[]).filter((id) => typeof id === "string" && id.trim())
+      : [];
+    const singleOrderId = orderIdFromQuery ?? (body?.orderId as string | undefined);
+    const orderIds = bulkOrderIds.length > 0 ? bulkOrderIds : singleOrderId ? [singleOrderId] : [];
 
-    if (!orderId) {
+    if (orderIds.length === 0) {
       return Response.json({ error: "Missing orderId" }, { status: 400 });
     }
 
     const orders = await readOrders();
-    const index = orders.findIndex((order) => order.id === orderId);
-    if (index === -1) {
-      return Response.json({ error: "Order not found" }, { status: 404 });
+    const removedOrders: Order[] = [];
+
+    for (const orderId of orderIds) {
+      const index = orders.findIndex((order) => order.id === orderId);
+      if (index === -1) continue;
+      const [removed] = orders.splice(index, 1);
+      removedOrders.push(removed);
+      if (removed.userEmail) {
+        await removeOrderFromUser(orderId, removed.userEmail);
+      }
     }
 
-    const [removed] = orders.splice(index, 1);
     await writeJsonFile(ORDERS_FILE, orders);
-
-    if (removed.userEmail) {
-      await removeOrderFromUser(orderId, removed.userEmail);
-    }
-
-    return Response.json({ ok: true, orders });
+    return Response.json({ ok: true, orders, deletedCount: removedOrders.length });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

@@ -25,6 +25,7 @@ import { useLiveCountdown } from "@/hooks/useLiveCountdown";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { parseIsoDate } from "@/lib/datetime";
 import { buildWhatsAppUrl } from "@/lib/store";
+import CopyButton from "@/components/CopyButton";
 import type { ComingSoonSettings } from "@/lib/site-settings";
 
 const COMING_SOON_COUNTDOWN_ID = "coming-soon-countdown";
@@ -171,7 +172,7 @@ export default function ComingSoonPage({
   const [newsletterStatus, setNewsletterStatus] = useState<
     "idle" | "sending" | "success" | "duplicate" | "error"
   >("idle");
-  const [newsletterDiscountMessage, setNewsletterDiscountMessage] = useState("");
+  const [newsletterDiscountCode, setNewsletterDiscountCode] = useState("");
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -186,17 +187,43 @@ export default function ComingSoonPage({
     if (result.ok) {
       if (result.alreadySubscribed) {
         setNewsletterStatus("duplicate");
-        setNewsletterDiscountMessage(result.discountMessage ?? "");
+        setNewsletterDiscountCode(result.discountCode ?? "");
       } else {
         setNewsletterStatus("success");
-        setNewsletterDiscountMessage(result.discountMessage ?? "");
+        setNewsletterDiscountCode(result.discountCode ?? "");
         form.reset();
       }
     } else {
       setNewsletterStatus("error");
-      setNewsletterDiscountMessage("");
+      setNewsletterDiscountCode("");
     }
   };
+
+  const renderDiscountCodeSuccess = (status: "success" | "duplicate") => (
+    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 text-center">
+      <p className="text-sm font-medium text-emerald-400">
+        {status === "success" ? t("successMessage") : t("duplicateMessage")}
+      </p>
+      {newsletterDiscountCode ? (
+        <div className="mt-3 flex flex-col items-center gap-2">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-300/70">
+            {t("discountCodeLabel")}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-xl border border-emerald-500/40 bg-black/40 px-4 py-2.5 font-mono text-base font-bold tracking-wider text-white sm:text-lg">
+              {newsletterDiscountCode}
+            </span>
+            <CopyButton text={newsletterDiscountCode} label={t("copyCode")} />
+          </div>
+          <p className="text-xs text-emerald-300/80">
+            {t("discountHint", { percent: newsletterDiscountPercent })}
+          </p>
+        </div>
+      ) : status === "duplicate" ? (
+        <p className="mt-2 text-sm text-purple-300">{t("duplicateNoCode")}</p>
+      ) : null}
+    </div>
+  );
 
   const featureKeys = ["power120w", "ganTech", "warranty", "premium"] as const;
 
@@ -339,17 +366,8 @@ export default function ComingSoonPage({
                   </button>
                 </div>
 
-                {newsletterStatus === "success" && (
-                  <p className="text-center text-sm text-emerald-400 font-medium">
-                    {t("successMessage")}
-                    {newsletterDiscountMessage && (
-                      <span className="block mt-1.5 text-emerald-300/90 text-xs">{newsletterDiscountMessage}</span>
-                    )}
-                  </p>
-                )}
-                {newsletterStatus === "duplicate" && (
-                  <p className="text-center text-sm text-purple-300">{t("duplicateMessage")}</p>
-                )}
+                {newsletterStatus === "success" && renderDiscountCodeSuccess("success")}
+                {newsletterStatus === "duplicate" && renderDiscountCodeSuccess("duplicate")}
                 {newsletterStatus === "error" && (
                   <p className="text-center text-sm text-red-400">{t("errorMessage")}</p>
                 )}

@@ -587,3 +587,28 @@ export async function deleteAffiliate(affiliateId: string): Promise<{ ok: boolea
   await writeAffiliates(filtered);
   return { ok: true };
 }
+
+export async function deleteAffiliateReferral(
+  referralId: string
+): Promise<{ ok: boolean; message?: string }> {
+  const referrals = await readAffiliateReferrals();
+  const referral = referrals.find((r) => r.id === referralId);
+  if (!referral) return { ok: false, message: "Referral negăsit." };
+
+  const affiliates = await readAffiliates();
+  const affIndex = affiliates.findIndex((a) => a.id === referral.affiliateId);
+  if (affIndex !== -1 && referral.status !== "paid") {
+    affiliates[affIndex] = {
+      ...affiliates[affIndex],
+      pendingCommission: Math.max(
+        0,
+        (affiliates[affIndex].pendingCommission ?? 0) - referral.commission
+      ),
+      totalOrders: Math.max(0, (affiliates[affIndex].totalOrders ?? 0) - 1),
+    };
+    await writeAffiliates(affiliates);
+  }
+
+  await writeAffiliateReferrals(referrals.filter((r) => r.id !== referralId));
+  return { ok: true };
+}

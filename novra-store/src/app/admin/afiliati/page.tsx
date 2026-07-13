@@ -37,6 +37,7 @@ import {
   reviewApplicationAdmin,
   updateAffiliateAdmin,
   updatePayoutStatusAdmin,
+  deleteReferralAdmin,
 } from "@/lib/affiliates";
 import { createStoreRefreshEffect } from "@/lib/store";
 
@@ -360,6 +361,15 @@ export default function AdminAfiliatiPage() {
     const result = await adjustReferralCommissionAdmin(referral.id, commission);
     setActionId(null);
     showMessage(result.ok ? "Comision ajustat." : result.message);
+    if (result.ok) await refresh();
+  };
+
+  const handleDeleteReferral = async (referral: AffiliateReferral) => {
+    if (!window.confirm("Ștergi acest referral? Comisionul pending va fi ajustat.")) return;
+    setActionId(referral.id);
+    const result = await deleteReferralAdmin(referral.id);
+    setActionId(null);
+    showMessage(result.ok ? "Referral șters." : result.message);
     if (result.ok) await refresh();
   };
 
@@ -895,26 +905,36 @@ export default function AdminAfiliatiPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-400">{formatDate(ref.createdAt)}</td>
                       <td className="px-4 py-3">
-                        {ref.status === "pending" && (
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              disabled={actionId === ref.id}
-                              onClick={() => handleMarkPaid(ref)}
-                              className="rounded px-2 py-1 text-xs text-emerald-300 hover:bg-white/5 disabled:opacity-50"
-                            >
-                              Plătit
-                            </button>
-                            <button
-                              type="button"
-                              disabled={actionId === ref.id}
-                              onClick={() => handleAdjustCommission(ref)}
-                              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-white/5 disabled:opacity-50"
-                            >
-                              Ajustează
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-1">
+                          {ref.status === "pending" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={actionId === ref.id}
+                                onClick={() => handleMarkPaid(ref)}
+                                className="rounded px-2 py-1 text-xs text-emerald-300 hover:bg-white/5 disabled:opacity-50"
+                              >
+                                Plătit
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actionId === ref.id}
+                                onClick={() => handleAdjustCommission(ref)}
+                                className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-white/5 disabled:opacity-50"
+                              >
+                                Ajustează
+                              </button>
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            disabled={actionId === ref.id}
+                            onClick={() => handleDeleteReferral(ref)}
+                            className="rounded px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                          >
+                            Șterge
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

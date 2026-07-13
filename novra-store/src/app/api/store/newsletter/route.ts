@@ -69,3 +69,26 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!email) {
+      return Response.json({ error: "Invalid email" }, { status: 400 });
+    }
+
+    const subscribers = await readJsonFile<NewsletterSubscriber[]>(FILE, []);
+    const next = subscribers.filter((subscriber) => subscriber.email !== email);
+    if (next.length === subscribers.length) {
+      return Response.json({ error: "Subscriber not found" }, { status: 404 });
+    }
+
+    await writeJsonFile(FILE, next);
+    return Response.json({ ok: true, subscribers: next });
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+}

@@ -29,7 +29,6 @@ export default function Navbar() {
     { href: "/promotii", label: t("promotions") },
     { href: "/blog", label: t("guides") },
     { href: "/urmareste-comanda", label: t("trackOrder") },
-    { href: "/cos", label: t("cart") },
   ];
 
   const mobileMenuLinks = [

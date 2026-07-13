@@ -11,6 +11,8 @@ import {
   updateOrderStatus,
   updateOrderAwb,
   deleteOrder,
+  bulkUpdateOrderStatus,
+  bulkDeleteOrders,
   isGuestOrder,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
@@ -30,6 +32,9 @@ export default function AdminComenziPage() {
   const [awbDrafts, setAwbDrafts] = useState<Record<string, string>>({});
   const [savingAwb, setSavingAwb] = useState<string | null>(null);
   const [awbMessage, setAwbMessage] = useState<Record<string, string>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<OrderStatus>("processing");
+  const [bulkWorking, setBulkWorking] = useState(false);
 
   const refreshOrders = async () => {
     const data = await loadOrders();
@@ -76,6 +81,39 @@ export default function AdminComenziPage() {
     await deleteOrder(deleteTarget.id);
     setDeleteTarget(null);
     setDeleting(false);
+    setSelectedIds((prev) => prev.filter((id) => id !== deleteTarget.id));
+    await refreshOrders();
+  };
+
+  const toggleSelected = (orderId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === orders.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(orders.map((order) => order.id));
+    }
+  };
+
+  const handleBulkStatus = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkWorking(true);
+    await bulkUpdateOrderStatus(selectedIds, bulkStatus);
+    setBulkWorking(false);
+    await refreshOrders();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Ștergi ${selectedIds.length} comenzi selectate?`)) return;
+    setBulkWorking(true);
+    await bulkDeleteOrders(selectedIds);
+    setSelectedIds([]);
+    setBulkWorking(false);
     await refreshOrders();
   };
 
@@ -92,6 +130,51 @@ export default function AdminComenziPage() {
     <div>
       <AdminHeader user={admin} title="Comenzi" subtitle="Toate comenzile plasate pe site" />
 
+      {orders.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-novra-card/30 p-4">
+          <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+            <input
+              type="checkbox"
+              checked={selectedIds.length === orders.length && orders.length > 0}
+              onChange={toggleSelectAll}
+              className="rounded border-white/20"
+            />
+            Selectează toate ({selectedIds.length}/{orders.length})
+          </label>
+          {selectedIds.length > 0 && (
+            <>
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
+                className="rounded-lg border border-white/10 bg-novra-bg/50 px-3 py-1.5 text-xs text-white outline-none"
+              >
+                {statusOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={bulkWorking}
+                onClick={() => void handleBulkStatus()}
+                className="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                Actualizează status
+              </button>
+              <button
+                type="button"
+                disabled={bulkWorking}
+                onClick={() => void handleBulkDelete()}
+                className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+              >
+                Șterge selectate
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-novra-card/30 py-16 text-center">
           <p className="text-gray-500">Nicio comandă încă.</p>
@@ -105,7 +188,15 @@ export default function AdminComenziPage() {
               className="scroll-mt-24 rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6"
             >
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+                <div className="flex gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(order.id)}
+                    onChange={() => toggleSelected(order.id)}
+                    className="mt-1 rounded border-white/20"
+                    aria-label={`Selectează comanda ${order.purchaseCode}`}
+                  />
+                  <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/admin/cautare?q=${encodeURIComponent(order.purchaseCode)}`}
@@ -134,6 +225,7 @@ export default function AdminComenziPage() {
                     {order.userEmail} · {order.address.phone}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">{formatDate(order.createdAt)}</p>
+                  </div>
                 </div>
                 <div className="flex flex-col items-start gap-2 sm:items-end">
                   <p className="text-xl font-bold text-purple-400">

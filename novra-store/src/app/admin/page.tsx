@@ -14,6 +14,13 @@ import {
   FileText,
   UserPlus,
   Bell,
+  Star,
+  Settings,
+  Mail,
+  Tag,
+  Coins,
+  Link2,
+  BarChart3,
 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import StatCard from "@/components/admin/StatCard";
@@ -28,16 +35,22 @@ import { loadPushNotificationsAdmin } from "@/lib/push";
 import { isCampaignCurrentlyActive } from "@/lib/campaigns-types";
 
 const quickLinks = [
+  { href: "/admin/statistici", label: "Statistici", desc: "Grafice și rapoarte vânzări", icon: BarChart3 },
   { href: "/admin/setari#administratori", label: "Administratori", desc: "Adaugă conturi admin pentru echipă", icon: Shield },
-  { href: "/admin/campanii", label: "Campanii active", desc: "Landing pages promoționale", icon: Megaphone },
+  { href: "/admin/utilizatori", label: "Utilizatori", desc: "Blocare, deblocare și ștergere conturi", icon: Users },
+  { href: "/admin/produse", label: "Produse", desc: "Editează prețuri, stoc și imagini", icon: Package },
+  { href: "/admin/comenzi", label: "Comenzi", desc: "Procesează, expediază, acțiuni bulk", icon: ShoppingBag },
+  { href: "/admin/clienti", label: "Clienți", desc: "Profil, credite și comenzi per client", icon: Users },
+  { href: "/admin/credite", label: "Gift Cards & Credite", desc: "Achiziții și ajustări NovraCredits", icon: Coins },
+  { href: "/admin/newsletter", label: "Newsletter", desc: "Abonați și coduri coming soon", icon: Mail },
+  { href: "/admin/coduri-reducere", label: "Coduri reducere", desc: "NOVRA10 newsletter + coduri admin", icon: Tag },
+  { href: "/admin/afiliati", label: "Program Afiliere", desc: "Afiliați, referrals și plăți", icon: Link2 },
+  { href: "/admin/campanii", label: "Campanii", desc: "Landing pages promoționale", icon: Megaphone },
   { href: "/admin/blog", label: "Blog & Ghiduri", desc: "Articole și conținut SEO", icon: FileText },
   { href: "/admin/recomandari", label: "Recomandări prieteni", desc: "Statistici program invitații", icon: UserPlus },
   { href: "/admin/notificari", label: "Notificări Push", desc: "Abonați și trimiteri", icon: Bell },
-  { href: "/admin/produse", label: "Gestionează produse", desc: "Editează prețuri și catalog" },
-  { href: "/admin/comenzi", label: "Vezi comenzi", desc: "Procesează și expediază" },
-  { href: "/admin/clienti", label: "Clienți înregistrați", desc: "Utilizatori și NovraCredits" },
-  { href: "/admin/coduri-reducere", label: "Coduri reducere", desc: "Gestionează codurile promoționale" },
-  { href: "/admin/setari", label: "Setări site", desc: "Countdown, WhatsApp, livrare" },
+  { href: "/admin/recenzii", label: "Recenzii", desc: "Aprobă, editează și șterge recenzii", icon: Star },
+  { href: "/admin/setari", label: "Setări site", desc: "Countdown, WhatsApp, livrare", icon: Settings },
 ];
 
 export default function AdminDashboardPage() {

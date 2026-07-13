@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail, Check, Tag } from "lucide-react";
+import { Mail, Check, Tag, Trash2 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin, getStoredUsers } from "@/lib/auth";
-import { loadNewsletterSubscribers } from "@/lib/newsletter";
+import { loadNewsletterSubscribers, deleteNewsletterSubscriber } from "@/lib/newsletter";
 import { loadDiscountCodes, formatDiscountValue, type DiscountCode } from "@/lib/discount-codes";
 import { loadSiteSettings } from "@/lib/site-settings";
 import { subscribeToStoreUpdates } from "@/lib/store";
@@ -23,6 +23,8 @@ export default function AdminNewsletterPage() {
   const [subscribers, setSubscribers] = useState<SubscriberRow[]>([]);
   const [discountCodes, setDiscountCodes] = useState<DiscountCode[]>([]);
   const [discountPercent, setDiscountPercent] = useState(10);
+  const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
 
   const mergeSubscribers = (fromStorage: Awaited<ReturnType<typeof loadNewsletterSubscribers>>) => {
     const fromUsers = getStoredUsers()
@@ -69,7 +71,7 @@ export default function AdminNewsletterPage() {
       loadSiteSettings(),
     ]);
     setSubscribers(mergeSubscribers(fromStorage));
-    setDiscountCodes(codes);
+    setDiscountCodes(codes.filter((c) => c.source === "newsletter"));
     setDiscountPercent(siteSettings.newsletterDiscountPercent);
   };
 
@@ -102,6 +104,16 @@ export default function AdminNewsletterPage() {
     return "Altele";
   };
 
+  const handleDeleteSubscriber = async (email: string) => {
+    if (!window.confirm(`Ștergi abonatul ${email}?`)) return;
+    setDeletingEmail(email);
+    const result = await deleteNewsletterSubscriber(email);
+    setDeletingEmail(null);
+    setMessage(result.ok ? "Abonat șters." : result.message);
+    if (result.ok) await refresh();
+    setTimeout(() => setMessage(""), 3000);
+  };
+
   return (
     <div>
       <AdminHeader
@@ -109,6 +121,12 @@ export default function AdminNewsletterPage() {
         title="Newsletter"
         subtitle={`${subscribers.length} abonați · ${discountCodes.length} coduri reducere`}
       />
+
+      {message && (
+        <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-600/10 px-4 py-3 text-sm text-purple-200">
+          {message}
+        </div>
+      )}
 
       <div className="mb-8 overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
         <div className="border-b border-white/10 px-4 py-3 sm:px-6">
@@ -190,6 +208,7 @@ export default function AdminNewsletterPage() {
                 <th className="px-4 py-4">Cod reducere</th>
                 <th className="px-4 py-4">Sursă</th>
                 <th className="px-4 py-4 sm:px-6">Data</th>
+                <th className="px-4 py-4">Acțiuni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -207,6 +226,17 @@ export default function AdminNewsletterPage() {
                   </td>
                   <td className="px-4 py-4 text-xs text-purple-300">{sourceLabel(sub.source)}</td>
                   <td className="px-4 py-4 sm:px-6 text-xs text-gray-500">{formatDate(sub.date)}</td>
+                  <td className="px-4 py-4">
+                    <button
+                      type="button"
+                      disabled={deletingEmail === sub.email}
+                      onClick={() => void handleDeleteSubscriber(sub.email)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      <Trash2 size={12} />
+                      Șterge
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

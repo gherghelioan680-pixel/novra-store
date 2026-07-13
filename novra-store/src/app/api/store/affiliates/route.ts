@@ -229,6 +229,18 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ ok: true, referral: result.referral });
     }
 
+    if (action === "delete-referral") {
+      const referralId = body?.referralId as string;
+      if (!referralId) return Response.json({ error: "Lipsește referralId." }, { status: 400 });
+
+      const { deleteAffiliateReferral } = await import("@/lib/affiliates-server");
+      const result = await deleteAffiliateReferral(referralId);
+      if (!result.ok) {
+        return Response.json({ ok: false, message: result.message }, { status: 400 });
+      }
+      return Response.json({ ok: true });
+    }
+
     return Response.json({ error: "Acțiune necunoscută." }, { status: 400 });
   } catch {
     return Response.json({ error: "Cerere invalidă." }, { status: 400 });

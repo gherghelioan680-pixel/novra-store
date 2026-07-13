@@ -67,19 +67,6 @@ export async function addNewsletterSubscriber(
     return { ok: false, message: "Introdu o adresă de email validă." };
   }
 
-  const subscribers = getNewsletterSubscribers();
-  const existing = subscribers.find((subscriber) => subscriber.email === trimmed);
-  if (existing) {
-    return {
-      ok: true,
-      alreadySubscribed: true,
-      discountCode: existing.discountCode,
-      discountMessage: existing.discountCode
-        ? `Codul tău: ${existing.discountCode} — 10% reducere la prima comandă!`
-        : undefined,
-    };
-  }
-
   try {
     const response = await fetch("/api/store/newsletter", {
       method: "POST",
@@ -101,6 +88,8 @@ export async function addNewsletterSubscriber(
       discountCode?: string;
       discountMessage?: string;
     };
+
+    const subscribers = getNewsletterSubscribers();
 
     if (data.alreadySubscribed) {
       return {
@@ -125,5 +114,43 @@ export async function addNewsletterSubscriber(
     };
   } catch {
     return { ok: false, message: "Nu s-a putut salva abonarea." };
+  }
+}
+
+export async function deleteNewsletterSubscriber(
+  email: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!isBrowser()) {
+    return { ok: false, message: "Indisponibil." };
+  }
+
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) {
+    return { ok: false, message: "Email invalid." };
+  }
+
+  try {
+    const response = await fetch("/api/store/newsletter", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ email: trimmed }),
+    });
+
+    if (!response.ok) {
+      return { ok: false, message: "Nu s-a putut șterge abonatul." };
+    }
+
+    const data = (await response.json()) as { subscribers?: NewsletterSubscriber[] };
+    if (data.subscribers) {
+      cacheNewsletterSubscribers(data.subscribers);
+    } else {
+      cacheNewsletterSubscribers(
+        getNewsletterSubscribers().filter((subscriber) => subscriber.email !== trimmed)
+      );
+    }
+    dispatchStoreUpdate({ scope: "newsletter" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
   }
 }

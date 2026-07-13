@@ -7,6 +7,7 @@ import {
   linkRefereeOnRegister,
 } from "@/lib/referrals-server";
 import { normalizeReferralCode } from "@/lib/referrals-types";
+import { BANNED_USER_MESSAGE } from "@/lib/user-ban-server";
 
 export const runtime = "nodejs";
 
@@ -127,6 +128,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const bannedExisting = users.find((u) => u.email.toLowerCase() === email && u.banned);
+      if (bannedExisting) {
+        return Response.json(
+          { success: false, message: BANNED_USER_MESSAGE },
+          { status: 403 }
+        );
+      }
+
       const newUser = buildRegisterUser(name, email, password);
       const inviteCode =
         typeof body?.inviteCode === "string" ? normalizeReferralCode(body.inviteCode) : "";
@@ -169,6 +178,13 @@ export async function POST(request: NextRequest) {
         return Response.json(
           { success: false, message: "Date de autentificare incorecte." },
           { status: 401 }
+        );
+      }
+
+      if (user.banned) {
+        return Response.json(
+          { success: false, message: BANNED_USER_MESSAGE },
+          { status: 403 }
         );
       }
 
