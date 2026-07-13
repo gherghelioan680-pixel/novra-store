@@ -44,7 +44,14 @@ export type SiteSettings = {
   orderEmailsEnabled: boolean;
   /** Procent reducere implicit pentru codurile newsletter (NOVRA10-XXXX) */
   newsletterDiscountPercent: number;
+  /** Generează automat cod NOVRA10 la abonare */
+  newsletterAutoGenerateCodes: boolean;
+  /** Șablon mesaj bun-venit ({code}, {percent}) */
+  newsletterWelcomeMessage: string;
 };
+
+export const DEFAULT_NEWSLETTER_WELCOME_MESSAGE =
+  "Mulțumim că te-ai abonat la newsletter-ul NOVRA. Codul tău exclusiv: {code} — {percent}% reducere la prima comandă!";
 
 export const DEFAULT_COMING_SOON: ComingSoonSettings = {
   enabled: false,
@@ -102,6 +109,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   cardPaymentEnabled: false,
   orderEmailsEnabled: true,
   newsletterDiscountPercent: 10,
+  newsletterAutoGenerateCodes: true,
+  newsletterWelcomeMessage: DEFAULT_NEWSLETTER_WELCOME_MESSAGE,
 };
 
 function mergeComingSoon(partial?: Partial<ComingSoonSettings>): ComingSoonSettings {

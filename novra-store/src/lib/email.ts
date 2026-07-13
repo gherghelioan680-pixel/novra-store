@@ -380,10 +380,21 @@ export async function sendTrackingEmail(order: Order, awb: string): Promise<bool
   }
 }
 
+export function formatNewsletterWelcomePreview(
+  template: string,
+  discountCode: string,
+  discountPercent: number
+): string {
+  return template
+    .replace(/\{code\}/g, discountCode)
+    .replace(/\{percent\}/g, String(discountPercent));
+}
+
 export async function sendNewsletterWelcomeEmail(
   email: string,
   discountCode: string,
-  discountPercent: number
+  discountPercent: number,
+  welcomeTemplate?: string
 ): Promise<boolean> {
   const resend = getResendClient();
   if (!resend) {
@@ -391,10 +402,14 @@ export async function sendNewsletterWelcomeEmail(
     return false;
   }
 
+  const templateText = welcomeTemplate?.trim()
+    ? formatNewsletterWelcomePreview(welcomeTemplate, discountCode, discountPercent)
+    : `Mulțumim că te-ai abonat la newsletter-ul NOVRA. Iată codul tău exclusiv pentru prima comandă:`;
+
   const body = `
     <p style="margin:0 0 16px;color:#e5e7eb;font-size:15px;line-height:1.6;">
       Bună!<br>
-      Mulțumim că te-ai abonat la newsletter-ul NOVRA. Iată codul tău exclusiv pentru prima comandă:
+      ${escapeHtml(templateText)}
     </p>
     <div style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
       <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;">Cod reducere</p>
@@ -427,4 +442,59 @@ export async function sendNewsletterWelcomeEmail(
     console.error("[email] Newsletter welcome error:", email, err);
     return false;
   }
+}
+
+export async function sendNewsletterBroadcastEmail(
+  emails: string[],
+  subject: string,
+  bodyText: string
+): Promise<{ sent: number; failed: number }> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not configured — skipping newsletter broadcast");
+    return { sent: 0, failed: emails.length };
+  }
+
+  const paragraphs = bodyText
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map(
+      (p) =>
+        `<p style="margin:0 0 14px;color:#e5e7eb;font-size:15px;line-height:1.6;">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`
+    )
+    .join("");
+
+  const body = `
+    ${paragraphs}
+    <p style="margin:20px 0 0;text-align:center;">
+      <a href="${getStripeCheckoutOrigin()}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Vizitează NOVRA</a>
+    </p>
+  `;
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const email of emails) {
+    try {
+      const { error } = await resend.emails.send({
+        from: getFromEmail(),
+        to: email,
+        subject,
+        html: baseEmailHtml(subject, body),
+      });
+      if (error) {
+        console.error("[email] Newsletter broadcast failed:", email, error);
+        failed += 1;
+      } else {
+        sent += 1;
+      }
+    } catch (err) {
+      console.error("[email] Newsletter broadcast error:", email, err);
+      failed += 1;
+    }
+  }
+
+  console.log("[email] Newsletter broadcast complete:", { sent, failed, total: emails.length });
+  return { sent, failed };
 }

@@ -1,8 +1,13 @@
 import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
-import type { NewsletterSubscriber } from "@/lib/newsletter";
-import { createNewsletterDiscountCode } from "@/lib/discount-codes-server";
+import type { NewsletterSubscriber, UpdateNewsletterSubscriberInput } from "@/lib/newsletter";
+import {
+  createNewsletterDiscountCode,
+  createManualNewsletterDiscountCode,
+  readDiscountCodes,
+  updateDiscountCode,
+} from "@/lib/discount-codes-server";
 import { formatDiscountSuccessMessage } from "@/lib/discount-codes";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
@@ -11,10 +16,40 @@ export const runtime = "nodejs";
 
 const FILE = "newsletter.json";
 
+async function readSubscribers(): Promise<NewsletterSubscriber[]> {
+  return readJsonFile<NewsletterSubscriber[]>(FILE, []);
+}
+
+async function linkDiscountCodeToSubscriber(
+  subscribers: NewsletterSubscriber[],
+  email: string,
+  codeValue: string | null | undefined
+): Promise<NewsletterSubscriber[]> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const index = subscribers.findIndex((s) => s.email === normalizedEmail);
+  if (index === -1) return subscribers;
+
+  if (codeValue === null || codeValue === undefined || codeValue === "") {
+    subscribers[index] = { ...subscribers[index], discountCode: undefined };
+    return subscribers;
+  }
+
+  const normalizedCode = codeValue.trim().toUpperCase();
+  const codes = await readDiscountCodes();
+  const match = codes.find((c) => c.code.toUpperCase() === normalizedCode);
+  if (!match) {
+    throw new Error("Codul de reducere nu a fost găsit.");
+  }
+
+  await updateDiscountCode({ code: match.code, email: normalizedEmail });
+  subscribers[index] = { ...subscribers[index], discountCode: match.code };
+  return subscribers;
+}
+
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) return unauthorizedResponse();
 
-  const subscribers = await readJsonFile<NewsletterSubscriber[]>(FILE, []);
+  const subscribers = await readSubscribers();
   return Response.json({ subscribers });
 }
 
@@ -26,11 +61,21 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    const subscribers = await readJsonFile<NewsletterSubscriber[]>(FILE, []);
+    const isAdmin = isAdminRequest(request);
+    const isAdminAdd = Boolean(body?.admin) && isAdmin;
+    if (body?.admin && !isAdmin) {
+      return unauthorizedResponse();
+    }
+
+    const subscribers = await readSubscribers();
     const settings = await getServerSiteSettings();
     const discountPercent = settings.newsletterDiscountPercent ?? 10;
     const existing = subscribers.find((subscriber) => subscriber.email === email);
+
     if (existing) {
+      if (isAdminAdd) {
+        return Response.json({ ok: false, message: "Acest email este deja abonat.", alreadySubscribed: true }, { status: 409 });
+      }
       return Response.json({
         ok: true,
         alreadySubscribed: true,
@@ -41,32 +86,128 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const discount = await createNewsletterDiscountCode(email);
+    const shouldGenerateCode =
+      body?.generateCode !== undefined
+        ? Boolean(body.generateCode)
+        : settings.newsletterAutoGenerateCodes !== false;
+
+    let discountCode: string | undefined;
+    if (shouldGenerateCode) {
+      const discount = await createNewsletterDiscountCode(email);
+      discountCode = discount.code;
+    }
+
+    const source =
+      body?.source === "homepage" ||
+      body?.source === "account" ||
+      body?.source === "admin" ||
+      body?.source === "other"
+        ? body.source
+        : isAdminAdd
+          ? "admin"
+          : "other";
 
     const next: NewsletterSubscriber = {
       email,
       name: typeof body?.name === "string" ? body.name.trim() || undefined : undefined,
+      notes: typeof body?.notes === "string" ? body.notes.trim() || undefined : undefined,
       subscribedAt: new Date().toISOString(),
-      source:
-        body?.source === "homepage" || body?.source === "account" || body?.source === "other"
-          ? body.source
-          : "other",
-      discountCode: discount.code,
+      source,
+      discountCode,
     };
 
     subscribers.unshift(next);
     await writeJsonFile(FILE, subscribers);
 
-    void sendNewsletterWelcomeEmail(email, discount.code, discountPercent);
+    const sendWelcome =
+      body?.sendWelcomeEmail !== undefined
+        ? Boolean(body.sendWelcomeEmail)
+        : !isAdminAdd;
+
+    if (sendWelcome && discountCode) {
+      void sendNewsletterWelcomeEmail(
+        email,
+        discountCode,
+        discountPercent,
+        settings.newsletterWelcomeMessage
+      );
+    }
 
     return Response.json({
       ok: true,
       subscriber: next,
-      discountCode: discount.code,
-      discountMessage: formatDiscountSuccessMessage(discount.code, discount.type, discount.value),
+      discountCode,
+      discountMessage: discountCode
+        ? formatDiscountSuccessMessage(discountCode, "percent", discountPercent)
+        : undefined,
     });
-  } catch {
-    return Response.json({ error: "Invalid request" }, { status: 400 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid request";
+    return Response.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const originalEmail =
+      typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const updates = (body?.updates ?? {}) as UpdateNewsletterSubscriberInput;
+
+    if (!originalEmail) {
+      return Response.json({ error: "Email invalid." }, { status: 400 });
+    }
+
+    const subscribers = await readSubscribers();
+    const index = subscribers.findIndex((s) => s.email === originalEmail);
+    if (index === -1) {
+      return Response.json({ error: "Abonatul nu a fost găsit." }, { status: 404 });
+    }
+
+    const current = subscribers[index];
+    let nextEmail = current.email;
+
+    if (updates.email !== undefined) {
+      const newEmail = updates.email.trim().toLowerCase();
+      if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        return Response.json({ error: "Email invalid." }, { status: 400 });
+      }
+      if (newEmail !== originalEmail && subscribers.some((s) => s.email === newEmail)) {
+        return Response.json({ error: "Există deja un abonat cu acest email." }, { status: 409 });
+      }
+      nextEmail = newEmail;
+    }
+
+    let updated: NewsletterSubscriber = {
+      ...current,
+      email: nextEmail,
+      ...(updates.name !== undefined
+        ? { name: updates.name.trim() || undefined }
+        : {}),
+      ...(updates.notes !== undefined
+        ? { notes: updates.notes.trim() || undefined }
+        : {}),
+    };
+
+    subscribers[index] = updated;
+
+    if (updates.discountCode !== undefined) {
+      const linked = await linkDiscountCodeToSubscriber(subscribers, nextEmail, updates.discountCode);
+      updated = linked.find((s) => s.email === nextEmail) ?? updated;
+    }
+
+    if (nextEmail !== originalEmail && updated.discountCode) {
+      await updateDiscountCode({ code: updated.discountCode, email: nextEmail });
+    }
+
+    await writeJsonFile(FILE, subscribers);
+
+    return Response.json({ ok: true, subscriber: updated, subscribers });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid request";
+    return Response.json({ error: message }, { status: 400 });
   }
 }
 
@@ -80,7 +221,7 @@ export async function DELETE(request: NextRequest) {
       return Response.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    const subscribers = await readJsonFile<NewsletterSubscriber[]>(FILE, []);
+    const subscribers = await readSubscribers();
     const next = subscribers.filter((subscriber) => subscriber.email !== email);
     if (next.length === subscribers.length) {
       return Response.json({ error: "Subscriber not found" }, { status: 404 });

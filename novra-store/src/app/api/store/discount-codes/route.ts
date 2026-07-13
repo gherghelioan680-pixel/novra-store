@@ -2,9 +2,11 @@ import type { NextRequest } from "next/server";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import {
   createAdminDiscountCode,
+  createManualNewsletterDiscountCode,
   deleteDiscountCode,
   markDiscountCodeUsed,
   readDiscountCodes,
+  updateDiscountCode,
   validateDiscountCodeServer,
 } from "@/lib/discount-codes-server";
 import type { CreateDiscountCodeInput, DiscountCodeType } from "@/lib/discount-codes";
@@ -109,6 +111,95 @@ export async function POST(request: NextRequest) {
         return Response.json({ ok: false, message: "Codul nu a fost găsit." }, { status: 404 });
       }
       return Response.json({ ok: true });
+    }
+
+    if (action === "update") {
+      if (!isAdminRequest(request)) return unauthorizedResponse();
+
+      const code = typeof body?.code === "string" ? body.code : "";
+      if (!code) {
+        return Response.json({ ok: false, message: "Cod lipsă." }, { status: 400 });
+      }
+
+      const parsedMaxUses =
+        body?.maxUses === null
+          ? null
+          : body?.maxUses === undefined || body?.maxUses === ""
+            ? undefined
+            : Number(body.maxUses);
+      const maxUses =
+        parsedMaxUses === null
+          ? null
+          : parsedMaxUses !== undefined && Number.isFinite(parsedMaxUses) && parsedMaxUses > 0
+            ? parsedMaxUses
+            : undefined;
+
+      const expiresAt =
+        body?.expiresAt === null
+          ? null
+          : typeof body?.expiresAt === "string" && body.expiresAt.trim()
+            ? body.expiresAt.trim()
+            : undefined;
+
+      try {
+        const updated = await updateDiscountCode({
+          code,
+          value: typeof body?.value === "number" ? body.value : undefined,
+          type: body?.type === "fixed" ? "fixed" : body?.type === "percent" ? "percent" : undefined,
+          maxUses,
+          expiresAt,
+          active: body?.active !== undefined ? Boolean(body.active) : undefined,
+          email:
+            body?.email === null
+              ? null
+              : typeof body?.email === "string"
+                ? body.email
+                : undefined,
+        });
+
+        if (!updated) {
+          return Response.json({ ok: false, message: "Codul nu a fost găsit." }, { status: 404 });
+        }
+        return Response.json({ ok: true, code: updated });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Nu s-a putut actualiza codul.";
+        return Response.json({ ok: false, message }, { status: 400 });
+      }
+    }
+
+    if (action === "create-newsletter") {
+      if (!isAdminRequest(request)) return unauthorizedResponse();
+
+      const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+      if (!email) {
+        return Response.json({ ok: false, message: "Email lipsă." }, { status: 400 });
+      }
+
+      const parsedMaxUses =
+        body?.maxUses === undefined || body?.maxUses === ""
+          ? undefined
+          : Number(body.maxUses);
+      const maxUses =
+        parsedMaxUses !== undefined && Number.isFinite(parsedMaxUses) && parsedMaxUses > 0
+          ? parsedMaxUses
+          : undefined;
+      const expiresAt =
+        typeof body?.expiresAt === "string" && body.expiresAt.trim()
+          ? body.expiresAt.trim()
+          : undefined;
+
+      try {
+        const created = await createManualNewsletterDiscountCode(email, {
+          code: typeof body?.code === "string" ? body.code : undefined,
+          value: typeof body?.value === "number" ? body.value : undefined,
+          maxUses,
+          expiresAt,
+        });
+        return Response.json({ ok: true, code: created });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Nu s-a putut crea codul.";
+        return Response.json({ ok: false, message }, { status: 400 });
+      }
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });

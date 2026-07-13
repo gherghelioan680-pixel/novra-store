@@ -247,3 +247,69 @@ export async function deleteDiscountCode(
     return { ok: false, message: "Nu s-a putut șterge codul. Încearcă din nou." };
   }
 }
+
+export type UpdateDiscountCodeClientInput = {
+  code: string;
+  value?: number;
+  type?: DiscountCodeType;
+  maxUses?: number | null;
+  expiresAt?: string | null;
+  active?: boolean;
+  email?: string | null;
+};
+
+export async function updateDiscountCode(
+  input: UpdateDiscountCodeClientInput
+): Promise<{ ok: true; code: DiscountCode } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/discount-codes", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "update", ...input }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      code?: DiscountCode;
+      message?: string;
+      error?: string;
+    };
+    if (!response.ok || !data.ok || !data.code) {
+      return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut actualiza codul." };
+    }
+    dispatchStoreUpdate({ scope: "discountCodes" });
+    return { ok: true, code: data.code };
+  } catch {
+    return { ok: false, message: "Nu s-a putut actualiza codul. Încearcă din nou." };
+  }
+}
+
+export async function createNewsletterDiscountCodeForSubscriber(
+  email: string,
+  overrides?: {
+    code?: string;
+    value?: number;
+    maxUses?: number;
+    expiresAt?: string;
+  }
+): Promise<{ ok: true; code: DiscountCode } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/discount-codes", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "create-newsletter", email, ...overrides }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      code?: DiscountCode;
+      message?: string;
+      error?: string;
+    };
+    if (!response.ok || !data.ok || !data.code) {
+      return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut crea codul." };
+    }
+    dispatchStoreUpdate({ scope: "discountCodes" });
+    return { ok: true, code: data.code };
+  } catch {
+    return { ok: false, message: "Nu s-a putut crea codul. Încearcă din nou." };
+  }
+}

@@ -147,6 +147,98 @@ export async function deleteDiscountCode(code: string): Promise<boolean> {
   return true;
 }
 
+export type UpdateDiscountCodeInput = {
+  code: string;
+  value?: number;
+  type?: DiscountCodeType;
+  maxUses?: number | null;
+  expiresAt?: string | null;
+  active?: boolean;
+  email?: string | null;
+};
+
+export async function updateDiscountCode(input: UpdateDiscountCodeInput): Promise<DiscountCode | null> {
+  const normalized = input.code.trim().toUpperCase();
+  const codes = await readDiscountCodes();
+  const index = codes.findIndex((c) => c.code.toUpperCase() === normalized);
+  if (index === -1) return null;
+
+  const current = codes[index];
+
+  if (input.value !== undefined && input.value <= 0 && discountAppliesToProducts(current)) {
+    throw new Error("Valoarea reducerii trebuie să fie mai mare decât 0.");
+  }
+
+  if (input.type === "percent" && input.value !== undefined && input.value > 100) {
+    throw new Error("Reducerea procentuală nu poate depăși 100%.");
+  }
+
+  codes[index] = {
+    ...current,
+    ...(input.value !== undefined ? { value: input.value } : {}),
+    ...(input.type !== undefined ? { type: input.type } : {}),
+    ...(input.maxUses !== undefined
+      ? { maxUses: input.maxUses === null ? undefined : input.maxUses }
+      : {}),
+    ...(input.expiresAt !== undefined
+      ? { expiresAt: input.expiresAt === null ? undefined : input.expiresAt }
+      : {}),
+    ...(input.active !== undefined ? { active: input.active } : {}),
+    ...(input.email !== undefined
+      ? { email: input.email === null ? undefined : input.email.trim().toLowerCase() }
+      : {}),
+  };
+
+  await writeDiscountCodes(codes);
+  return codes[index];
+}
+
+export async function createManualNewsletterDiscountCode(
+  email: string,
+  overrides?: {
+    code?: string;
+    value?: number;
+    maxUses?: number;
+    expiresAt?: string;
+  }
+): Promise<DiscountCode> {
+  const settings = await getServerSiteSettings();
+  const percentValue = overrides?.value ?? settings.newsletterDiscountPercent ?? 10;
+  const codes = await readDiscountCodes();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  let code = overrides?.code?.trim().toUpperCase();
+  if (code) {
+    if (codes.some((c) => c.code.toUpperCase() === code)) {
+      throw new Error("Acest cod există deja.");
+    }
+  } else {
+    code = generateNewsletterDiscountCode(codes.map((c) => c.code));
+  }
+
+  const entry: DiscountCode = {
+    code,
+    email: normalizedEmail,
+    type: "percent",
+    value: percentValue,
+    applyToProducts: true,
+    freeShipping: false,
+    singleUsePerEmail: true,
+    used: false,
+    useCount: 0,
+    usedByEmails: [],
+    active: true,
+    maxUses: overrides?.maxUses,
+    expiresAt: overrides?.expiresAt,
+    createdAt: new Date().toISOString(),
+    source: "newsletter",
+  };
+
+  codes.unshift(entry);
+  await writeDiscountCodes(codes);
+  return entry;
+}
+
 export async function validateDiscountCodeServer(
   code: string,
   email?: string
