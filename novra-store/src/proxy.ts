@@ -27,6 +27,14 @@ function applyCacheHeaders(response: NextResponse, pathname: string) {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Admin must never pass through next-intl (defense in depth alongside matcher).
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    const response = NextResponse.next();
+    applyCacheHeaders(response, pathname);
+    return response;
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
 

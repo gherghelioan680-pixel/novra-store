@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AdminLayoutClient from "@/components/admin/AdminLayoutClient";
-import Providers from "@/components/Providers";
+import AdminProviders from "@/components/AdminProviders";
 
 export const metadata: Metadata = {
   title: "Admin | NOVRA",
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Providers>
+    <AdminProviders>
       <AdminLayoutClient>{children}</AdminLayoutClient>
-    </Providers>
+    </AdminProviders>
   );
 }
