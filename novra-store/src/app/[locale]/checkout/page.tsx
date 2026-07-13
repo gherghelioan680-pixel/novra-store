@@ -66,6 +66,7 @@ function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const t = useTranslations("checkout");
   const tc = useTranslations("common");
+  const tCopy = useTranslations("copy");
   const { items, totalPrice, clearCart, hydrated } = useCart();
   const { freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
   const [status, setStatus] = useState<"idle" | "sending" | "redirecting" | "success" | "error">("idle");
@@ -426,7 +427,7 @@ function CheckoutPageContent() {
             <div className="mb-8 inline-flex flex-col items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 px-6 py-4">
               <p className="text-xs uppercase tracking-widest text-gray-400">{t("purchaseCode")}</p>
               <p className="font-mono text-lg font-semibold text-purple-300">{placedOrder.purchaseCode}</p>
-              <CopyButton text={placedOrder.purchaseCode} label={t("copyCode")} />
+              <CopyButton text={placedOrder.purchaseCode} label={t("copyCode")} copiedLabel={tCopy("copied")} />
               <p className="text-xs text-gray-500">{t("keepCodeRef")}</p>
             </div>
           )}

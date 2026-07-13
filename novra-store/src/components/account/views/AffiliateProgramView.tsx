@@ -46,6 +46,7 @@ const defaultRequirements = (): AffiliateRequirements =>
 
 export default function AffiliateProgramView({ user, onToast }: AffiliateProgramViewProps) {
   const t = useTranslations("accountAffiliate");
+  const tCopy = useTranslations("copy");
   const locale = useLocale();
   const [data, setData] = useState<AffiliateDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -185,7 +186,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
             <code className="flex-1 break-all rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-purple-200">
               {affiliateLink}
             </code>
-            <CopyButton text={affiliateLink} label={t("copyLink")} className="shrink-0 px-4 py-2" />
+            <CopyButton text={affiliateLink} label={t("copyLink")} copiedLabel={tCopy("copied")} className="shrink-0 px-4 py-2" />
           </div>
           <p className="mt-2 text-xs text-gray-500">
             {t("codeAttribution", { code: affiliate.code })}

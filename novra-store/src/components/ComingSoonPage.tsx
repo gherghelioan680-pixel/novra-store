@@ -160,6 +160,7 @@ export default function ComingSoonPage({
   newsletterDiscountPercent = 10,
 }: ComingSoonPageProps) {
   const t = useTranslations("comingSoon");
+  const tCopy = useTranslations("copy");
   const headline = settings.headline?.trim() || t("defaultHeadline");
   const subtitle = settings.subtitle?.trim() || t("defaultSubtitle");
   const showNewsletter = settings.showNewsletter !== false;
@@ -213,7 +214,7 @@ export default function ComingSoonPage({
             <span className="rounded-xl border border-emerald-500/40 bg-black/40 px-4 py-2.5 font-mono text-base font-bold tracking-wider text-white sm:text-lg">
               {newsletterDiscountCode}
             </span>
-            <CopyButton text={newsletterDiscountCode} label={t("copyCode")} />
+            <CopyButton text={newsletterDiscountCode} label={t("copyCode")} copiedLabel={tCopy("copied")} />
           </div>
           <p className="text-xs text-emerald-300/80">
             {t("discountHint", { percent: newsletterDiscountPercent })}

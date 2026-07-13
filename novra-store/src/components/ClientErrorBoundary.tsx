@@ -1,7 +1,6 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
 
 type Props = {
   children: ReactNode;
@@ -12,14 +11,8 @@ type State = {
   hasError: boolean;
 };
 
-function DefaultErrorFallback() {
-  const t = useTranslations("errorBoundary");
-  return (
-    <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-6 text-center">
-      <p className="text-red-300 text-sm">{t("message")}</p>
-    </div>
-  );
-}
+const DEFAULT_ERROR_MESSAGE =
+  "Catalogul nu s-a încărcat complet. Reîmprospătează pagina sau folosește meniul de navigare.";
 
 export class ClientErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
@@ -30,7 +23,13 @@ export class ClientErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback ?? <DefaultErrorFallback />;
+      return (
+        this.props.fallback ?? (
+          <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-6 text-center">
+            <p className="text-red-300 text-sm">{DEFAULT_ERROR_MESSAGE}</p>
+          </div>
+        )
+      );
     }
 
     return this.props.children;

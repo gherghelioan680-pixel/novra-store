@@ -19,6 +19,7 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const t = useTranslations("checkoutSuccess");
   const tc = useTranslations("common");
+  const tCopy = useTranslations("copy");
   const { clearCart } = useCart();
   const sessionId = searchParams.get("session_id");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -76,7 +77,7 @@ function CheckoutSuccessContent() {
               <div className="mb-8 inline-flex flex-col items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 px-6 py-4">
                 <p className="text-xs uppercase tracking-widest text-gray-400">{t("purchaseCode")}</p>
                 <p className="font-mono text-lg font-semibold text-purple-300">{order.purchaseCode}</p>
-                <CopyButton text={order.purchaseCode} label={t("copyCode")} />
+                <CopyButton text={order.purchaseCode} label={t("copyCode")} copiedLabel={tCopy("copied")} />
               </div>
             )}
             {!order?.purchaseCode && (

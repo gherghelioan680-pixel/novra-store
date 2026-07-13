@@ -1,19 +1,22 @@
 "use client";
 
 import { useState, type MouseEvent } from "react";
-import { useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 
 type CopyButtonProps = {
   text: string;
   label?: string;
+  copiedLabel?: string;
   className?: string;
 };
 
-export default function CopyButton({ text, label, className = "" }: CopyButtonProps) {
-  const t = useTranslations("copy");
+export default function CopyButton({
+  text,
+  label = "Copiază",
+  copiedLabel = "Copiat",
+  className = "",
+}: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
-  const buttonLabel = label ?? t("copy");
 
   const handleCopy = async (e: MouseEvent) => {
     e.stopPropagation();
@@ -30,11 +33,11 @@ export default function CopyButton({ text, label, className = "" }: CopyButtonPr
     <button
       type="button"
       onClick={handleCopy}
-      title={buttonLabel}
+      title={label}
       className={`inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 transition hover:border-purple-500/30 hover:text-white ${className}`}
     >
       {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
-      {copied ? t("copied") : buttonLabel}
+      {copied ? copiedLabel : label}
     </button>
   );
 }

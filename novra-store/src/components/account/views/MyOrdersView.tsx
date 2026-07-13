@@ -36,6 +36,7 @@ function getDateLocale(locale: string) {
 export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
   const t = useTranslations("accountOrders");
   const tc = useTranslations("common");
+  const tCopy = useTranslations("copy");
   const locale = useLocale();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +129,7 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-mono text-xs text-purple-300">{order.purchaseCode}</p>
-                        <CopyButton text={order.purchaseCode} label={t("copy")} />
+                        <CopyButton text={order.purchaseCode} label={t("copy")} copiedLabel={tCopy("copied")} />
                       </div>
                       <p className="mt-1 font-mono text-[10px] text-gray-500">{order.id}</p>
                       <p className="mt-1 text-sm text-gray-400">{formatDate(order.createdAt)}</p>
@@ -164,6 +165,7 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
 
 function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const t = useTranslations("accountOrders");
+  const tCopy = useTranslations("copy");
   const locale = useLocale();
 
   const formatDateTime = (iso: string) =>
@@ -201,7 +203,7 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xs text-gray-500">{t("orderCode")}</p>
               <p className="font-mono text-sm text-purple-300">{order.purchaseCode}</p>
-              <CopyButton text={order.purchaseCode} label={t("copyCode")} />
+              <CopyButton text={order.purchaseCode} label={t("copyCode")} copiedLabel={tCopy("copied")} />
             </div>
             <p className="mt-2 font-mono text-xs text-gray-500">{order.id}</p>
             <p className="mt-1 text-sm text-gray-400">

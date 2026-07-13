@@ -21,6 +21,7 @@ function getDateLocale(locale: string) {
 
 export default function ReferFriendView({ user }: ReferFriendViewProps) {
   const t = useTranslations("accountRefer");
+  const tCopy = useTranslations("copy");
   const locale = useLocale();
   const [code, setCode] = useState("");
   const [inviteLink, setInviteLink] = useState("");
@@ -77,7 +78,7 @@ export default function ReferFriendView({ user }: ReferFriendViewProps) {
           <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">{t("yourCode")}</p>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="font-mono text-lg font-semibold text-purple-300">{code}</span>
-            <CopyButton text={code} label={t("copyCode")} />
+            <CopyButton text={code} label={t("copyCode")} copiedLabel={tCopy("copied")} />
           </div>
         </div>
 
@@ -85,7 +86,7 @@ export default function ReferFriendView({ user }: ReferFriendViewProps) {
           <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">{t("invitationLink")}</p>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm text-gray-300 break-all">{inviteLink}</span>
-            <CopyButton text={inviteLink} label={t("copyLink")} />
+            <CopyButton text={inviteLink} label={t("copyLink")} copiedLabel={tCopy("copied")} />
           </div>
         </div>
 
