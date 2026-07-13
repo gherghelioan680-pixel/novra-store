@@ -2,12 +2,14 @@
 
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import Image from "next/image";
-import Link from "next/link";
 import { Mail, Phone, Clock, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl, formatWhatsAppDisplay } from "@/lib/store";
 
 export default function Footer() {
+  const t = useTranslations("footer");
   const { whatsappNumber } = useSiteSettings();
   const phoneDisplay = formatWhatsAppDisplay(whatsappNumber);
 
@@ -26,9 +28,7 @@ export default function Footer() {
             />
           </div>
 
-          <p className="text-sm text-gray-400 mb-6 max-w-xs leading-relaxed">
-            Cabluri premium pentru o lume în continuă mișcare. Performanță, siguranță și design — fără compromis.
-          </p>
+          <p className="text-sm text-gray-400 mb-6 max-w-xs leading-relaxed">{t("tagline")}</p>
 
           <div className="flex gap-4 text-gray-400">
             <a
@@ -62,62 +62,62 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="font-semibold text-sm mb-4 text-white tracking-wider">MAGAZIN</h4>
+          <h4 className="font-semibold text-sm mb-4 text-white tracking-wider">{t("shop")}</h4>
           <ul className="space-y-2.5 text-sm text-gray-400">
             <li>
               <Link href="/produse" className="hover:text-purple-400 transition">
-                Toate produsele
+                {t("allProducts")}
               </Link>
             </li>
             <li>
               <Link href="/urmareste-comanda" className="hover:text-purple-400 transition">
-                Urmărește comanda
+                {t("trackOrder")}
               </Link>
             </li>
             <li>
               <Link href="/promotii" className="hover:text-purple-400 transition">
-                Promoții
+                {t("promotions")}
               </Link>
             </li>
             <li>
               <Link href="/blog" className="hover:text-purple-400 transition">
-                Blog & Ghiduri
+                {t("blog")}
               </Link>
             </li>
             <li>
               <Link href="/recenzii" className="hover:text-purple-400 transition">
-                Recenzii clienți
+                {t("reviews")}
               </Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-semibold text-sm mb-4 text-white tracking-wider">INFORMAȚII</h4>
+          <h4 className="font-semibold text-sm mb-4 text-white tracking-wider">{t("info")}</h4>
           <ul className="space-y-2.5 text-sm text-gray-400">
             <li>
               <Link href="/despre-noi" className="hover:text-purple-400 transition">
-                Despre noi
+                {t("about")}
               </Link>
             </li>
             <li>
               <Link href="/livrare-si-plata" className="hover:text-purple-400 transition">
-                Livrare și plată
+                {t("shipping")}
               </Link>
             </li>
             <li>
               <Link href="/garantie-si-retur" className="hover:text-purple-400 transition">
-                Garanție și retur
+                {t("warranty")}
               </Link>
             </li>
             <li>
               <Link href="/faq" className="hover:text-purple-400 transition">
-                Întrebări frecvente
+                {t("faq")}
               </Link>
             </li>
             <li>
               <Link href="/contact" className="hover:text-purple-400 transition">
-                Contact
+                {t("contact")}
               </Link>
             </li>
           </ul>
@@ -126,7 +126,7 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold text-sm mb-4 text-white tracking-wider flex items-center gap-2">
             <MessageCircle size={14} className="text-purple-500" aria-hidden />
-            SUPORT RAPID
+            {t("support")}
           </h4>
 
           <ul className="space-y-3 text-sm">
@@ -169,29 +169,29 @@ export default function Footer() {
               <span className="w-8 h-8 rounded-lg bg-novra-card/40 border border-white/8 flex items-center justify-center shrink-0">
                 <Clock size={14} className="text-purple-500/70" aria-hidden />
               </span>
-              <span>L–V 08:00 – 21:00</span>
+              <span>{t("hours")}</span>
             </li>
           </ul>
 
           <ul className="space-y-2 text-xs text-gray-500 mt-6 pt-4 border-t border-novra-border/60">
             <li>
               <Link href="/politica-confidentialitate" className="hover:text-purple-400 transition">
-                Politica de confidențialitate
+                {t("privacy")}
               </Link>
             </li>
             <li>
               <Link href="/termeni-si-conditii" className="hover:text-purple-400 transition">
-                Termeni și condiții
+                {t("terms")}
               </Link>
             </li>
             <li>
               <Link href="/politica-cookies" className="hover:text-purple-400 transition">
-                Politica cookie-uri
+                {t("cookies")}
               </Link>
             </li>
             <li>
               <Link href="/termeni-program-afiliere" className="hover:text-purple-400 transition">
-                Termeni program afiliere
+                {t("affiliateTerms")}
               </Link>
             </li>
           </ul>
@@ -201,7 +201,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto border-t border-novra-border/60 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-novra-muted">
         <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
           <Image src="/logo.png" alt="Logo" width={100} height={40} className="w-24 h-auto opacity-60" />
-          <p>© 2026 NOVRA. Toate drepturile rezervate.</p>
+          <p>{t("copyright")}</p>
         </div>
       </div>
     </footer>

@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import WhatsAppCta from "@/components/WhatsAppCta";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { getReviewAvatarUrl } from "@/lib/reviews";
 import {
@@ -36,8 +37,6 @@ import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 const LiveVisitors = dynamic(() => import("@/components/LiveVisitors"), {
   ssr: false,
 });
-
-const WHATSAPP_MESSAGE = "Salut! Sunt interesat de produsele NOVRA.";
 
 const FEATURED_PRODUCT_IDS = ["usb-c-100w", "usb-c-lightning-pd", "bundle-travel-pack"];
 
@@ -159,6 +158,7 @@ function HeroPriceRotator() {
 }
 
 export default function Home() {
+  const th = useTranslations("home");
   const { whatsappNumber } = useSiteSettings();
   const reviews = useReviews(3);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -211,7 +211,7 @@ export default function Home() {
     }
   };
 
-  const whatsappHref = buildWhatsAppUrl(whatsappNumber, WHATSAPP_MESSAGE);
+  const whatsappHref = buildWhatsAppUrl(whatsappNumber, th("whatsappMessage"));
 
   return (
     <>

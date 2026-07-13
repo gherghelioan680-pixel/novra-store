@@ -8,11 +8,14 @@ import { parseSessionRaw, type SessionData } from "@/lib/server-auth";
 
 const DEFAULT_COMING_SOON_COUNTDOWN = "2026-08-11T23:59:59+03:00";
 
+import { stripLocalePrefix } from "@/lib/locale-path";
+
 function isExemptPath(pathname: string): boolean {
+  const path = stripLocalePrefix(pathname);
   return (
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next")
+    path.startsWith("/admin") ||
+    path.startsWith("/api") ||
+    path.startsWith("/_next")
   );
 }
 

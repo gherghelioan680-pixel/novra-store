@@ -3,41 +3,44 @@
 import { useRef, useEffect } from "react";
 import { Menu, MessageCircle, ShoppingCart, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useCart } from "@/context/CartContext";
 import MarketingTicker from "@/components/MarketingTicker";
 import CountdownBanner from "@/components/CountdownBanner";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { clampHeaderHeight } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/store";
-
-const navLinks = [
-  { href: "/", label: "Acasă" },
-  { href: "/produse", label: "Produse" },
-  { href: "/promotii", label: "Promoții" },
-  { href: "/blog", label: "Ghiduri" },
-  { href: "/urmareste-comanda", label: "Urmărește comanda" },
-  { href: "/cos", label: "Coș" },
-];
-
-const mobileMenuLinks = [
-  { href: "/", label: "Acasă" },
-  { href: "/produse", label: "Produse" },
-  { href: "/promotii", label: "Promoții" },
-  { href: "/blog", label: "Ghiduri" },
-  { href: "/urmareste-comanda", label: "Urmărește comanda" },
-  { href: "/cos", label: "Coș", showCartCount: true },
-  { href: "/contul-meu", label: "Contul meu", icon: "user" as const },
-];
 
 const MOBILE_HEADER_FALLBACK = 148;
 const MOBILE_NAV_TOGGLE_ID = "mobile-nav-toggle";
 
 export default function Navbar() {
+  const t = useTranslations("nav");
   const { whatsappNumber } = useSiteSettings();
   const { totalItems } = useCart();
   const headerRef = useRef<HTMLElement>(null);
   const menuToggleRef = useRef<HTMLInputElement>(null);
+
+  const navLinks = [
+    { href: "/", label: t("home") },
+    { href: "/produse", label: t("products") },
+    { href: "/promotii", label: t("promotions") },
+    { href: "/blog", label: t("guides") },
+    { href: "/urmareste-comanda", label: t("trackOrder") },
+    { href: "/cos", label: t("cart") },
+  ];
+
+  const mobileMenuLinks = [
+    { href: "/", label: t("home") },
+    { href: "/produse", label: t("products") },
+    { href: "/promotii", label: t("promotions") },
+    { href: "/blog", label: t("guides") },
+    { href: "/urmareste-comanda", label: t("trackOrder") },
+    { href: "/cos", label: t("cart"), showCartCount: true },
+    { href: "/contul-meu", label: t("myAccount"), icon: "user" as const },
+  ];
 
   useEffect(() => {
     const header = headerRef.current;
@@ -105,18 +108,20 @@ export default function Navbar() {
             </div>
 
             <div className="relative z-[10001] flex gap-2 sm:gap-4 items-center shrink-0">
+              <LanguageSwitcher />
+
               <Link
                 href="/contul-meu"
                 className="hidden sm:flex items-center gap-2 text-sm text-gray-300 transition-all duration-300 hover:-translate-y-0.5 hover:text-[#8b8cff]"
               >
                 <User size={18} />
-                <span>Contul Meu</span>
+                <span>{t("myAccount")}</span>
               </Link>
 
               <Link
                 href="/cos"
                 className="relative min-w-11 min-h-11 flex items-center justify-center p-1 transition-all duration-300 hover:-translate-y-0.5 hover:text-purple-500 touch-manipulation"
-                aria-label="Coș de cumpărături"
+                aria-label={t("cartAria")}
               >
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
@@ -131,12 +136,11 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="relative min-w-11 min-h-11 flex items-center justify-center p-1 transition-all duration-300 hover:-translate-y-0.5 hover:text-green-500 touch-manipulation"
-                aria-label="WhatsApp"
+                aria-label={t("whatsappAria")}
               >
                 <MessageCircle size={20} />
               </a>
 
-              {/* Mobile menu — checkbox + CSS peer, with iOS-friendly hit target */}
               <div className="relative z-[10001] md:hidden">
                 <input
                   ref={menuToggleRef}
@@ -147,7 +151,7 @@ export default function Navbar() {
                 <label
                   htmlFor={MOBILE_NAV_TOGGLE_ID}
                   className="relative z-[10002] cursor-pointer touch-manipulation min-w-11 min-h-11 flex items-center justify-center p-2 -mr-1 text-white hover:text-purple-500 active:text-purple-400 transition-colors duration-300 [-webkit-tap-highlight-color:transparent]"
-                  aria-label="Deschide meniul"
+                  aria-label={t("openMenu")}
                 >
                   <Menu size={22} aria-hidden />
                 </label>
@@ -156,7 +160,7 @@ export default function Navbar() {
                   <label
                     htmlFor={MOBILE_NAV_TOGGLE_ID}
                     className="absolute inset-0 bg-novra-bg/80 backdrop-blur-sm cursor-pointer [-webkit-tap-highlight-color:transparent]"
-                    aria-label="Închide meniul"
+                    aria-label={t("closeMenu")}
                   />
 
                   <nav
@@ -166,11 +170,11 @@ export default function Navbar() {
                       top: "var(--header-height, 148px)",
                       maxHeight: "calc(100dvh - var(--header-height, 148px))",
                     }}
-                    aria-label="Meniu navigare"
+                    aria-label={t("mobileNavAria")}
                   >
                     <div className="relative z-[10004] px-4 py-4 flex flex-col gap-1 pb-safe">
                       {mobileMenuLinks.map((link) => (
-                        <a
+                        <Link
                           key={`${link.href}-${link.label}`}
                           href={link.href}
                           onClick={closeMobileMenu}
@@ -183,8 +187,9 @@ export default function Navbar() {
                           {"showCartCount" in link && link.showCartCount && totalItems > 0 && (
                             <span className="ml-auto text-purple-400 text-sm font-semibold">({totalItems})</span>
                           )}
-                        </a>
+                        </Link>
                       ))}
+                      <LanguageSwitcher variant="mobile" />
                     </div>
                   </nav>
                 </div>

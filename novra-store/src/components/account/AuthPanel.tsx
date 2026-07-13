@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { loginUser, registerUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import AccountLogo from "./AccountLogo";
@@ -10,6 +11,8 @@ type AuthPanelProps = {
 };
 
 export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
+  const t = useTranslations("account");
+  const tc = useTranslations("common");
   const [mode, setMode] = useState<"login" | "register" | "forgot-password">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,15 +36,15 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
           const data = (await response.json()) as { exists?: boolean };
 
           if (!data.exists) {
-            setMessage("Nu am găsit niciun cont cu acest email.");
+            setMessage(t("emailNotFound"));
             return;
           }
         } catch {
-          setMessage("Eroare de rețea. Încearcă din nou.");
+          setMessage(tc("networkError"));
           return;
         }
 
-        setMessage(`Un link de resetare a parolei a fost trimis la ${email}. Verifică-ți inbox-ul și junk folder.`);
+        setMessage(t("resetSent", { email }));
         setTimeout(() => {
           setMode("login");
           setEmail("");
@@ -93,7 +96,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                 mode === "login" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white active:text-white"
               }`}
             >
-              Login
+              {t("login")}
             </button>
             <button
               type="button"
@@ -102,20 +105,24 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                 mode === "register" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white active:text-white"
               }`}
             >
-              Register
+              {t("register")}
             </button>
           </div>
 
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold tracking-tight">
-              {mode === "login" ? "Bine ai revenit" : mode === "register" ? "Creează cont" : "Resetare parolă"}
+              {mode === "login"
+                ? t("welcomeBack")
+                : mode === "register"
+                  ? t("createAccountTitle")
+                  : t("resetPasswordTitle")}
             </h1>
             <p className="mt-2 text-sm text-gray-400">
               {mode === "login"
-                ? "Intră în contul tău NOVRA"
+                ? t("loginSubtitle")
                 : mode === "register"
-                  ? "Înregistrează-te și primești 50 NovraCredits"
-                  : "Introdu emailul pentru resetare"}
+                  ? t("registerSubtitle")
+                  : t("resetSubtitle")}
             </p>
           </div>
 
@@ -123,7 +130,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
             {mode === "register" && (
               <div>
                 <label htmlFor="auth-name" className="mb-2 block text-sm text-gray-400">
-                  Nume
+                  {t("name")}
                 </label>
                 <input
                   id="auth-name"
@@ -134,14 +141,14 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none transition focus:border-purple-500/50 touch-manipulation"
-                  placeholder="Numele tău"
+                  placeholder={t("namePlaceholder")}
                 />
               </div>
             )}
 
             <div>
               <label htmlFor="auth-email" className="mb-2 block text-sm text-gray-400">
-                Email
+                {t("email")}
               </label>
               <input
                 id="auth-email"
@@ -160,7 +167,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
             {mode !== "forgot-password" && (
               <div>
                 <label htmlFor="auth-password" className="mb-2 block text-sm text-gray-400">
-                  Parolă
+                  {t("password")}
                 </label>
                 <input
                   id="auth-password"
@@ -171,7 +178,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none transition focus:border-purple-500/50 touch-manipulation"
-                  placeholder="Parola ta"
+                  placeholder={t("passwordPlaceholder")}
                 />
               </div>
             )}
@@ -182,12 +189,12 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
               className="w-full min-h-11 rounded-xl bg-purple-600 py-3 text-sm font-semibold transition hover:bg-purple-700 active:bg-purple-800 disabled:opacity-60 touch-manipulation cursor-pointer"
             >
               {isSubmitting
-                ? "Se procesează..."
+                ? t("processing")
                 : mode === "login"
-                  ? "Autentifică-te"
+                  ? t("loginButton")
                   : mode === "register"
-                    ? "Creează cont"
-                    : "Trimite link"}
+                    ? t("createAccount")
+                    : t("sendLink")}
             </button>
           </form>
 
@@ -199,14 +206,14 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                   onClick={() => switchMode("register")}
                   className="min-h-11 text-left text-purple-400 hover:text-purple-300 active:text-purple-200 touch-manipulation py-1"
                 >
-                  Nu ai cont? Creează-l
+                  {t("noAccountCreate")}
                 </button>
                 <button
                   type="button"
                   onClick={() => switchMode("forgot-password")}
                   className="min-h-11 text-left text-gray-400 hover:text-white active:text-white touch-manipulation py-1"
                 >
-                  Ai uitat parola?
+                  {t("forgotPassword")}
                 </button>
               </>
             )}
@@ -216,7 +223,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                 onClick={() => switchMode("login")}
                 className="min-h-11 text-left text-purple-400 hover:text-purple-300 active:text-purple-200 touch-manipulation py-1"
               >
-                Ai deja cont? Intră în cont
+                {t("hasAccountLogin")}
               </button>
             )}
             {mode === "forgot-password" && (
@@ -225,7 +232,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                 onClick={() => switchMode("login")}
                 className="min-h-11 text-left text-purple-400 hover:text-purple-300 active:text-purple-200 touch-manipulation py-1"
               >
-                Înapoi la autentificare
+                {t("backToLogin")}
               </button>
             )}
           </div>

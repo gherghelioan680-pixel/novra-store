@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useIsClient } from "@/hooks/useIsClient";
 import { usePathname } from "next/navigation";
 import { Cookie, Shield, X, Settings2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { stripLocalePrefix } from "@/lib/locale-path";
 import {
   applyConsentPreset,
   getCookieConsent,
@@ -17,11 +19,14 @@ import { clearAffiliateRef } from "@/lib/affiliate-attribution";
 const BOTTOM_CTA_PATHS = ["/cos", "/checkout"];
 
 function isBottomCtaPage(pathname: string) {
-  if (BOTTOM_CTA_PATHS.includes(pathname)) return true;
-  return pathname.startsWith("/produse/");
+  const path = stripLocalePrefix(pathname);
+  if (BOTTOM_CTA_PATHS.includes(path)) return true;
+  return path.startsWith("/produse/");
 }
 
 export default function CookieConsent() {
+  const t = useTranslations("cookie");
+  const tc = useTranslations("common");
   const pathname = usePathname();
   const mounted = useIsClient();
   const [visible, setVisible] = useState(false);
@@ -76,7 +81,7 @@ export default function CookieConsent() {
           : "bottom-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
       }`}
       role="dialog"
-      aria-label="Consimțământ cookie-uri"
+      aria-label={t("aria")}
     >
       <div className="max-w-4xl mx-auto relative overflow-hidden rounded-2xl sm:rounded-3xl border border-purple-500/30 bg-gradient-to-br from-novra-surface/95 via-novra-card/95 to-purple-950/90 backdrop-blur-xl shadow-2xl shadow-purple-900/40">
         <div className="absolute -top-16 -right-16 w-48 h-48 bg-purple-600/15 blur-[60px] rounded-full pointer-events-none" />
@@ -91,15 +96,13 @@ export default function CookieConsent() {
 
               <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-bold text-white mb-1.5 flex items-center gap-2">
-                  Respectăm confidențialitatea ta
+                  {t("title")}
                   <Shield size={14} className="text-purple-400 shrink-0" aria-hidden />
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                  Folosim cookie-uri esențiale pentru funcționarea site-ului, cookie-uri analitice și cookie-uri
-                  pentru programul de afiliere (parametrul <code className="text-purple-300">?ref=</code>).
-                  Poți alege ce accepți. Citește{" "}
+                  {t("description")}{" "}
                   <Link href="/politica-cookies" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">
-                    Politica cookie-uri
+                    {t("policyLink")}
                   </Link>
                   .
                 </p>
@@ -112,14 +115,14 @@ export default function CookieConsent() {
                 onClick={acceptAll}
                 className="w-full sm:w-40 min-h-11 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-purple-900/30 touch-manipulation"
               >
-                Accept
+                {tc("accept")}
               </button>
               <button
                 type="button"
                 onClick={rejectOptional}
                 className="w-full sm:w-40 min-h-11 bg-novra-elevated hover:bg-novra-border/60 border border-novra-border text-gray-200 text-sm font-medium px-5 py-2.5 rounded-xl transition-all duration-300 touch-manipulation"
               >
-                Refuz
+                {tc("reject")}
               </button>
               <button
                 type="button"
@@ -127,7 +130,7 @@ export default function CookieConsent() {
                 className="w-full sm:w-44 min-h-11 inline-flex items-center justify-center gap-2 border border-purple-500/30 bg-purple-600/10 text-purple-200 text-sm font-medium px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-purple-600/20 touch-manipulation"
               >
                 <Settings2 size={14} />
-                Personalizează
+                {t("customize")}
               </button>
             </div>
 
@@ -135,7 +138,7 @@ export default function CookieConsent() {
               type="button"
               onClick={rejectOptional}
               className="absolute top-3 right-3 min-w-11 min-h-11 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors touch-manipulation"
-              aria-label="Închide"
+              aria-label={tc("close")}
             >
               <X size={16} />
             </button>
@@ -144,16 +147,14 @@ export default function CookieConsent() {
           <div className="relative p-4 sm:p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-base font-bold text-white">Personalizează cookie-urile</h3>
-                <p className="mt-1 text-xs text-gray-400">
-                  Cookie-urile esențiale sunt mereu active. Poți activa opțional celelalte categorii.
-                </p>
+                <h3 className="text-base font-bold text-white">{t("customizeTitle")}</h3>
+                <p className="mt-1 text-xs text-gray-400">{t("customizeHint")}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCustomize(false)}
                 className="rounded-lg p-1 text-gray-400 hover:bg-white/10 hover:text-white"
-                aria-label="Înapoi"
+                aria-label={tc("back")}
               >
                 <X size={16} />
               </button>
@@ -163,10 +164,8 @@ export default function CookieConsent() {
               <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-novra-bg/40 p-4 opacity-80">
                 <input type="checkbox" checked disabled className="mt-1 h-4 w-4 rounded" />
                 <span>
-                  <span className="block text-sm font-medium text-white">Esențiale</span>
-                  <span className="block text-xs text-gray-400 mt-1">
-                    Necesare pentru coș, autentificare și funcționarea magazinului.
-                  </span>
+                  <span className="block text-sm font-medium text-white">{t("essential")}</span>
+                  <span className="block text-xs text-gray-400 mt-1">{t("essentialDesc")}</span>
                 </span>
               </label>
 
@@ -178,10 +177,8 @@ export default function CookieConsent() {
                   className="mt-1 h-4 w-4 rounded border-white/20 bg-novra-bg/50 text-purple-500"
                 />
                 <span>
-                  <span className="block text-sm font-medium text-white">Analitice</span>
-                  <span className="block text-xs text-gray-400 mt-1">
-                    Ne ajută să înțelegem cum este folosit site-ul și să îmbunătățim experiența.
-                  </span>
+                  <span className="block text-sm font-medium text-white">{t("analytics")}</span>
+                  <span className="block text-xs text-gray-400 mt-1">{t("analyticsDesc")}</span>
                 </span>
               </label>
 
@@ -193,10 +190,8 @@ export default function CookieConsent() {
                   className="mt-1 h-4 w-4 rounded border-white/20 bg-novra-bg/50 text-purple-500"
                 />
                 <span>
-                  <span className="block text-sm font-medium text-white">Urmărire afiliere</span>
-                  <span className="block text-xs text-gray-400 mt-1">
-                    Salvează codul afiliat din linkurile cu <code className="text-purple-300">?ref=</code>.
-                  </span>
+                  <span className="block text-sm font-medium text-white">{t("affiliate")}</span>
+                  <span className="block text-xs text-gray-400 mt-1">{t("affiliateDesc")}</span>
                 </span>
               </label>
             </div>
@@ -207,14 +202,14 @@ export default function CookieConsent() {
                 onClick={saveCustom}
                 className="flex-1 min-h-11 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700"
               >
-                Salvează preferințele
+                {t("savePreferences")}
               </button>
               <button
                 type="button"
                 onClick={acceptAll}
                 className="min-h-11 rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-300 hover:text-white"
               >
-                Accept toate
+                {t("acceptAll")}
               </button>
             </div>
           </div>

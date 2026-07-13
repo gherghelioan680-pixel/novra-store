@@ -18,59 +18,21 @@ import {
   X,
   Link2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { AccountSection } from "./types";
 import AccountLogo from "./AccountLogo";
 
 type NavItem = {
   id: AccountSection;
-  label: string;
+  labelKey: string;
   icon?: React.ComponentType<{ size?: number; className?: string }>;
-  badge?: string;
+  badgeKey?: string;
 };
 
 type NavGroup = {
-  title: string;
+  titleKey?: string;
   items: NavItem[];
 };
-
-const navGroups: NavGroup[] = [
-  {
-    title: "",
-    items: [{ id: "overview", label: "Overview", icon: LayoutDashboard }],
-  },
-  {
-    title: "Orders",
-    items: [
-      { id: "my-orders", label: "My Orders", icon: ShoppingBag },
-      { id: "my-returns", label: "My Returns", icon: RotateCcw },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      { id: "my-profile", label: "My Profile", icon: User, badge: "+100 NovraCredits" },
-      { id: "shipping-address", label: "Shipping Address", icon: MapPin },
-      { id: "manage-account", label: "Manage Account", icon: Settings },
-    ],
-  },
-  {
-    title: "Asset",
-    items: [
-      { id: "my-coupons", label: "My Coupons", icon: Ticket },
-      { id: "my-novra-credits", label: "My NovraCredits", icon: Coins },
-      { id: "gift-cards", label: "Gift Cards", icon: Gift },
-      { id: "affiliate-program", label: "Program Afiliere", icon: Link2 },
-      { id: "refer-friend", label: "Recomandă un prieten", icon: Gift },
-    ],
-  },
-  {
-    title: "Customer Service",
-    items: [
-      { id: "email-preferences", label: "Email Preferences", icon: Mail },
-      { id: "support-center", label: "Support Center", icon: Headphones },
-    ],
-  },
-];
 
 type AccountSidebarProps = {
   activeSection: AccountSection;
@@ -89,6 +51,46 @@ export default function AccountSidebar({
   onMobileToggle,
   onMobileClose,
 }: AccountSidebarProps) {
+  const t = useTranslations("account");
+
+  const navGroups: NavGroup[] = [
+    {
+      items: [{ id: "overview", labelKey: "overview", icon: LayoutDashboard }],
+    },
+    {
+      titleKey: "orders",
+      items: [
+        { id: "my-orders", labelKey: "myOrders", icon: ShoppingBag },
+        { id: "my-returns", labelKey: "myReturns", icon: RotateCcw },
+      ],
+    },
+    {
+      titleKey: "account",
+      items: [
+        { id: "my-profile", labelKey: "myProfile", icon: User, badgeKey: "profileBadge" },
+        { id: "shipping-address", labelKey: "shippingAddress", icon: MapPin },
+        { id: "manage-account", labelKey: "manageAccount", icon: Settings },
+      ],
+    },
+    {
+      titleKey: "assets",
+      items: [
+        { id: "my-coupons", labelKey: "myCoupons", icon: Ticket },
+        { id: "my-novra-credits", labelKey: "myCredits", icon: Coins },
+        { id: "gift-cards", labelKey: "giftCards", icon: Gift },
+        { id: "affiliate-program", labelKey: "affiliateProgram", icon: Link2 },
+        { id: "refer-friend", labelKey: "referFriend", icon: Gift },
+      ],
+    },
+    {
+      titleKey: "customerService",
+      items: [
+        { id: "email-preferences", labelKey: "emailPreferences", icon: Mail },
+        { id: "support-center", labelKey: "supportCenter", icon: Headphones },
+      ],
+    },
+  ];
+
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="border-b border-white/10 p-5">
@@ -96,11 +98,11 @@ export default function AccountSidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
-        {navGroups.map((group) => (
-          <div key={group.title || "overview"} className="mb-4">
-            {group.title && (
+        {navGroups.map((group, groupIndex) => (
+          <div key={group.titleKey ?? `group-${groupIndex}`} className="mb-4">
+            {group.titleKey && (
               <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
-                {group.title}
+                {t(group.titleKey)}
               </p>
             )}
             <ul className="space-y-0.5">
@@ -123,10 +125,10 @@ export default function AccountSidebar({
                       }`}
                     >
                       {Icon && <Icon size={18} className={isActive ? "text-purple-400" : ""} />}
-                      <span className="flex-1">{item.label}</span>
-                      {item.badge && (
+                      <span className="flex-1">{t(item.labelKey)}</span>
+                      {item.badgeKey && (
                         <span className="rounded-full bg-purple-600/30 px-2 py-0.5 text-[10px] font-medium text-purple-300">
-                          {item.badge}
+                          {t(item.badgeKey)}
                         </span>
                       )}
                     </button>
@@ -145,7 +147,7 @@ export default function AccountSidebar({
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400 transition hover:bg-white/5 hover:text-white"
         >
           <LogOut size={18} />
-          Sign Out
+          {t("signOut")}
         </button>
       </div>
     </div>
@@ -157,7 +159,7 @@ export default function AccountSidebar({
         type="button"
         onClick={onMobileToggle}
         className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-novra-card lg:hidden"
-        aria-label="Meniu cont"
+        aria-label={t("menuAria")}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -177,10 +179,10 @@ export default function AccountSidebar({
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-white/10 bg-novra-bg-alt pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
         {[
-          { id: "overview" as AccountSection, label: "Overview", icon: LayoutDashboard },
-          { id: "my-orders" as AccountSection, label: "Orders", icon: ShoppingBag },
-          { id: "my-profile" as AccountSection, label: "Profile", icon: User },
-          { id: "my-novra-credits" as AccountSection, label: "Credits", icon: Coins },
+          { id: "overview" as AccountSection, labelKey: "overview", icon: LayoutDashboard },
+          { id: "my-orders" as AccountSection, labelKey: "orders", icon: ShoppingBag },
+          { id: "my-profile" as AccountSection, labelKey: "profile", icon: User },
+          { id: "my-novra-credits" as AccountSection, labelKey: "credits", icon: Coins },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -194,7 +196,7 @@ export default function AccountSidebar({
               }`}
             >
               <Icon size={18} />
-              {item.label}
+              {t(item.labelKey)}
             </button>
           );
         })}
@@ -204,7 +206,7 @@ export default function AccountSidebar({
           className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] text-gray-500"
         >
           <ChevronDown size={18} />
-          More
+          {t("more")}
         </button>
       </nav>
     </>

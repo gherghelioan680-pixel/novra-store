@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 type TrackedOrder = {
   purchaseCode: string;
@@ -46,6 +47,8 @@ const STATUS_ICONS: Record<string, typeof Clock3> = {
 };
 
 function TrackOrderContent() {
+  const t = useTranslations("trackOrder");
+  const tc = useTranslations("common");
   const searchParams = useSearchParams();
   const initialCode = searchParams.get("code") ?? "";
   const [code, setCode] = useState(initialCode);
@@ -56,7 +59,7 @@ function TrackOrderContent() {
   const fetchOrder = async (searchCode: string) => {
     const trimmed = searchCode.trim().toUpperCase();
     if (!trimmed) {
-      setError("Introdu codul comenzii.");
+      setError(t("enterCode"));
       return;
     }
 
@@ -68,12 +71,12 @@ function TrackOrderContent() {
       const response = await fetch(`/api/store/orders/track?code=${encodeURIComponent(trimmed)}`);
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? "Comanda nu a fost găsită.");
+        setError(data.error ?? t("notFound"));
         return;
       }
       setOrder(data.order as TrackedOrder);
     } catch {
-      setError("Nu am putut verifica comanda. Încearcă din nou.");
+      setError(t("fetchError"));
     } finally {
       setLoading(false);
     }
@@ -95,10 +98,8 @@ function TrackOrderContent() {
       <main className="pt-[var(--header-height,148px)] px-4 sm:px-8 pb-16">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Urmărește comanda</h1>
-            <p className="mt-3 text-gray-400 text-sm sm:text-base">
-              Introdu codul comenzii (ex: NV-120726-ABC123) pentru a vedea statusul și detaliile livrării.
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="mt-3 text-gray-400 text-sm sm:text-base">{t("subtitle")}</p>
           </div>
 
           <form
@@ -106,13 +107,13 @@ function TrackOrderContent() {
             className="rounded-2xl border border-purple-500/20 bg-novra-card/40 p-5 sm:p-6 mb-8"
           >
             <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              Cod comandă
+              {t("orderCode")}
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="NV-DDMMYY-XXXXXX"
+                placeholder={t("placeholder")}
                 className="flex-1 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 font-mono text-sm outline-none focus:border-purple-500/50"
               />
               <button
@@ -121,7 +122,7 @@ function TrackOrderContent() {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                Caută
+                {loading ? t("searching") : t("search")}
               </button>
             </div>
             {error && <p className="mt-3 text-sm text-red-300">{error}</p>}

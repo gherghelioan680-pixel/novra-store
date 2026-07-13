@@ -215,6 +215,15 @@ export default function AdminSetariPage() {
         </div>
       )}
 
+      <section className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-5">
+        <p className="text-sm text-emerald-200">
+          <strong>Site public:</strong> RO / EN / DE — limba se detectează automat din browser (
+          <code className="rounded bg-black/30 px-1.5 py-0.5">Accept-Language</code>) și se salvează în
+          cookie-ul <code className="rounded bg-black/30 px-1.5 py-0.5">novra_lang</code>. Panoul admin rămâne în
+          română. Traducerile produselor se pot extinde ulterior din catalog.
+        </p>
+      </section>
+
       <section
         id="administratori"
         className="mb-6 scroll-mt-24 rounded-2xl border-2 border-purple-500/40 bg-gradient-to-br from-purple-600/10 to-novra-card/40 p-5 sm:p-6"

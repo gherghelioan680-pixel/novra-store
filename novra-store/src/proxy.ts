@@ -1,43 +1,12 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
 
-function isStaticAsset(pathname: string): boolean {
-  return (
-    pathname.startsWith("/_next/static") ||
-    pathname.startsWith("/_next/image") ||
-    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$/i.test(pathname)
-  );
-}
+const handleI18nRouting = createMiddleware(routing);
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
-  // Samsung Internet / Chrome Android cache HTML aggressively without explicit headers.
-  // Critical for Coming Soon toggle and other server-driven layout changes.
-  if (!isStaticAsset(pathname)) {
-    if (pathname.startsWith("/api")) {
-      response.headers.set("Cache-Control", "no-store, must-revalidate");
-    } else {
-      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-      response.headers.set("Pragma", "no-cache");
-      response.headers.set("CDN-Cache-Control", "no-store");
-      response.headers.set("Vercel-CDN-Cache-Control", "no-store");
-    }
-  }
-
-  return response;
+export function proxy(request: Parameters<typeof handleI18nRouting>[0]) {
+  return handleI18nRouting(request);
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
+  matcher: ["/((?!api|admin|_next|_vercel|.*\\..*).*)"],
 };

@@ -2,7 +2,7 @@ import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
 import { ProductGalleryCard } from "@/components/produse/ProductGalleryBox";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { CatalogProduct } from "@/lib/catalog";
 import { buildProductUrl, isBundleProduct } from "@/lib/catalog";
 import { ProductBadgesOverlay } from "@/components/produse/ProductBadges";

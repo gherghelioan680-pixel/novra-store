@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Minus, Plus, ShoppingBag, Trash2, ArrowLeft } from "lucide-react";
+import { Link, useRouter as useLocaleRouter } from "@/i18n/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
@@ -18,7 +19,7 @@ import {
 import { subscribeToStoreUpdates } from "@/lib/store";
 
 function CartAddFromUrl() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const searchParams = useSearchParams();
   const { addItem, hydrated } = useCart();
   const processedRef = useRef(false);
@@ -56,6 +57,8 @@ function CartAddFromUrl() {
 }
 
 function CosPageContent() {
+  const t = useTranslations("cart");
+  const tc = useTranslations("common");
   const { items, updateQuantity, removeItem, totalPrice, totalItems, hydrated } = useCart();
   const [, setStockTick] = useState(0);
 
@@ -72,7 +75,7 @@ function CosPageContent() {
       <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
         <Navbar />
         <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto">
-          <p className="text-gray-500 text-sm">Se încarcă coșul...</p>
+          <p className="text-gray-500 text-sm">{tc("loadingCart")}</p>
         </main>
         <Footer />
       </div>
@@ -89,27 +92,29 @@ function CosPageContent() {
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group touch-manipulation min-h-11"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          Continuă cumpărăturile
+          {tc("continueShopping")}
         </Link>
 
         <div className="border-b border-white/10 pb-10 mb-10">
           <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">
-            Coșul tău
+            {t("title")}
           </span>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
-            {totalItems > 0 ? `${totalItems} ${totalItems === 1 ? "produs" : "produse"}` : "Coș gol"}
+            {totalItems > 0
+              ? `${totalItems} ${totalItems === 1 ? tc("product") : tc("products")}`
+              : t("empty")}
           </h1>
         </div>
 
         {items.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl">
             <ShoppingBag size={40} className="mx-auto text-gray-600 mb-4" />
-            <p className="text-gray-400 mb-6">Nu ai adăugat încă produse în coș.</p>
+            <p className="text-gray-400 mb-6">{t("emptyMessage")}</p>
             <Link
               href="/produse"
               className="inline-flex items-center justify-center min-h-11 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-all touch-manipulation"
             >
-              Vezi produsele
+              {tc("viewProducts")}
             </Link>
           </div>
         ) : (
@@ -156,7 +161,7 @@ function CosPageContent() {
                       type="button"
                       onClick={() => removeItem(item.id)}
                       className="min-w-11 min-h-11 flex items-center justify-center text-gray-500 hover:text-red-400 transition-colors touch-manipulation"
-                      aria-label="Elimină produs"
+                      aria-label={t("remove")}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -166,7 +171,7 @@ function CosPageContent() {
                         type="button"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="min-w-11 min-h-11 flex items-center justify-center hover:text-purple-400 transition-colors touch-manipulation"
-                        aria-label="Scade cantitatea"
+                        aria-label={t("decreaseQty")}
                       >
                         <Minus size={14} />
                       </button>
@@ -176,7 +181,7 @@ function CosPageContent() {
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         disabled={!canIncrease}
                         className="min-w-11 min-h-11 flex items-center justify-center hover:text-purple-400 transition-colors touch-manipulation disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Crește cantitatea"
+                        aria-label={t("increaseQty")}
                       >
                         <Plus size={14} />
                       </button>
@@ -190,10 +195,10 @@ function CosPageContent() {
             <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 block font-medium">
-                  Total
+                  {tc("total")}
                 </span>
                 <span className="text-3xl font-bold text-white tracking-tight">
-                  {totalPrice.toFixed(2)} RON
+                  {totalPrice.toFixed(2)} {tc("ron")}
                 </span>
               </div>
 
@@ -201,7 +206,7 @@ function CosPageContent() {
                 href="/checkout"
                 className="w-full sm:w-auto text-center min-h-11 flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-semibold px-10 py-4 rounded-xl text-sm uppercase tracking-wider transition-all shadow-xl touch-manipulation"
               >
-                Finalizează comanda
+                {t("checkout")}
               </Link>
             </div>
           </>
