@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
-import ProductGalleryBox from "@/components/produse/ProductGalleryBox";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, RefreshCcw, Gem, ShieldCheck, CheckCircle2, ShoppingBag, Package, ArrowRight, Mail, Sparkles, Gift, Star, Quote } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -265,31 +265,19 @@ export default function Home() {
           initial={false}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1 }}
-          className="relative w-full max-w-[560px] lg:max-w-[620px] shrink-0"
+          className="relative w-full max-w-[500px] h-[240px] sm:h-[360px] md:h-[480px] flex items-center justify-center"
         >
-          <div className="pointer-events-none absolute -inset-4 bg-purple-600/12 rounded-[2.5rem] blur-2xl" />
-          <ProductGalleryBox
-            aspectClassName="aspect-[4/5] sm:aspect-square min-h-[300px] sm:min-h-[380px] md:min-h-[520px]"
-            contentPadding="p-0"
-            className="rounded-3xl border border-purple-500/20 bg-gradient-to-b from-purple-950/40 to-novra-card/60 shadow-2xl shadow-purple-950/40"
-            overlay={
-              <>
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(139,92,246,0.12),transparent_70%)]" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(15,5,25,0.55)_100%)]" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-purple-950/50 to-transparent" />
-              </>
-            }
-          >
-            <ProductImage
-              src="/products/bundle/novra-bundle-preview.png"
-              category="accesorii"
-              alt={th("aboutImageAlt")}
-              fill
+          <div className="absolute inset-0 bg-purple-900/25 rounded-full blur-3xl" />
+          <div className="relative z-10 w-full">
+            <Image
+              src="/cablu.png"
+              alt={th("heroImageAlt")}
+              width={500}
+              height={500}
               priority
-              sizes="(max-width: 1024px) 100vw, 620px"
-              className="object-contain object-center scale-[1.08] sm:scale-[1.12] drop-shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+              className="w-full h-auto drop-shadow-2xl"
             />
-          </ProductGalleryBox>
+          </div>
         </motion.div>
       </section>
 
@@ -382,11 +370,12 @@ export default function Home() {
         viewport={{ once: true }}
         className="py-8 sm:py-12 max-w-7xl mx-auto"
       >
-        <div className="relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/60 via-novra-card/50 to-novra-surface p-6 sm:p-10 md:p-12 lg:p-14">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/8 blur-[100px] rounded-full pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/80 via-novra-card/60 to-novra-surface p-6 sm:p-10 md:p-12">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-600/15 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-            <div className="flex-1 text-center lg:text-left order-2 lg:order-1">
+          <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
                 <Package size={14} aria-hidden />
                 {th("bundleBadge")}
@@ -421,27 +410,15 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative w-full max-w-[380px] sm:max-w-[420px] lg:max-w-[460px] shrink-0 order-1 lg:order-2">
-              <ProductGalleryBox
-                aspectClassName="aspect-square min-h-[280px] sm:min-h-[340px]"
-                contentPadding="p-0"
-                className="rounded-2xl border border-purple-500/15 bg-gradient-to-b from-purple-950/30 to-novra-card/40 shadow-xl shadow-purple-950/30"
-                overlay={
-                  <>
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(139,92,246,0.1),transparent_65%)]" />
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(15,5,25,0.4)_100%)]" />
-                  </>
-                }
-              >
-                <ProductImage
-                  src="/products/bundle/novra-bundle-preview.png"
-                  category="accesorii"
-                  alt={th("bundleTitle")}
-                  fill
-                  sizes="(max-width: 1024px) 80vw, 460px"
-                  className="object-contain object-center scale-[1.1] drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-                />
-              </ProductGalleryBox>
+            <div className="relative w-full max-w-[280px] sm:max-w-xs shrink-0">
+              <div className="absolute inset-0 bg-purple-600/20 rounded-2xl blur-2xl" />
+              <Image
+                src="/cutie.png"
+                alt={th("bundleImageAlt")}
+                width={320}
+                height={320}
+                className="relative z-10 w-full h-auto rounded-2xl"
+              />
             </div>
           </div>
         </div>
@@ -502,20 +479,16 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <div className="order-1 lg:order-2 relative h-72 sm:h-96 lg:h-[480px] rounded-3xl overflow-hidden border border-purple-500/15 bg-gradient-to-b from-purple-950/50 to-novra-card/40 shadow-2xl shadow-purple-950/25">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(139,92,246,0.14),transparent_65%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(15,5,25,0.5)_100%)]" />
-            <div className="absolute inset-0">
-              <ProductImage
-                src="/products/bundle/novra-bundle-preview.png"
-                category="accesorii"
-                alt={th("aboutImageAlt")}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-contain object-center scale-[1.05] sm:scale-[1.1] drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-              />
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/80 backdrop-blur-md border border-purple-500/15">
+          <div className="order-1 lg:order-2 relative h-64 sm:h-80 lg:h-[420px] rounded-3xl overflow-hidden border border-novra-border group">
+            <Image
+              src="/technologie.png"
+              alt={th("aboutImageAlt")}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-novra-bg/80 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/70 backdrop-blur-md border border-novra-border/60">
               <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("customersCount")}</p>
               <p className="text-sm text-white font-medium">{th("brandTagline")}</p>
             </div>
@@ -609,37 +582,20 @@ export default function Home() {
         viewport={{ once: true }}
         className="py-16 sm:py-24 max-w-7xl mx-auto"
       >
-        <div className="relative overflow-hidden rounded-3xl border border-purple-500/15 bg-novra-card/30">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_50%,rgba(139,92,246,0.08),transparent_60%)]" />
+        <div className="relative overflow-hidden rounded-3xl border border-purple-500/25 bg-gradient-to-br from-purple-950/60 via-novra-card/50 to-novra-surface">
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/15 blur-[90px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-fuchsia-500/10 blur-[70px] rounded-full pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(168,85,247,0.08),transparent_60%)] pointer-events-none" />
 
-          <div className="relative z-10 grid lg:grid-cols-2 gap-8 lg:gap-0 items-stretch">
-            <div className="relative min-h-[260px] sm:min-h-[320px] lg:min-h-[420px] bg-gradient-to-br from-purple-950/40 to-novra-card/20 border-b lg:border-b-0 lg:border-r border-purple-500/10">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(139,92,246,0.1),transparent_65%)]" />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(15,5,25,0.45)_100%)]" />
-              <div className="absolute inset-0 p-4 sm:p-6 lg:p-8">
-                <ProductImage
-                  src="/products/bundle/novra-bundle-preview.png"
-                  category="accesorii"
-                  alt={th("newsletterImageAlt")}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-contain object-center scale-[1.05] sm:scale-[1.1] drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-                />
-              </div>
-              <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/80 backdrop-blur-md border border-purple-500/15">
-                <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("welcomeOffer")}</p>
-                <p className="text-sm text-white font-medium">{th("welcomeDiscount")}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-center p-6 sm:p-10 md:p-12 lg:p-14">
-              <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-600/10 text-purple-300 text-xs font-semibold uppercase tracking-[0.2em] px-3 py-1.5 mb-5 w-fit">
-                <Mail size={13} aria-hidden />
+          <div className="relative z-10 grid lg:grid-cols-2 gap-8 lg:gap-12 p-6 sm:p-10 md:p-12 items-center">
+            <div>
+              <span className="inline-flex items-center gap-2 bg-purple-500/15 text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5 border border-purple-500/20">
+                <Sparkles size={13} aria-hidden />
                 {th("newsletterBadge")}
               </span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4 leading-[1.15]">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 {th("newsletterTitle")}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400">
                   {th("newsletterTitleHighlight")}
                 </span>
               </h2>
@@ -650,20 +606,18 @@ export default function Home() {
               <ul className="space-y-2.5 mb-8">
                 {[th("newsletterPerk1"), th("newsletterPerk2"), th("newsletterPerk3")].map((perk) => (
                   <li key={perk} className="flex items-center gap-2.5 text-sm text-gray-300">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600/10 border border-purple-500/20 shrink-0">
-                      <Gift size={13} className="text-purple-400" aria-hidden />
-                    </span>
+                    <Gift size={15} className="text-purple-400 shrink-0" aria-hidden />
                     {perk}
                   </li>
                 ))}
               </ul>
 
               <form onSubmit={handleNewsletterSubmit} className="space-y-3">
-                <div className="flex flex-col sm:flex-row gap-2.5 rounded-xl border border-purple-500/20 bg-novra-bg/50 p-1.5">
+                <div className="flex flex-col sm:flex-row gap-2.5 p-1.5 rounded-2xl bg-novra-bg/50 border border-novra-border/80 backdrop-blur-sm">
                   <div className="relative flex-1 min-w-0">
                     <Mail
                       size={16}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400/60 pointer-events-none"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400/70 pointer-events-none"
                       aria-hidden
                     />
                     <input
@@ -671,13 +625,13 @@ export default function Home() {
                       name="email"
                       required
                       placeholder={th("emailPlaceholder")}
-                      className="w-full bg-transparent border-0 pl-11 pr-4 py-3.5 rounded-lg outline-none focus:ring-2 focus:ring-purple-500/30 text-white placeholder:text-novra-muted text-sm sm:text-base"
+                      className="w-full bg-transparent border-0 pl-11 pr-4 py-3.5 rounded-xl outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder:text-novra-muted text-sm sm:text-base"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={newsletterStatus === "sending"}
-                    className="inline-flex items-center justify-center gap-2 min-h-11 bg-purple-600 hover:bg-purple-700 px-6 sm:px-8 py-3.5 rounded-lg font-semibold transition-colors duration-300 disabled:opacity-50 cursor-pointer whitespace-nowrap text-sm sm:text-base touch-manipulation"
+                    className="inline-flex items-center justify-center gap-2 min-h-11 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 px-6 sm:px-8 py-3.5 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 cursor-pointer whitespace-nowrap text-sm sm:text-base shadow-lg shadow-purple-900/30 touch-manipulation"
                   >
                     {newsletterStatus === "sending" ? th("sending") : th("subscribe")}
                     {newsletterStatus !== "sending" && <ArrowRight size={16} aria-hidden />}
@@ -719,6 +673,21 @@ export default function Home() {
               </form>
 
               <p className="text-xs text-novra-muted mt-4">{th("noSpam")}</p>
+            </div>
+
+            <div className="relative h-56 sm:h-72 lg:h-80 rounded-2xl overflow-hidden border border-purple-500/15">
+              <Image
+                src="/cutie.png"
+                alt={th("newsletterImageAlt")}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-950/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/70 backdrop-blur-md border border-novra-border/60">
+                <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("welcomeOffer")}</p>
+                <p className="text-sm text-white font-medium">{th("welcomeDiscount")}</p>
+              </div>
             </div>
           </div>
         </div>
