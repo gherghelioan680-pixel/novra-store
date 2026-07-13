@@ -1,20 +1,11 @@
-import "../globals.css";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import Providers from "@/components/Providers";
 import ComingSoonGate from "@/components/ComingSoonGate";
+import SetDocumentLang from "@/components/SetDocumentLang";
 import { routing } from "@/i18n/routing";
-
-export const dynamic = "force-dynamic";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  themeColor: "#13111c",
-};
 
 export const metadata: Metadata = {
   title: "NOVRA | Precision. Performance. Power.",
@@ -43,14 +34,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className="bg-novra-bg text-white antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <ComingSoonGate>
-            <Providers>{children}</Providers>
-          </ComingSoonGate>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      <SetDocumentLang locale={locale} />
+      <ComingSoonGate>
+        <Providers>{children}</Providers>
+      </ComingSoonGate>
+    </NextIntlClientProvider>
   );
 }
