@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { UserRound } from "lucide-react";
 import { getCurrentUser, loginUser, registerUser, type User } from "@/lib/auth";
 
@@ -17,6 +18,8 @@ export default function CheckoutAuthSection({
   onModeChange,
   onAuthSuccess,
 }: CheckoutAuthSectionProps) {
+  const t = useTranslations("checkoutAuth");
+  const ta = useTranslations("account");
   const currentUser = getCurrentUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,7 +33,7 @@ export default function CheckoutAuthSection({
         <div className="flex items-center gap-3">
           <UserRound size={20} className="text-purple-300 shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-white">Autentificat ca {currentUser.name}</p>
+            <p className="text-sm font-semibold text-white">{t("authenticatedAs", { name: currentUser.name })}</p>
             <p className="text-xs text-gray-400">{currentUser.email}</p>
           </div>
         </div>
@@ -73,7 +76,7 @@ export default function CheckoutAuthSection({
 
   return (
     <div className="mb-8 rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
-      <p className="mb-4 text-xs uppercase tracking-widest text-gray-500">Cont</p>
+      <p className="mb-4 text-xs uppercase tracking-widest text-gray-500">{t("account")}</p>
 
       <div className="mb-5 flex rounded-xl border border-white/10 bg-novra-bg/40 p-1">
         <button
@@ -83,7 +86,7 @@ export default function CheckoutAuthSection({
             mode === "login" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white"
           }`}
         >
-          Login
+          {t("login")}
         </button>
         <button
           type="button"
@@ -92,7 +95,7 @@ export default function CheckoutAuthSection({
             mode === "register" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white"
           }`}
         >
-          Register
+          {t("register")}
         </button>
         <button
           type="button"
@@ -101,24 +104,20 @@ export default function CheckoutAuthSection({
             mode === "guest" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white"
           }`}
         >
-          Continuă fără cont
+          {t("continueGuest")}
         </button>
       </div>
 
       {mode === "guest" ? (
-        <p className="text-sm text-gray-400 leading-relaxed">
-          Plasează comanda cu datele de livrare — fără parolă. Poți crea un cont după finalizare, din pagina de confirmare.
-        </p>
+        <p className="text-sm text-gray-400 leading-relaxed">{t("guestDescription")}</p>
       ) : (
         <>
           <div className="mb-4 text-center sm:text-left">
             <h2 className="text-lg font-semibold text-white">
-              {mode === "login" ? "Bine ai revenit" : "Creează cont"}
+              {mode === "login" ? ta("welcomeBack") : ta("createAccountTitle")}
             </h2>
             <p className="mt-1 text-sm text-gray-400">
-              {mode === "login"
-                ? "Intră în contul tău NOVRA"
-                : "Înregistrează-te și primești 50 NovraCredits"}
+              {mode === "login" ? ta("loginSubtitle") : ta("registerSubtitle")}
             </p>
           </div>
 
@@ -126,7 +125,7 @@ export default function CheckoutAuthSection({
             {mode === "register" && (
               <div>
                 <label htmlFor="checkout-auth-name" className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                  Nume
+                  {ta("name")}
                 </label>
                 <input
                   id="checkout-auth-name"
@@ -135,14 +134,14 @@ export default function CheckoutAuthSection({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none transition focus:border-purple-500/50"
-                  placeholder="Numele tău"
+                  placeholder={ta("namePlaceholder")}
                 />
               </div>
             )}
 
             <div>
               <label htmlFor="checkout-auth-email" className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                Email
+                {ta("email")}
               </label>
               <input
                 id="checkout-auth-email"
@@ -151,13 +150,13 @@ export default function CheckoutAuthSection({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none transition focus:border-purple-500/50"
-                placeholder="exemplu@email.com"
+                placeholder={t("emailPlaceholder")}
               />
             </div>
 
             <div>
               <label htmlFor="checkout-auth-password" className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                Parolă
+                {ta("password")}
               </label>
               <input
                 id="checkout-auth-password"
@@ -166,7 +165,7 @@ export default function CheckoutAuthSection({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none transition focus:border-purple-500/50"
-                placeholder="Parola ta"
+                placeholder={ta("passwordPlaceholder")}
               />
             </div>
 
@@ -176,10 +175,10 @@ export default function CheckoutAuthSection({
               className="w-full min-h-11 rounded-xl bg-purple-600 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:opacity-60"
             >
               {isSubmitting
-                ? "Se procesează..."
+                ? ta("processing")
                 : mode === "login"
-                  ? "Autentifică-te"
-                  : "Creează cont"}
+                  ? ta("loginButton")
+                  : ta("createAccount")}
             </button>
           </form>
 
@@ -190,7 +189,7 @@ export default function CheckoutAuthSection({
                 onClick={() => switchMode("register")}
                 className="min-h-11 text-left text-purple-400 hover:text-purple-300 touch-manipulation py-1"
               >
-                Nu ai cont? Creează-l
+                {ta("noAccountCreate")}
               </button>
             )}
             {mode === "register" && (
@@ -199,7 +198,7 @@ export default function CheckoutAuthSection({
                 onClick={() => switchMode("login")}
                 className="min-h-11 text-left text-purple-400 hover:text-purple-300 touch-manipulation py-1"
               >
-                Ai deja cont? Intră în cont
+                {ta("hasAccountLogin")}
               </button>
             )}
           </div>
@@ -207,7 +206,9 @@ export default function CheckoutAuthSection({
           {message && (
             <p
               className={`mt-4 text-sm ${
-                message.includes("reușit") || message.includes("succes") ? "text-green-400" : "text-purple-300"
+                message.includes("reușit") || message.includes("succes") || message.includes("success")
+                  ? "text-green-400"
+                  : "text-purple-300"
               }`}
               role="status"
               aria-live="polite"

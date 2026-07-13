@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaWhatsapp } from "react-icons/fa";
@@ -8,44 +9,43 @@ import { fadeUp } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/store";
 
-const WHATSAPP_MESSAGE = "Salut! Am o întrebare despre produsele NOVRA.";
-
 export default function WhatsAppCta() {
+  const t = useTranslations("whatsapp");
   const { whatsappNumber } = useSiteSettings();
 
   const supportChannels = [
     {
       icon: FaWhatsapp,
-      label: "WhatsApp",
-      title: "Răspuns rapid",
-      description: "Discută direct cu echipa NOVRA. Timp mediu de răspuns: sub 30 de minute.",
-      href: buildWhatsAppUrl(whatsappNumber, WHATSAPP_MESSAGE),
+      label: t("label"),
+      title: t("rapidResponse"),
+      description: t("rapidResponseDesc"),
+      href: buildWhatsAppUrl(whatsappNumber, t("ctaMessage")),
       external: true,
       accent: "from-green-500/10 to-transparent border-green-500/20 hover:border-green-500/40",
       iconClass: "text-[#25D366]",
-      cta: "Scrie-ne acum",
+      cta: t("writeNow"),
     },
     {
       icon: Mail,
-      label: "Email",
-      title: "Asistență oficială",
-      description: "Pentru comenzi, colaborări sau solicitări comerciale — support@novra.ro",
+      label: t("email"),
+      title: t("officialSupport"),
+      description: t("officialSupportDesc"),
       href: "mailto:support@novra.ro",
       external: false,
       accent: "from-purple-500/10 to-transparent border-white/8 hover:border-purple-500/30",
       iconClass: "text-purple-400",
-      cta: "Trimite email",
+      cta: t("sendEmail"),
     },
     {
       icon: HelpCircle,
-      label: "FAQ",
-      title: "Întrebări frecvente",
-      description: "Răspunsuri instant la cele mai comune întrebări despre livrare, plată și garanție.",
+      label: t("faq"),
+      title: t("faqTitle"),
+      description: t("faqDesc"),
       href: "/faq",
       external: false,
       accent: "from-purple-500/10 to-transparent border-white/8 hover:border-purple-500/30",
       iconClass: "text-purple-400",
-      cta: "Vezi FAQ",
+      cta: t("viewFaq"),
     },
   ];
 
@@ -55,17 +55,17 @@ export default function WhatsAppCta() {
         <motion.div {...fadeUp} className="text-center mb-10 sm:mb-12">
           <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
             <MessageCircle size={14} aria-hidden />
-            Suport rapid
+            {t("quickSupport")}
           </span>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Suntem aici{" "}
+            {t("hereForYou")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-              pentru tine
+              {t("forYou")}
             </span>
           </h2>
           <p className="text-gray-400 text-sm sm:text-base max-w-xl mx-auto flex items-center justify-center gap-2">
             <Clock size={15} className="text-purple-500 shrink-0" aria-hidden />
-            L–V 08:00 – 21:00 · Răspundem rapid la orice întrebare
+            {t("hours")}
           </p>
         </motion.div>
 

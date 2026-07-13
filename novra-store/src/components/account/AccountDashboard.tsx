@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCurrentUser, logoutUser, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -45,6 +46,7 @@ function isAccountSection(value: string | null): value is AccountSection {
 
 function AccountDashboardContent() {
   const searchParams = useSearchParams();
+  const t = useTranslations("account");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState<AccountSection>("overview");
@@ -85,7 +87,7 @@ function AccountDashboardContent() {
     setCurrentUser(null);
     setIsLoggedIn(false);
     setActiveSection("overview");
-    setToast("Ai ieșit din cont.");
+    setToast(t("logoutSuccess"));
   };
 
   const handleUserUpdate = (user: User, message?: string) => {
@@ -162,7 +164,7 @@ function AccountDashboardContent() {
             user={currentUser}
             onSave={(user) => {
               handleUserUpdate(user);
-              showToast("Preferințele au fost salvate.");
+              showToast(t("preferencesSaved"));
             }}
           />
         );

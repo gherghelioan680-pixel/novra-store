@@ -82,6 +82,7 @@ export default async function ComingSoonGate({ children }: { children: React.Rea
       settings={settings.comingSoon}
       whatsappNumber={settings.whatsappNumber}
       initialTimeLeft={initialTimeLeft}
+      newsletterDiscountPercent={settings.newsletterDiscountPercent ?? 10}
     />
   );
 }

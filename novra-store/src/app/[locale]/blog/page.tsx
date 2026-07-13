@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
@@ -7,20 +8,33 @@ import { getPublishedArticles } from "@/lib/blog-server";
 import { estimateReadingTime, formatReadingTime } from "@/lib/blog-utils";
 import { BookOpen, ArrowRight, Tag, Clock } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Ghiduri & Blog — NOVRA",
-  description: "Ghiduri, sfaturi și noutăți despre cabluri premium, încărcare rapidă și accesorii NOVRA.",
+type PageProps = {
+  params: Promise<{ locale: string }>;
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ro-RO", {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "blog" });
+
+  return {
+    title: t("metadataTitle"),
+    description: t("metadataDescription"),
+  };
+}
+
+function formatDate(iso: string, locale: string): string {
+  const dateLocale = locale === "ro" ? "ro-RO" : locale === "de" ? "de-DE" : "en-US";
+  return new Date(iso).toLocaleDateString(dateLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 }
 
-export default async function BlogListingPage() {
+export default async function BlogListingPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("blog");
   const articles = await getPublishedArticles();
   const [featured, ...rest] = articles;
 
@@ -31,16 +45,16 @@ export default async function BlogListingPage() {
         <div className="pt-8 pb-10 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-600/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-purple-300 mb-4">
             <BookOpen size={14} />
-            Ghiduri NOVRA
+            {t("badge")}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Blog & Ghiduri</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">{t("title")}</h1>
           <p className="text-gray-400 max-w-lg mx-auto">
-            Sfaturi practice, comparații și noutăți despre produsele NOVRA.
+            {t("subtitle")}
           </p>
         </div>
 
         {articles.length === 0 ? (
-          <p className="text-center text-gray-500 py-16">Articolele vor apărea în curând.</p>
+          <p className="text-center text-gray-500 py-16">{t("empty")}</p>
         ) : (
           <div className="space-y-8">
             {featured && (
@@ -64,7 +78,7 @@ export default async function BlogListingPage() {
                   )}
                   <div className="p-6 sm:p-8 flex flex-col justify-center">
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-400 mb-3">
-                      Articol recomandat
+                      {t("featured")}
                     </span>
                     {featured.categories.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
@@ -84,14 +98,14 @@ export default async function BlogListingPage() {
                     </h2>
                     <p className="mt-3 text-gray-400 line-clamp-3 leading-relaxed">{featured.excerpt}</p>
                     <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                      <span>{formatDate(featured.createdAt)}</span>
+                      <span>{formatDate(featured.createdAt, locale)}</span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={12} />
                         {formatReadingTime(estimateReadingTime(featured.content))}
                       </span>
                     </div>
                     <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-purple-400 group-hover:gap-2 transition-all">
-                      Citește ghidul complet
+                      {t("readFullGuide")}
                       <ArrowRight size={14} />
                     </span>
                   </div>
@@ -138,14 +152,14 @@ export default async function BlogListingPage() {
                       </h2>
                       <p className="mt-2 text-sm text-gray-400 line-clamp-2">{article.excerpt}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                        <span>{formatDate(article.createdAt)}</span>
+                        <span>{formatDate(article.createdAt, locale)}</span>
                         <span className="inline-flex items-center gap-1">
                           <Clock size={11} />
                           {formatReadingTime(estimateReadingTime(article.content))}
                         </span>
                       </div>
                       <span className="mt-3 inline-flex items-center gap-1 text-sm text-purple-400 group-hover:gap-2 transition-all">
-                        Citește articolul
+                        {t("readArticle")}
                         <ArrowRight size={14} />
                       </span>
                     </div>

@@ -1,36 +1,27 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Cookie, Sparkles, Settings, BarChart3, Link2, Mail } from "lucide-react";
-
 import { fadeUp } from "@/lib/motion";
-import { AFFILIATE_ATTRIBUTION_DAYS, AFFILIATE_REF_COOKIE } from "@/lib/affiliates-types";
+import { AFFILIATE_ATTRIBUTION_DAYS } from "@/lib/affiliates-types";
 
-const cookieTypes = [
-  {
-    name: "Esențiale (strict necesare)",
-    purpose: "Funcționarea coșului, autentificarea contului, securitatea sesiunii.",
-    duration: "Sesiune / până la 30 zile",
-    required: true,
-  },
-  {
-    name: AFFILIATE_REF_COOKIE,
-    purpose: `Atribuire comenzi program afiliere (parametru ?ref=). Durată: ${AFFILIATE_ATTRIBUTION_DAYS} zile.`,
-    duration: `${AFFILIATE_ATTRIBUTION_DAYS} zile`,
-    required: false,
-  },
-  {
-    name: "Preferințe site",
-    purpose: "Salvare setări locale (ex. coș, preferințe UI).",
-    duration: "Variabil",
-    required: false,
-  },
-];
+type CookieType = {
+  name: string;
+  purpose: string;
+  duration: string;
+  required: boolean;
+};
 
 export default function PoliticaCookies() {
+  const t = useTranslations("legalCookies");
+
+  const cookieTypes = useMemo(() => t.raw("cookieTypes") as CookieType[], [t]);
+
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
@@ -40,15 +31,15 @@ export default function PoliticaCookies() {
           <motion.div {...fadeUp}>
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
               <Sparkles size={14} aria-hidden />
-              Cookie-uri
+              {t("badge")}
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-4">
-              Politica de{" "}
+              {t("title")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                Cookie-uri
+                {t("titleHighlight")}
               </span>
             </h1>
-            <p className="text-gray-400 text-sm font-light">Ultima actualizare: Iulie 2026</p>
+            <p className="text-gray-400 text-sm font-light">{t("lastUpdated")}</p>
           </motion.div>
         </section>
 
@@ -57,12 +48,8 @@ export default function PoliticaCookies() {
             <div className="flex items-start gap-4 mb-4">
               <Cookie size={20} className="text-purple-400 shrink-0 mt-1" />
               <div>
-                <h2 className="text-lg font-semibold text-white mb-2">Ce sunt cookie-urile?</h2>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  Cookie-urile sunt fișiere mici stocate pe dispozitivul tău când vizitezi NOVRA Store. Ne ajută să
-                  oferim funcționalități esențiale (coș, cont, checkout) și, opțional, să atribuim comenzi în programul
-                  de afiliere.
-                </p>
+                <h2 className="text-lg font-semibold text-white mb-2">{t("whatTitle")}</h2>
+                <p className="text-gray-300 text-sm leading-relaxed">{t("whatText")}</p>
               </div>
             </div>
           </motion.section>
@@ -70,7 +57,7 @@ export default function PoliticaCookies() {
           <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Settings size={18} className="text-purple-400" />
-              Tipuri de cookie-uri utilizate
+              {t("typesTitle")}
             </h2>
             <div className="space-y-4">
               {cookieTypes.map((cookie) => (
@@ -79,16 +66,16 @@ export default function PoliticaCookies() {
                     <h3 className="font-medium text-white text-sm">{cookie.name}</h3>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] uppercase ${
-                        cookie.required
-                          ? "bg-purple-500/15 text-purple-300"
-                          : "bg-gray-500/15 text-gray-400"
+                        cookie.required ? "bg-purple-500/15 text-purple-300" : "bg-gray-500/15 text-gray-400"
                       }`}
                     >
-                      {cookie.required ? "Necesar" : "Opțional"}
+                      {cookie.required ? t("required") : t("optional")}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400 mb-1">{cookie.purpose}</p>
-                  <p className="text-xs text-gray-500">Durată: {cookie.duration}</p>
+                  <p className="text-xs text-gray-500">
+                    {t("durationLabel")} {cookie.duration}
+                  </p>
                 </div>
               ))}
             </div>
@@ -97,28 +84,23 @@ export default function PoliticaCookies() {
           <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
             <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
               <Link2 size={18} className="text-purple-400" />
-              Cookie afiliere (?ref=)
+              {t("affiliateTitle")}
             </h2>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Când accesezi site-ul printr-un link de afiliat (ex. novra.ro/?ref=COD), setăm un cookie care reține codul
-              afiliatului timp de {AFFILIATE_ATTRIBUTION_DAYS} zile. Dacă plasezi o comandă în această perioadă, comisionul
-              poate fi atribuit afiliatului respectiv. Poți șterge cookie-urile din setările browserului.
+              {t("affiliateText", { days: AFFILIATE_ATTRIBUTION_DAYS })}
             </p>
           </motion.section>
 
           <motion.section {...fadeUp} className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40">
             <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
               <BarChart3 size={18} className="text-purple-400" />
-              Gestionarea cookie-urilor
+              {t("manageTitle")}
             </h2>
-            <p className="text-gray-300 text-sm leading-relaxed mb-3">
-              Poți configura browserul să refuze cookie-urile sau să te alerteze când sunt setate. Dezactivarea cookie-urilor
-              esențiale poate afecta funcționarea coșului, checkout-ului și contului.
-            </p>
+            <p className="text-gray-300 text-sm leading-relaxed mb-3">{t("manageText")}</p>
             <p className="text-sm text-gray-400">
-              Mai multe detalii în{" "}
+              {t("manageMore")}{" "}
               <Link href="/politica-confidentialitate" className="text-purple-400 hover:underline">
-                Politica de confidențialitate
+                {t("privacyLink")}
               </Link>
               .
             </p>
@@ -130,7 +112,7 @@ export default function PoliticaCookies() {
           >
             <div className="flex items-center gap-2 text-sm">
               <Mail size={14} className="text-purple-500" />
-              <span className="text-gray-400">Întrebări:</span>
+              <span className="text-gray-400">{t("questions")}</span>
               <a href="mailto:contact@novra.ro" className="text-purple-400 hover:underline">
                 contact@novra.ro
               </a>

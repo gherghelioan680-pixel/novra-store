@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useLayoutEffect } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Clock, Tag } from "lucide-react";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -28,6 +29,7 @@ function TimeBlock({ value, label }: { value: number; label: string }) {
 }
 
 export default function CampaignCountdown({ campaign }: CampaignCountdownProps) {
+  const t = useTranslations("campaign");
   const mounted = useIsClient();
   const endDate = new Date(campaign.endDate);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(EMPTY_TIME_LEFT);
@@ -60,7 +62,7 @@ export default function CampaignCountdown({ campaign }: CampaignCountdownProps) 
       <div className="relative text-center max-w-2xl mx-auto">
         <span className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${theme.badge} px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white mb-4`}>
           <Tag size={14} />
-          {campaign.discountPercent > 0 ? `−${campaign.discountPercent}% reducere` : "Ofertă specială"}
+          {campaign.discountPercent > 0 ? t("discount", { percent: campaign.discountPercent }) : t("specialOffer")}
         </span>
 
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-3">
@@ -73,19 +75,19 @@ export default function CampaignCountdown({ campaign }: CampaignCountdownProps) 
           <div className="inline-flex flex-col items-center gap-3 mb-8">
             <div className="flex items-center gap-2 text-purple-200/80 text-sm">
               <Clock size={16} />
-              <span>Oferta expiră în</span>
+              <span>{t("expiresIn")}</span>
             </div>
             <div
               className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-black/30 border border-purple-400/25 backdrop-blur-sm"
               aria-live="polite"
             >
-              <TimeBlock value={timeLeft.days} label="zile" />
+              <TimeBlock value={timeLeft.days} label={t("days")} />
               <span className="text-purple-300 font-bold pb-4">:</span>
-              <TimeBlock value={timeLeft.hours} label="ore" />
+              <TimeBlock value={timeLeft.hours} label={t("hours")} />
               <span className="text-purple-300 font-bold pb-4">:</span>
-              <TimeBlock value={timeLeft.minutes} label="min" />
+              <TimeBlock value={timeLeft.minutes} label={t("minutes")} />
               <span className="text-purple-300 font-bold pb-4">:</span>
-              <TimeBlock value={timeLeft.seconds} label="sec" />
+              <TimeBlock value={timeLeft.seconds} label={t("seconds")} />
             </div>
           </div>
         )}

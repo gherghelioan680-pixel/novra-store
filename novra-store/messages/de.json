@@ -87,7 +87,138 @@
     "description": "Beschreibung",
     "selectVariant": "Variante wählen",
     "bestseller": "Bestseller",
-    "bundleSavings": "Sparen Sie {amount} RON"
+    "bundleSavings": "Sparen Sie {amount} RON",
+    "bundleSavingsShort": "−{amount} lei"
+  },
+  "metadata": {
+    "description": "Premium-Kabel für Geschwindigkeit, Sicherheit und kompromisslose Leistung."
+  },
+  "productModal": {
+    "ariaLabel": "Produktdetails",
+    "closeAria": "Produktdetails schließen",
+    "specPower": "Stromversorgung:",
+    "specSync": "Synchronisation:",
+    "specArch": "Architektur:",
+    "specMaterial": "Material:",
+    "adapterColor": "Adapterfarbe",
+    "cableColor": "Kabelfarbe",
+    "combination": "Kombination:",
+    "chooseColor": "Farbe wählen",
+    "chooseVariant": "Variante wählen",
+    "comingSoon": "Demnächst verfügbar",
+    "finalPrice": "Endpreis",
+    "addedToCart": "In den Warenkorb gelegt!",
+    "whatsappOrderMessage": "Hallo NOVRA Team! Ich möchte folgendes Produkt bestellen:\n\n- Produkt: {title}\n- {variantField}: {variantLabel}\n- Preis: {price} RON\n\nBitte bestätigen Sie die Verfügbarkeit!",
+    "variantConfiguration": "Konfiguration",
+    "variantColor": "Farbe",
+    "variantLength": "Variante/Länge"
+  },
+  "push": {
+    "closeAria": "Schließen",
+    "title": "NOVRA Angebote erhalten",
+    "description": "Erfahren Sie als Erster von Rabatten, Neuheiten und exklusiven Aktionen.",
+    "activating": "Wird aktiviert...",
+    "enable": "Aktivieren",
+    "dismiss": "Nicht jetzt"
+  },
+  "campaign": {
+    "discount": "−{percent}% Rabatt",
+    "specialOffer": "Sonderangebot",
+    "expiresIn": "Angebot endet in",
+    "days": "Tage",
+    "hours": "Std",
+    "minutes": "Min",
+    "seconds": "Sek",
+    "activeCampaign": "Aktive Aktion",
+    "discountNote": "Der {percent}% Rabatt wird automatisch an der Kasse angewendet, wenn Sie die Website über diese Aktion aufrufen.",
+    "metadataTitle": "Aktion — NOVRA"
+  },
+  "countdown": {
+    "days": "Tage",
+    "hours": "Std",
+    "minutes": "Min",
+    "seconds": "Sek",
+    "timeRemaining": "Verbleibende Zeit: {time}",
+    "staticAriaLabel": "Verbleibende Zeit: Countdown für begrenztes Angebot"
+  },
+  "copy": {
+    "copy": "Kopieren",
+    "copied": "Kopiert"
+  },
+  "whatsapp": {
+    "label": "WhatsApp",
+    "ctaMessage": "Hallo! Ich habe eine Frage zu NOVRA Produkten.",
+    "floatMessage": "Hallo! Ich brauche Informationen zu NOVRA Produkten.",
+    "tooltip": "Brauchen Sie Hilfe? Wir sind da! 👋",
+    "chatAria": "WhatsApp Chat mit NOVRA",
+    "chatTitle": "Chat mit NOVRA",
+    "premiumSupport": "Premium Support",
+    "quickSupport": "Schneller Support",
+    "hereForYou": "Wir sind da",
+    "forYou": "für Sie",
+    "hours": "Mo–Fr 08:00 – 21:00 · Wir antworten schnell auf jede Frage",
+    "rapidResponse": "Schnelle Antwort",
+    "rapidResponseDesc": "Chatten Sie direkt mit dem NOVRA Team. Durchschnittliche Antwortzeit: unter 30 Minuten.",
+    "writeNow": "Jetzt schreiben",
+    "email": "E-Mail",
+    "officialSupport": "Offizieller Support",
+    "officialSupportDesc": "Für Bestellungen, Partnerschaften oder Geschäftsanfragen — support@novra.ro",
+    "sendEmail": "E-Mail senden",
+    "faq": "FAQ",
+    "faqTitle": "Häufige Fragen",
+    "faqDesc": "Sofortige Antworten auf die häufigsten Fragen zu Versand, Zahlung und Garantie.",
+    "viewFaq": "FAQ ansehen"
+  },
+  "liveVisitors": {
+    "ariaLabel": "{count} Live-Besucher auf der Website",
+    "live": "live"
+  },
+  "marketingTicker": {
+    "fallback": "24–48h Lieferung in ganz Rumänien"
+  },
+  "blog": {
+    "metadataTitle": "Ratgeber & Blog — NOVRA",
+    "metadataDescription": "Ratgeber, Tipps und Neuigkeiten über Premium-Kabel, Schnellladung und NOVRA Zubehör.",
+    "badge": "NOVRA Ratgeber",
+    "title": "Blog & Ratgeber",
+    "subtitle": "Praktische Tipps, Vergleiche und Neuigkeiten über NOVRA Produkte.",
+    "empty": "Artikel folgen in Kürze.",
+    "featured": "Empfohlener Artikel",
+    "readFullGuide": "Vollständigen Ratgeber lesen",
+    "readArticle": "Artikel lesen",
+    "backToGuides": "Zurück zu Ratgebern",
+    "tags": "Tags",
+    "ctaText": "Entdecken Sie die in diesem Ratgeber erwähnten NOVRA Kabel und Zubehör.",
+    "articleMetadataTitle": "Artikel — NOVRA"
+  },
+  "creditsSuccess": {
+    "verifyingTitle": "Zahlung wird überprüft...",
+    "verifyingDesc": "Credits werden automatisch geladen.",
+    "successTitle": "Zahlung erfolgreich!",
+    "creditsAdded": "{amount} NovraCredits wurden Ihrem Konto hinzugefügt.",
+    "creditsAddedGeneric": "NovraCredits wurden Ihrem Konto hinzugefügt.",
+    "viewBalance": "Guthaben ansehen",
+    "errorTitle": "Zahlung konnte nicht bestätigt werden",
+    "invalidSession": "Ungültige Zahlungssitzung.",
+    "paymentNotConfirmed": "Zahlung konnte nicht bestätigt werden.",
+    "backToGiftCards": "Zurück zu Gift Cards"
+  },
+  "accesorii": {
+    "backToCatalog": "Zurück zum Katalog",
+    "categoryLabel": "Hardware-Ökosystem",
+    "titleHighlight": "Kabel + Adapter",
+    "titleSuffix": "Hochleistung",
+    "description": "Vervollständigen Sie Ihr Tech-Arsenal. Kompakte Netzladegeräte und Auto-Adapter aus Premium-Materialien, entwickelt für saubere, effiziente und sichere Energie für Ihre NOVRA Kabel.",
+    "specPerformance": "Leistung:",
+    "specProtocols": "Protokolle:",
+    "specTechnology": "Technologie:",
+    "specMaterial": "Material:",
+    "adapterColor": "Adapterfarbe",
+    "cableColor": "Kabelfarbe",
+    "selectedCombination": "Ausgewählte Kombination:",
+    "finalPrice": "Endpreis",
+    "addedToCart": "In den Warenkorb gelegt!",
+    "whatsappOrderMessage": "Hallo NOVRA Team! Ich möchte aus der Kabel + Adapter Serie bestellen:\n\n- Produkt: {title}\n- Typ: {subtitle}\n- Konfiguration: {variantLabel}\n- Preis: {price} RON"
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -129,7 +260,72 @@
     "emptyCartMessage": "Fügen Sie Produkte hinzu, bevor Sie zur Kasse gehen.",
     "guestCheckout": "Gastbestellung",
     "loginCheckout": "Anmelden",
-    "registerCheckout": "Konto erstellen"
+    "registerCheckout": "Konto erstellen",
+    "orderSent": "Bestellung gesendet!",
+    "successConfirmEmail": "Vielen Dank! Wir haben Ihre Bestellung erhalten und Sie erhalten in Kürze eine Bestätigungs-E-Mail.",
+    "copyCode": "Code kopieren",
+    "keepCodeRef": "Bewahren Sie diesen Code als Referenz auf",
+    "backToProducts": "Zurück zu den Produkten",
+    "paymentCancelled": "Die Zahlung wurde abgebrochen. Sie können es erneut versuchen oder Nachnahme wählen.",
+    "checkoutLabel": "Kasse",
+    "placeOrderTitle": "Bestellung aufgeben",
+    "remove": "Entfernen",
+    "codeApplied": "Code angewendet!",
+    "discountAmount": "Rabatt",
+    "useNovraCredits": "NovraCredits verwenden",
+    "creditsAvailable": "Verfügbares Guthaben: {credits} NovraCredits",
+    "creditsApplying": "· {amount} Lei werden angewendet",
+    "ramburs": "Nachnahme",
+    "rambursDesc": "Barzahlung bei Lieferung",
+    "cardPayment": "Kartenzahlung",
+    "stripeSecure": "Sichere Stripe-Zahlung",
+    "cardUnavailable": "Derzeit nicht verfügbar",
+    "paidFullyWithCredits": "Die Bestellung wird vollständig mit NovraCredits bezahlt.",
+    "stripeNotConfigured": "Kartenzahlung ist derzeit nicht verfügbar. Der Administrator muss Stripe-Schlüssel in den Vercel Environment Variables hinzufügen.",
+    "observations": "Anmerkungen (optional)",
+    "stripeRedirect": "Weiterleitung zu Stripe...",
+    "redirectManual": "Wenn Sie nicht automatisch weitergeleitet werden,",
+    "clickToPay": "klicken Sie hier zur Zahlung",
+    "payWithCredits": "Mit NovraCredits bezahlen",
+    "payNow": "Jetzt bezahlen ({total} RON)",
+    "sendOrder": "Bestellung absenden ({total} RON)",
+    "authRequired": "Melden Sie sich an oder erstellen Sie ein Konto, oder wählen Sie „Ohne Konto fortfahren“.",
+    "subtotalProducts": "Produkt-Zwischensumme",
+    "campaign": "Kampagne",
+    "paymentLabel": "Zahlung",
+    "freeShippingOver": "Kostenloser Versand für Bestellungen über {threshold} RON",
+    "stripeInitError": "Kartenzahlung konnte nicht initialisiert werden.",
+    "stripeNetworkError": "Netzwerkfehler bei der Verbindung zu Stripe. Bitte erneut versuchen.",
+    "freeShippingCode": "(Code {code})"
+  },
+  "checkoutSuccess": {
+    "verifyingPayment": "Zahlung wird überprüft...",
+    "pleaseWait": "Bitte warten Sie einige Sekunden.",
+    "paymentSuccess": "Zahlung erfolgreich!",
+    "cardSuccessMessage": "Vielen Dank! Ihre Kartenzahlung wurde erfolgreich verarbeitet. Sie erhalten eine Bestätigungs-E-Mail mit den Bestelldetails.",
+    "copyCode": "Code kopieren",
+    "purchaseCode": "Bestellcode",
+    "noPurchaseCode": "Die Zahlung wurde verarbeitet. Wenn Sie die Bestätigungs-E-Mail nicht innerhalb weniger Minuten erhalten, kontaktieren Sie uns.",
+    "myOrders": "Meine Bestellungen",
+    "paymentNotConfirmed": "Zahlung konnte nicht bestätigt werden",
+    "chargedContact": "Wenn Ihnen etwas berechnet wurde, kontaktieren Sie uns per WhatsApp mit Zahlungsnachweis.",
+    "backToCheckout": "Zurück zur Kasse"
+  },
+  "checkoutAuth": {
+    "account": "Konto",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "continueGuest": "Ohne Konto fortfahren",
+    "guestDescription": "Bestellen Sie mit Lieferdaten — kein Passwort erforderlich. Sie können nach dem Checkout auf der Bestätigungsseite ein Konto erstellen.",
+    "authenticatedAs": "Angemeldet als {name}",
+    "emailPlaceholder": "beispiel@email.com"
+  },
+  "checkoutGuest": {
+    "saveDetailsTitle": "Diese Daten für zukünftige Bestellungen speichern?",
+    "createWithEmail": "Schnell ein Konto mit der E-Mail {email} erstellen",
+    "password": "Passwort",
+    "choosePassword": "Passwort wählen",
+    "createAccountButton": "Konto mit einem Passwort erstellen"
   },
   "trackOrder": {
     "title": "Bestellung verfolgen",
@@ -195,7 +391,249 @@
     "noAccountCreate": "Noch kein Konto? Erstellen",
     "hasAccountLogin": "Bereits ein Konto? Anmelden",
     "backToLogin": "Zurück zur Anmeldung",
-    "processing": "Wird verarbeitet..."
+    "processing": "Wird verarbeitet...",
+    "logoutSuccess": "Sie wurden abgemeldet.",
+    "preferencesSaved": "Einstellungen gespeichert.",
+    "greeting": "Hallo, {name}",
+    "welcome": "Willkommen in Ihrem NOVRA-Konto",
+    "coupons": "Gutscheine",
+    "edit": "Bearbeiten",
+    "backToSite": "Zurück zur Website",
+    "logoAlt": "NOVRA Logo",
+    "emailPlaceholder": "beispiel@email.com"
+  },
+  "accountOverview": {
+    "adminPanel": "Admin-Bereich",
+    "earnCreditsTitle": "So verdienen Sie NovraCredits",
+    "signup": "Registrierung",
+    "signupDesc": "Erhalten Sie 50 NovraCredits bei Kontoerstellung",
+    "newsletter": "Newsletter",
+    "newsletterDesc": "Erhalten Sie Neuigkeiten und exklusive NovraCredits",
+    "shop": "Einkaufen",
+    "shopDesc": "1 NovraCredit für jeden ausgegebenen Leu",
+    "profile": "Profil",
+    "profileDesc": "Vervollständigen Sie Ihr Profil und erhalten Sie bis zu 100 NovraCredits",
+    "completed": "Abgeschlossen",
+    "subscribed": "Abonniert",
+    "subscribe": "Abonnieren",
+    "complete": "Vervollständigen",
+    "recentOrders": "Letzte Bestellungen",
+    "viewAll": "Alle anzeigen"
+  },
+  "accountOrders": {
+    "title": "Meine Bestellungen",
+    "filterAll": "Alle",
+    "statusPending": "Ausstehend",
+    "statusProcessing": "In Bearbeitung",
+    "statusShipped": "Versendet",
+    "statusDelivered": "Geliefert",
+    "statusCancelled": "Storniert",
+    "loading": "Bestellungen werden geladen...",
+    "orderDetails": "Bestelldetails",
+    "orderCode": "Bestellcode:",
+    "copyCode": "Code kopieren",
+    "copy": "Kopieren",
+    "placed": "Aufgegeben:",
+    "updated": "Aktualisiert:",
+    "orderCancelled": "Diese Bestellung wurde storniert.",
+    "products": "Produkte",
+    "discount": "Rabatt",
+    "shipping": "Versand",
+    "total": "Gesamt",
+    "shippingAddress": "Lieferadresse",
+    "notes": "Anm.:",
+    "cardPayment": "Kartenzahlung",
+    "cashOnDelivery": "Nachnahme (Barzahlung bei Lieferung)",
+    "paid": "Bezahlt",
+    "tracking": "Paketverfolgung",
+    "trackFanCourier": "Bei Fan Courier verfolgen"
+  },
+  "accountCoupons": {
+    "title": "Meine Gutscheine",
+    "subtitle": "Ihre Rabattcodes. Wenden Sie einen aktiven Code an der Kasse an.",
+    "loading": "Wird geladen...",
+    "emptyTitle": "Keine Gutscheine verfügbar",
+    "emptyDesc": "Abonnieren Sie den Newsletter, um einen exklusiven Rabattcode zu erhalten.",
+    "activeCount": "{count, plural, one {# aktiver Gutschein} other {# aktive Gutscheine}}",
+    "copyCodeAria": "Code kopieren",
+    "discountLabel": "Rabatt",
+    "freeShipping": "· Kostenloser Versand",
+    "sourceNewsletter": "Newsletter",
+    "sourceAdmin": "Admin",
+    "created": "Erstellt",
+    "expires": "Läuft ab",
+    "statusActive": "Aktiv",
+    "statusUsed": "Verwendet",
+    "statusExpired": "Abgelaufen"
+  },
+  "accountCredits": {
+    "title": "NovraCredits",
+    "currentBalance": "Aktuelles Guthaben",
+    "creditsEqual": "NovraCredits (= {credits} Lei Rabatt)",
+    "howToUseTitle": "So verwenden Sie Credits",
+    "howToUseDesc": "1 NovraCredit = 1 Leu Rabatt an der Kasse. Verdienen Sie Credits durch Profilvervollständigung, Newsletter-Abonnement oder Kauf von Gift-Card-Paketen.",
+    "transactionHistory": "Transaktionsverlauf",
+    "loading": "Wird geladen...",
+    "noTransactions": "Noch keine Transaktionen.",
+    "balance": "Guthaben:"
+  },
+  "accountGiftCards": {
+    "title": "Geschenkkarten",
+    "subtitle": "Kaufen Sie NovraCredits-Pakete und verwenden Sie sie an der Kasse. 1 NovraCredit = 1 Leu Rabatt.",
+    "paymentCancelled": "Die Zahlung wurde abgebrochen. Sie können es erneut versuchen.",
+    "lei": "Lei",
+    "securePaymentTitle": "Sichere Stripe-Zahlung",
+    "creditsAutoLoad": "Nach Kartenzahlung werden Credits automatisch auf Ihr Konto geladen.",
+    "cardUnavailableContact": "Kartenzahlung ist derzeit nicht verfügbar. Kontaktieren Sie uns für Unterstützung."
+  },
+  "accountRefer": {
+    "loading": "Wird geladen...",
+    "programInactive": "Das Empfehlungsprogramm ist derzeit nicht aktiv.",
+    "title": "Freund empfehlen",
+    "description": "Senden Sie Ihren einzigartigen Link an Freunde. Wenn sie sich registrieren und ihre erste Bestellung aufgeben, erhalten Sie beide {reward}.",
+    "yourCode": "Ihr Code",
+    "invitationLink": "Einladungslink",
+    "copyCode": "Code kopieren",
+    "copyLink": "Link kopieren",
+    "programNote": "Getrennt vom Affiliate-Programm (?ref=). Einladungen verwenden ?invite=.",
+    "yourInvites": "Ihre Einladungen ({count})",
+    "noInvites": "Noch keine Freunde eingeladen. Teilen Sie den Link oben!",
+    "pending": "Ausstehend",
+    "registered": "Registriert {date}",
+    "linkAccessed": "Link aufgerufen",
+    "firstOrder": "Erste Bestellung",
+    "awaitingOrder": "Wartet auf Bestellung",
+    "rewardCredits": "{amount} NovraCredits",
+    "rewardCoupon": "−{amount}% Gutschein"
+  },
+  "accountAffiliate": {
+    "loading": "Wird geladen...",
+    "program": "Affiliate-Programm",
+    "dashboardTitle": "Ihr Affiliate-Dashboard",
+    "dashboardDesc": "Bewerben Sie NOVRA und verdienen Sie {commission} für jede zugeordnete Bestellung.",
+    "yourLink": "Ihr Affiliate-Link",
+    "copyLink": "Link kopieren",
+    "codeAttribution": "Code: {code} · Zuordnungsfenster: 30 Tage",
+    "clicks": "Klicks",
+    "orders": "Bestellungen",
+    "conversionRate": "Konversionsrate",
+    "totalCommission": "Gesamtprovision",
+    "pendingCommission": "Ausstehende Provision",
+    "availableWithdrawal": "Verfügbar zur Auszahlung: {amount}",
+    "paidCommission": "Ausgezahlte Provision",
+    "withdrawTitle": "Geld abheben",
+    "minWithdrawal": "Sie können eine Auszahlung beantragen, wenn mindestens {min} RON verfügbar sind. Aktuelles Guthaben: {balance}.",
+    "beneficiaryName": "Kontoinhaber *",
+    "beneficiaryPlaceholder": "Vollständiger Name des Kontoinhabers",
+    "bankOptional": "Bank (optional)",
+    "bankPlaceholder": "z.B. BCR, ING, BT",
+    "ibanRecommended": "IBAN (empfohlen)",
+    "bankCard": "Bankkarte",
+    "iban": "IBAN *",
+    "cardNumber": "Kartennummer *",
+    "withdrawAmount": "Auszahlungsbetrag (max. {max})",
+    "minAmount": "Mindestens {min} RON",
+    "confirmPayment": "Ich bestätige, dass die Zahlungsdaten korrekt sind und ich der Inhaber des angegebenen Kontos/der Karte bin.",
+    "submitting": "Wird gesendet...",
+    "submitWithdrawal": "Auszahlungsanfrage senden",
+    "withdrawalSent": "Auszahlungsanfrage wurde gesendet!",
+    "withdrawalHistory": "Auszahlungsverlauf",
+    "noWithdrawals": "Sie haben noch keine Auszahlungsanfragen.",
+    "amount": "Betrag",
+    "beneficiary": "Inhaber",
+    "status": "Status",
+    "date": "Datum",
+    "statusPaid": "Bezahlt",
+    "statusRejected": "Abgelehnt",
+    "statusPending": "Ausstehend",
+    "attributedOrders": "Zugeordnete Bestellungen",
+    "noAttributedOrders": "Noch keine zugeordneten Bestellungen. Teilen Sie Ihren Link, um zu starten!",
+    "order": "Bestellung",
+    "total": "Gesamt",
+    "commission": "Provision",
+    "applicationSent": "Ihre Bewerbung wurde eingereicht! Sie erhalten bald eine Antwort.",
+    "pendingTitle": "Bewerbung ausstehend",
+    "pendingDesc": "Wir haben Ihre Bewerbung vom {date} erhalten. Das NOVRA-Team wird sie bald prüfen.",
+    "evaluating": "Ihre Bewerbung wird geprüft.",
+    "rejectedTitle": "Bewerbung abgelehnt",
+    "rejectedDefault": "Leider wurde Ihre Bewerbung diesmal nicht genehmigt. Kontaktieren Sie uns für Details.",
+    "becomeAffiliate": "NOVRA-Affiliate werden",
+    "earnCommission": "Verdienen Sie {rate}% des Produktwerts für jede über Ihren Link generierte Bestellung. Siehe",
+    "programTerms": "Programmbedingungen",
+    "howItWorks": "So funktioniert es",
+    "step1": "1. Bewerben und auf die Genehmigung des NOVRA-Teams warten",
+    "step2": "2. Einen einzigartigen Affiliate-Link erhalten (z.B. novra.ro/?ref=IHR_CODE)",
+    "step3": "3. Link teilen — Besucher haben 30 Tage zum Kauf",
+    "step4": "4. Provision für jede abgeschlossene Bestellung erhalten",
+    "eligibilityTitle": "Teilnahmevoraussetzungen",
+    "eligibilityDesc": "Bestätigen Sie, dass Sie alle Bedingungen erfüllen:",
+    "requirement_hasAccount": "Ich habe ein aktives Konto im NOVRA Store",
+    "requirement_agreedToTerms": "Ich akzeptiere die AGB des Affiliate-Programms",
+    "requirement_minimumAge": "Ich bin mindestens 18 Jahre alt",
+    "requirement_socialMediaPresence": "Ich habe eine Social-Media-Präsenz oder einen Werbekanal (Blog, YouTube, TikTok usw.)",
+    "requirement_romanianResident": "Ich bin in Rumänien ansässig",
+    "submitApplication": "Bewerbung senden"
+  },
+  "accountManage": {
+    "title": "Kontoeinstellungen",
+    "email": "E-Mail",
+    "verified": "verifiziert",
+    "password": "Passwort",
+    "changePassword": "Passwort ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "passwordsMismatch": "Die neuen Passwörter stimmen nicht überein.",
+    "updatePassword": "Passwort aktualisieren",
+    "deleteAccount": "Konto löschen",
+    "areYouSure": "Sind Sie sicher?",
+    "deleteWarning": "Diese Aktion ist dauerhaft. Ihr Konto und alle zugehörigen Daten werden gelöscht.",
+    "deleting": "Wird gelöscht...",
+    "confirmDelete": "Löschung bestätigen",
+    "closeAria": "Schließen"
+  },
+  "accountShipping": {
+    "title": "Lieferadresse",
+    "subtitle": "Fügen Sie Ihre Adresse hinzu oder aktualisieren Sie sie für schnelle Lieferungen.",
+    "fullName": "Vollständiger Name",
+    "address": "Adresse",
+    "city": "Stadt",
+    "county": "Kreis",
+    "postalCode": "Postleitzahl",
+    "phone": "Telefon",
+    "country": "Land",
+    "selectCounty": "Kreis auswählen",
+    "romania": "Rumänien",
+    "fullNamePlaceholder": "Max Mustermann",
+    "addressPlaceholder": "Straße, Hausnummer, Gebäude, Wohnung",
+    "cityPlaceholder": "Bukarest",
+    "postalCodePlaceholder": "010101",
+    "phonePlaceholder": "+40 7XX XXX XXX"
+  },
+  "accountEmail": {
+    "title": "E-Mail-Einstellungen",
+    "offers": "Angebote und Aktionen",
+    "orderStatus": "Bestellstatus",
+    "recommendations": "Personalisierte Empfehlungen",
+    "savePreferences": "Einstellungen speichern"
+  },
+  "accountSupport": {
+    "title": "Support-Center",
+    "whatsappTitle": "WhatsApp-Support",
+    "whatsappDesc": "Schnelle Antwort vom NOVRA-Team",
+    "whatsappMessage": "Hallo! Ich brauche Hilfe mit meinem NOVRA-Konto.",
+    "contactTitle": "Kontaktformular",
+    "contactDesc": "Senden Sie uns eine Nachricht",
+    "faqTitle": "FAQ",
+    "faqDesc": "Häufig gestellte Fragen",
+    "supportHoursTitle": "Support-Zeiten",
+    "supportHours": "Montag – Freitag, 09:00 – 18:00"
+  },
+  "cartToasts": {
+    "productUnavailable": "Dieses Produkt ist nicht mehr verfügbar.",
+    "outOfStock": "Nicht auf Lager für dieses Produkt.",
+    "insufficientStock": "Unzureichender Bestand. Verfügbar: {available} Stück.",
+    "addedToCart": "Produkt zum Warenkorb hinzugefügt"
   },
   "home": {
     "heroTitle": "Precision. Performance. Power.",
@@ -216,13 +654,119 @@
     "emailPlaceholder": "Ihre E-Mail-Adresse",
     "subscribe": "Abonnieren",
     "reviews": "Was Kunden sagen",
-    "whatsappMessage": "Hallo! Ich interessiere mich für NOVRA Produkte."
+    "whatsappMessage": "Hallo! Ich interessiere mich für NOVRA Produkte.",
+    "badge": "NOVRA Premium Accessories",
+    "heroLine1": "PRECISION.",
+    "heroLine2": "PERFORMANCE.",
+    "heroLine3": "POWER.",
+    "orderWhatsapp": "Über WhatsApp bestellen",
+    "heroImageAlt": "NOVRA Premium Kabel",
+    "showCategory": "{label} anzeigen",
+    "currency": "Lei",
+    "benefitFastCharge": "Schnellladung",
+    "benefitFastChargeSub": "bis zu 100W",
+    "benefitDataTransfer": "Datenübertragung",
+    "benefitDataTransferSub": "bis zu 480Mbps",
+    "benefitMaterials": "Premium-Materialien",
+    "benefitMaterialsSub": "langlebig und sicher",
+    "benefitWarranty": "Garantie",
+    "benefitWarrantySub": "2 Jahre",
+    "popularProducts": "Beliebte Produkte",
+    "choosePerformance": "Wählen Sie",
+    "productsSubtitle": "Rigoros getestete Kabel und Adapter — Power Delivery, Premium-Materialien, 2 Jahre Garantie.",
+    "viewAllProducts": "Alle Produkte ansehen",
+    "bundleBadge": "Ecosystem Paket",
+    "bundleTitle": "Kabel + Adapter — alles in einem Paket",
+    "bundleDesc": "Kombinieren Sie ein Premium-NOVRA-Kabel mit einem Hochleistungsadapter. Sparen Sie und erhalten Sie volle Kompatibilität für Büro, Zuhause oder Reisen.",
+    "bundlePrice": "159,99 Lei",
+    "bundleOldPrice": "179,98 Lei",
+    "bundleSavings": "Sparen Sie ~20 Lei",
+    "viewBundles": "Pakete ansehen",
+    "exploreRange": "Sortiment entdecken",
+    "bundleImageAlt": "NOVRA Kabel + Adapter Paket",
+    "aboutBadge": "Über NOVRA",
+    "aboutTitle": "Technologie, die",
+    "aboutTitleHighlight": "die Zukunft verbindet",
+    "aboutDesc": "NOVRA ist mehr als ein Kabel. Es ist das Versprechen von Leistung, Sicherheit und Premium-Design für alle, die mehr von Technologie verlangen.",
+    "aboutFeature1": "Power Delivery bis zu 100W",
+    "aboutFeature2": "Premium-Materialien, makellose Verarbeitung",
+    "aboutFeature3": "2 Jahre Garantie auf jedes Produkt",
+    "discoverStory": "Unsere Geschichte entdecken",
+    "quickSummary": "Kurzübersicht",
+    "aboutImageAlt": "Über NOVRA",
+    "customersCount": "Über 10.000+ Kunden",
+    "brandTagline": "Rumänische Marke, internationale Standards",
+    "reviewsBadge": "Kundenbewertungen",
+    "reviewsTitle": "Über",
+    "reviewsTitleHighlight": "10.000+",
+    "reviewsTitleEnd": "zufriedene Kunden",
+    "viewAllReviews": "Alle Bewertungen ansehen",
+    "verifiedCustomer": "Verifizierter Kunde",
+    "starsLabel": "{count} Sterne",
+    "newsletterBadge": "NOVRA Newsletter",
+    "newsletterTitle": "Erfahren Sie als Erster",
+    "newsletterTitleHighlight": "Neuigkeiten",
+    "newsletterLongDesc": "Abonnieren Sie für exklusive Angebote, Sonderlaunches und vorrangigen Zugang zu NOVRA-Aktionen. Unsere Community erhält Rabatte vor allen anderen.",
+    "newsletterPerk1": "Exklusive Abonnenten-Rabatte",
+    "newsletterPerk2": "Vorrangiger Zugang zu Neuheiten",
+    "newsletterPerk3": "Tipps vom NOVRA-Team",
+    "sending": "Wird gesendet...",
+    "newsletterSuccess": "Erfolgreich abonniert! Vielen Dank für Ihr NOVRA-Newsletter-Abonnement.",
+    "newsletterDuplicate": "Sie sind bereits abonniert!",
+    "newsletterError": "Senden fehlgeschlagen. Bitte erneut versuchen.",
+    "noSpam": "Kein Spam. Jederzeit abbestellbar.",
+    "welcomeOffer": "Willkommensangebot",
+    "welcomeDiscount": "10% Rabatt auf Ihre erste Bestellung",
+    "newsletterImageAlt": "NOVRA Newsletter",
+    "modalTitle": "NOVRA Kurzübersicht",
+    "modalDesc": "Greifen Sie schnell auf unsere Kategorien zu oder entdecken Sie den gesamten Katalog premium Kabel und Adapter.",
+    "allProducts": "Alle Produkte",
+    "quickAdd": "Schnell hinzufügen",
+    "quickAddTitle": "Schnell in den Warenkorb",
+    "goToCart": "Zum Warenkorb",
+    "saveAmount": "Sparen Sie {amount} lei",
+    "productWhatsappMessage": "Hallo, ich möchte bestellen: {title} ({category}) — Preis: {price}.",
+    "orderWhatsappTitle": "Über WhatsApp bestellen",
+    "orderWhatsappAria": "{title} über WhatsApp bestellen",
+    "addToCartAria": "{title} schnell in den Warenkorb",
+    "outOfStockAria": "{title} — nicht vorrätig"
   },
   "affiliate": {
     "title": "NOVRA Affiliate-Programm",
     "subtitle": "Verdienen Sie Provision für jeden Verkauf über Ihren einzigartigen Link.",
     "join": "Jetzt anmelden",
-    "learnMore": "Mehr erfahren"
+    "learnMore": "Mehr erfahren",
+    "badge": "Affiliate-Programm",
+    "titleEarn": "Verdienen Sie",
+    "titleCommission": "{rate}% Provision",
+    "titlePromote": "durch die Bewerbung von NOVRA",
+    "intro": "Treten Sie dem NOVRA Store Affiliate-Programm bei. Teilen Sie Ihren einzigartigen Link, verfolgen Sie die Leistung in Ihrem Konto und ziehen Sie die Provision ab, wenn Sie die Mindestschwelle von {amount} RON erreichen.",
+    "applyNow": "Jetzt bewerben",
+    "programTerms": "Programm-AGB",
+    "highlightCommissionTitle": "{rate}% Provision",
+    "highlightCommissionDesc": "Vom Produktzwischensumme (ohne Versand) für jede validierte Bestellung.",
+    "highlightTrackingTitle": "{days} Tage Tracking",
+    "highlightTrackingDesc": "Attributions-Cookie nach Klick auf ?ref= — Besucher hat 30 Tage zum Bestellen.",
+    "highlightMinTitle": "Minimum {amount} RON",
+    "highlightMinDesc": "Auszahlung im Affiliate-Panel anfordern; Zahlung per Banküberweisung.",
+    "howItWorks": "So funktioniert es",
+    "step1Title": "Im Konto bewerben",
+    "step1Desc": "Gehen Sie zu Mein Konto → Affiliate-Programm, bestätigen Sie die Berechtigung und senden Sie die Anfrage.",
+    "step2Title": "Link erhalten",
+    "step2Desc": "Nach Genehmigung erhalten Sie einen einzigartigen Link wie novra.ro/?ref=IHR_CODE.",
+    "step3Title": "NOVRA bewerben",
+    "step3Desc": "Teilen Sie Ihren Link in sozialen Medien, Blog oder Ihrem Content-Kanal.",
+    "step4Title": "Provision verdienen",
+    "step4Desc": "Für jede abgeschlossene Bestellung über Ihren Link erhalten Sie Provision auf Ihr Konto.",
+    "payoutTitle": "Provisionsauszahlungsprozess",
+    "payout1": "Provision erscheint nach abgeschlossenen Bestellungen über Ihren Link.",
+    "payout2": "Wenn verfügbares Guthaben Minimum {amount} RON erreicht, Auszahlung anfordern.",
+    "payout3": "Kontoinhaber, IBAN (empfohlen) oder Karte und gewünschten Betrag eingeben.",
+    "payout4": "NOVRA Team bearbeitet Zahlung manuell per Banküberweisung (5–15 Werktage).",
+    "gdprTitle": "Erhobene Daten & DSGVO",
+    "gdprText": "Für das Affiliate-Programm erheben wir: Name, E-Mail, Referenzcode, Klick-/Bestellstatistiken und bei Auszahlung Bankdaten (IBAN oder Karte) für die Provision. Wir verwenden ?ref= Attributions-Cookie (30 Tage). Verarbeitung entspricht DSGVO — Details in <privacyLink>Datenschutzrichtlinie</privacyLink> und <termsLink>Programm-AGB</termsLink>.",
+    "readyToStart": "Bereit zu starten?",
+    "accountLink": "Mein Konto → Affiliate-Programm"
   },
   "categories": {
     "usb-c": "Kabel",
@@ -283,6 +827,649 @@
       "subtitle": "GaN Travel Charger + Braided Cable Kit",
       "tag": "Reise-Set",
       "description": "Komplettes Mobilitätsset: kompakter GaN-Ladegerät mit Premium-Flechtkabel. Ideal für Büro, Reisen oder als Geschenk."
+    }
+  },
+  "errorBoundary": {
+    "message": "Der Katalog wurde nicht vollständig geladen. Aktualisieren Sie die Seite oder nutzen Sie das Navigationsmenü."
+  },
+  "subscribeModal": {
+    "title": "Jetzt abonnieren!",
+    "description": "Geben Sie Ihre E-Mail ein, um Neuigkeiten und exklusive Angebote in unserem Newsletter zu erhalten.",
+    "emailPlaceholder": "beispiel@email.com",
+    "subscribeAria": "Abonnieren",
+    "closeAria": "Schließen",
+    "agreePrefix": "Mit dem Fortfahren akzeptieren Sie unsere",
+    "termsLink": "Nutzungsbedingungen",
+    "and": "und",
+    "privacyLink": "Datenschutzrichtlinie",
+    "mustAgree": "Sie müssen die AGB und Datenschutzrichtlinie akzeptieren."
+  },
+  "faq": {
+    "badge": "NOVRA Support",
+    "title": "Häufig gestellte",
+    "titleHighlight": "Fragen",
+    "subtitle": "Schnelle Antworten auf die häufigsten Fragen zu Bestellungen, Versand und Support.",
+    "catOrders": "Bestellungen",
+    "catPayment": "Zahlung",
+    "catDelivery": "Versand",
+    "catWarranty": "Garantie",
+    "searchPlaceholder": "Frage suchen...",
+    "noResults": "Keine passenden Fragen gefunden.",
+    "ctaTitle": "Antwort nicht gefunden?",
+    "ctaDesc": "Das NOVRA-Team ist per WhatsApp oder E-Mail für Sie da.",
+    "contactUs": "Kontaktieren Sie uns",
+    "warrantyLink": "Garantie & Rückgabe",
+    "items": [
+      {
+        "q": "Wie kann ich eine Bestellung aufgeben?",
+        "a": "Wählen Sie das Produkt aus unserem <catalogLink>Katalog</catalogLink>, konfigurieren Sie die Variante (Farbe, Länge usw.) und tippen Sie auf Bestellen. Abschluss per WhatsApp oder Checkout-Formular auf der Website."
+      },
+      {
+        "q": "Welche Zahlungsmethoden akzeptieren Sie?",
+        "a": "Wir akzeptieren Online-Kartenzahlung (Visa, Mastercard) und Nachnahme. Bei Nachnahme zahlen Sie erst nach Prüfung des Pakets. Details auf <shippingLink>Versand & Zahlung</shippingLink>."
+      },
+      {
+        "q": "Wie lange dauert die Lieferung?",
+        "a": "Wir versenden Bestellungen innerhalb von 24–48 Werktstunden per Expresskurier mit voller Versicherung. Die genaue Lieferzeit hängt von Ihrem Standort und der Verfügbarkeit ab."
+      },
+      {
+        "q": "Liefern Sie in ganz Rumänien?",
+        "a": "Ja, wir liefern landesweit über vertrauenswürdige Logistikpartner. Bei der Bestellung bestätigen wir die Lieferadresse und teilen die voraussichtliche Ankunftszeit mit."
+      },
+      {
+        "q": "Wie kann ich Sie für Support kontaktieren?",
+        "a": "Schreiben Sie uns per WhatsApp, an support@novra.ro oder über unsere <contactLink>Kontaktseite</contactLink>. Wir antworten so schnell wie möglich."
+      },
+      {
+        "q": "Wo finde ich Informationen zu Garantie und Rückgabe?",
+        "a": "Die vollständige 24-Monats-Garantie und 14-Tage-Rückgaberecht finden Sie auf der Seite <warrantyLink>Garantie & Rückgabe</warrantyLink>."
+      },
+      {
+        "q": "Sind NOVRA-Produkte mit meinen Geräten kompatibel?",
+        "a": "Jedes Produkt im Katalog enthält relevante technische Daten (Steckertyp, Länge, iOS/Android-Kompatibilität usw.). Bei Unsicherheit kontaktieren Sie uns vor der Bestellung."
+      }
+    ]
+  },
+  "contact": {
+    "badge": "Kundenbeziehungen",
+    "title": "Kontaktieren Sie",
+    "titleHighlight": "NOVRA",
+    "subtitle": "Wir sind für Sie da — Bestellungen, technischer Support oder Partnerschaften. Wählen Sie Ihren Kanal.",
+    "program": "Öffnungszeiten",
+    "programValue": "Mo–Fr 08:00 – 21:00",
+    "phone": "Telefon",
+    "delivery": "Lieferung",
+    "deliveryValue": "Ganz Rumänien",
+    "whatsappLabel": "Schneller Support",
+    "whatsappDesc": "Chatten Sie direkt mit uns. Durchschnittliche Antwortzeit: unter 30 Minuten.",
+    "emailLabel": "Offizieller Support",
+    "emailDesc": "Für Bestellungen, Partnerschaften oder Geschäftsanfragen.",
+    "formTitle": "Nachricht senden",
+    "nameLabel": "Vollständiger Name",
+    "namePlaceholder": "Z.B. Max Mustermann",
+    "emailFieldLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "Z.B. name@firma.de",
+    "subjectLabel": "Betreff",
+    "subjectPlaceholder": "Wie können wir helfen?",
+    "messageLabel": "Nachricht",
+    "messagePlaceholder": "Schreiben Sie hier die Details Ihrer Anfrage...",
+    "sending": "Wird gesendet...",
+    "submit": "Nachricht senden",
+    "success": "Ihre Nachricht wurde erfolgreich gesendet! Das NOVRA-Team meldet sich in Kürze.",
+    "error": "Beim Senden ist ein Fehler aufgetreten. Bitte erneut versuchen.",
+    "viewFaq": "Häufige Fragen ansehen",
+    "whatsappMessage": "Hallo! Ich habe eine Frage an das NOVRA-Team."
+  },
+  "about": {
+    "badge": "Das Wesen von NOVRA",
+    "title": "Wir definieren",
+    "titleHighlight": "den Standard",
+    "subtitle": "NOVRA entstand aus einer einfachen Überzeugung: Exzellenz lässt keinen Raum für Kompromisse. In einem Markt voller generischer Lösungen wählten wir den Weg absoluter Präzision.",
+    "storyTitle": "Unsere Geschichte",
+    "storyP1": "Jede Strähne unseres geflochtenen Nylons und jeder Aerospace-Legierungsstecker ist das Ergebnis eines unaufhörlichen Strebens nach Perfektion. Wir bauen nicht nur Kabel — wir verbinden unsichtbar Ambition und Technologie.",
+    "storyP2": "Wir sind denen gewidmet, die verstehen, dass kleine Details den Erfolg bestimmen. NOVRA ist die Signatur derer, die sich nie mit 'gut genug' zufriedengeben.",
+    "storyImageAlt": "NOVRA Technologie",
+    "pillarsBadge": "Warum NOVRA",
+    "pillarsTitle": "Vier Säulen. Ein Versprechen.",
+    "pillar1Title": "Reine Leistung",
+    "pillar1Desc": "Power Delivery bis zu 100W und stabile Datenübertragung — ohne Verluste, ohne Kompromisse.",
+    "pillar2Title": "Premium-Materialien",
+    "pillar2Desc": "Hochdichtes geflochtenes Nylon, Aerospace-Legierungsstecker und makellose Verarbeitung.",
+    "pillar3Title": "Zertifizierte Sicherheit",
+    "pillar3Desc": "Schutz vor Überspannung, Überstrom und Überhitzung. 2 Jahre Garantie auf jedes Produkt.",
+    "pillar4Title": "Luxus-Design",
+    "pillar4Desc": "Minimalistische Ästhetik, charakteristische NOVRA-Farben und ein taktiles Erlebnis voller Vertrauen.",
+    "visionTitle": "Unsere Vision",
+    "visionQuote": "„Alltägliche Nutzbarkeit in ein Luxuserlebnis zu verwandeln — pure Leistung in makelloser Ästhetik.\"",
+    "timelineBadge": "NOVRA Entwicklung",
+    "timelineTitle": "Der Weg zur Exzellenz",
+    "milestone2024": "Geburt der Marke NOVRA — eine klare Vision: null Kompromisse.",
+    "milestone2025": "Launch der UltraCharge 100W Serie — Industriestandard neu definiert.",
+    "milestone2026": "Über 10.000 zufriedene Kunden in ganz Rumänien.",
+    "ctaTitle": "Werden Sie Teil der NOVRA-Community",
+    "ctaDesc": "Entdecken Sie Produkte für alle, die mehr verlangen. Leistung, Sicherheit und Design — in einer Marke.",
+    "viewProducts": "Produkte ansehen",
+    "contactUs": "Kontaktieren Sie uns"
+  },
+  "reviews": {
+    "badge": "Ihre Meinung",
+    "title": "Was",
+    "titleHighlight": "Kunden sagen",
+    "subtitle": "Die Meinung unserer Community ist unsere Visitenkarte. Entdecken Sie die Erfahrungen derer, die bereits NOVRA gewählt haben.",
+    "statCustomers": "Zufriedene Kunden",
+    "statRating": "Durchschnittsbewertung",
+    "statRecommend": "Empfehlen NOVRA",
+    "verifiedClient": "Verifizierter Kunde",
+    "formBadge": "Ihr Feedback",
+    "formTitle": "Bei uns gekauft?",
+    "formDesc": "Ihre Meinung hilft uns zu wachsen. Senden Sie Feedback über das sichere Formular unten.",
+    "nameLabel": "Vollständiger Name",
+    "namePlaceholder": "Z.B. Elena Popa",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "name@beispiel.com",
+    "ratingLabel": "Bewertung",
+    "rating5": "5 Sterne ★★★★★",
+    "rating4": "4 Sterne ★★★★☆",
+    "rating3": "3 Sterne ★★★☆☆",
+    "rating2": "2 Sterne ★★☆☆☆",
+    "rating1": "1 Stern  ★☆☆☆☆",
+    "reviewLabel": "Ihre Erfahrung (Bewertung)",
+    "reviewPlaceholder": "Erzählen Sie uns, was Ihnen an NOVRA-Produkten oder -Services am besten gefallen hat...",
+    "sending": "Wird gesendet...",
+    "submit": "Feedback senden",
+    "success": "Vielen Dank! Ihr Feedback wurde direkt an unser Team gesendet.",
+    "error": "Senden fehlgeschlagen. Bitte erneut versuchen.",
+    "discoverProducts": "NOVRA Produkte entdecken",
+    "formSubject": "Neue Bewertung auf der NOVRA Website"
+  },
+  "shipping": {
+    "badge": "NOVRA Logistik",
+    "title": "Versand",
+    "titleHighlight": "& Zahlung",
+    "subtitle": "Schneller Versand in ganz Rumänien, Premium-Verpackung und flexible Zahlung — Online-Karte oder Nachnahme.",
+    "highlight1Label": "24–48 Stunden",
+    "highlight1Sub": "Schneller Versand",
+    "highlight2Label": "Ganz Rumänien",
+    "highlight2Sub": "Landesweite Lieferung",
+    "highlight3Label": "Versichert",
+    "highlight3Sub": "Geschütztes Paket",
+    "highlight4Label": "2 Methoden",
+    "highlight4Sub": "Karte oder Nachnahme",
+    "deliveryTitle": "Lieferung",
+    "deliverySubtitle": "Elite-Logistik vom Lager bis zur Haustür",
+    "expressTitle": "Expresskurier",
+    "expressDesc": "Versand über vertrauenswürdige Logistikpartner mit Sendungsverfolgung und voller Versicherung.",
+    "packagingTitle": "Premium-Verpackung",
+    "packagingDesc": "Jedes NOVRA-Produkt wird extra geschützt, damit Ihr Unboxing-Erlebnis makellos ist.",
+    "flowTitle": "So erreicht Sie Ihre Bestellung",
+    "step1Title": "Bestellung aufgeben",
+    "step1Desc": "Produkte aus dem Katalog wählen und online oder per WhatsApp bestellen.",
+    "step2Title": "Details bestätigen",
+    "step2Desc": "Wir kontaktieren Sie zur Bestätigung, Lieferadresse und Zahlungsmethode.",
+    "step3Title": "Paket versenden",
+    "step3Desc": "Sorgfältige Verpackung und Übergabe an den Kurier innerhalb von 24–48 Werktstunden.",
+    "step4Title": "Produkt erhalten",
+    "step4Desc": "Paket bei Lieferung prüfen und per Karte oder Nachnahme bezahlen.",
+    "timeTitle": "Lieferzeit",
+    "timeSubtitle": "Klare Schätzungen, keine Überraschungen",
+    "timeValue": "24–48h",
+    "timeValueSub": "Werktstunden ab Bestätigung",
+    "timeP1": "Bestellungen bis 14:00 Uhr werden am selben Werktag bearbeitet.",
+    "timeP2": "Die genaue Lieferzeit hängt von Ihrem Standort ab — wir informieren per SMS oder Telefon.",
+    "costsTitle": "Versandkosten",
+    "costsSubtitle": "Transparent und wettbewerbsfähig",
+    "standardLabel": "Standard",
+    "standardDesc": "Pauschalpreis für Expresskurier-Lieferung an jeden Ort in Rumänien.",
+    "freeShipping": "Kostenloser Versand",
+    "freeShippingDesc": "Für Bestellungen über {threshold} RON. Kostenloser Versand wird automatisch an der Kasse angewendet.",
+    "paymentTitle": "Zahlungsmethoden",
+    "paymentSubtitle": "Wählen Sie, was zu Ihnen passt",
+    "cardTitle": "Kartenzahlung (online)",
+    "cardBadge": "Empfohlen",
+    "cardDesc": "Sichere Zahlung mit Visa, Mastercard oder anderen Bankkarten. Zahlungslink nach Bestellbestätigung.",
+    "cardF1": "SSL-verschlüsselte Transaktion",
+    "cardF2": "Sofortige Bestätigung",
+    "cardF3": "Keine Zusatzgebühren",
+    "codTitle": "Nachnahme",
+    "codBadge": "Klassisch",
+    "codDesc": "Barzahlung bei Lieferung nach Qualitätsprüfung.",
+    "codF1": "Keine Vorauszahlung",
+    "codF2": "Prüfen vor Zahlung",
+    "codF3": "Volle Transparenz",
+    "secureTitle": "100% sichere Zahlung",
+    "secureDesc": "Alle Kartentransaktionen werden über zertifizierte Gateways mit SSL-Verschlüsselung verarbeitet. Bei Nachnahme zahlen Sie erst nach Paketprüfung — null Risiko.",
+    "footerText": "Fragen zu Versand oder Zahlung? Sehen Sie",
+    "footerFaq": "häufige Fragen",
+    "footerOr": "oder",
+    "footerContact": "kontaktieren Sie uns"
+  },
+  "warranty": {
+    "badge": "NOVRA Engagement",
+    "title": "Garantie",
+    "titleHighlight": "& Rückgabe",
+    "subtitle": "Klare Standards, transparenter Prozess. Jedes NOVRA-Produkt hat 24 Monate Garantie und 14 Tage Rückgaberecht — unkompliziert.",
+    "highlight1": "24 Monate",
+    "highlight1Sub": "Volle Garantie",
+    "highlight2": "14 Tage",
+    "highlight2Sub": "Rückgaberecht",
+    "highlight3": "48h",
+    "highlight3Sub": "Rückgabe-Bearbeitung",
+    "highlight4": "100%",
+    "highlight4Sub": "Volle Erstattung",
+    "qualityTitle": "Qualitätsgarantie",
+    "qualitySubtitle": "Volles Vertrauen in jedes Produkt",
+    "months": "Monate Garantie",
+    "qualityDesc": "Jedes NOVRA-Produkt durchläuft rigorose Tests vor dem Versand. Wir sind so überzeugt von der Haltbarkeit, dass wir volle Garantie gegen Herstellungsfehler bieten.",
+    "coversTitle": "Was die Garantie abdeckt",
+    "cover1": "Herstellungs- oder Materialfehler",
+    "cover2": "Fehlfunktion unter normalen Nutzungsbedingungen",
+    "cover3": "Probleme an Steckern oder Kabelgeflecht",
+    "cover4": "Kostenloser Ersatz oder Reparatur in der Garantiezeit",
+    "excludesTitle": "Was die Garantie nicht abdeckt",
+    "exclude1": "Schäden durch unsachgemäße Nutzung",
+    "exclude2": "Normaler Verschleiß oder versehentliche mechanische Schäden",
+    "exclude3": "Änderungen oder Reparaturen durch unbefugte Dritte",
+    "exclude4": "Schäden durch Flüssigkeiten, Feuer oder höhere Gewalt",
+    "returnTitle": "Rückgaberichtlinie",
+    "returnSubtitle": "14 Kalendertage, ohne Erklärung",
+    "conditionsTitle": "Rückgabebedingungen",
+    "conditionsDesc": "Wenn Sie nicht vollständig zufrieden sind, können Sie Produkte innerhalb von 14 Kalendertagen nach Erhalt zurückgeben. Produkte müssen im Originalzustand mit intakter Verpackung sein.",
+    "refundTitle": "Erstattung",
+    "refundDesc": "Nach Empfang und Prüfung erstatten wir den vollen Betrag auf Ihr Bankkonto. Rücksendekosten trägt der Kunde, außer bei defekten Produkten.",
+    "howTitle": "Wie gehen Sie vor?",
+    "returnStep1Title": "Kontaktieren Sie uns",
+    "returnStep1Desc": "Schreiben Sie uns per WhatsApp oder E-Mail zur Rückgabe. Wir bestätigen am selben Tag.",
+    "returnStep2Title": "Paket vorbereiten",
+    "returnStep2Desc": "Produkt im Originalzustand mit Zubehör und Verpackung verpacken. Anweisungen befolgen.",
+    "returnStep3Title": "Rücksendung",
+    "returnStep3Desc": "Paket gemäß Anweisung an den Kurier übergeben. Wir teilen Rücksendeadresse und Details mit.",
+    "returnStep4Title": "Erstattung",
+    "returnStep4Desc": "Nach Prüfung erstatten wir den vollen Betrag innerhalb von 14 Werktagen.",
+    "ctaTitle": "Brauchen Sie Hilfe?",
+    "ctaDesc": "Das NOVRA-Team führt Sie Schritt für Schritt durch Garantie oder Rückgabe.",
+    "viewFaq": "FAQ ansehen",
+    "whatsappMessage": "Hallo! Ich habe eine Garantie-/Rückgabeanfrage."
+  },
+  "promotions": {
+    "backHome": "Zurück zur Startseite",
+    "badge": "Sonderaktionen",
+    "title": "NOVRA Angebote, bereit zum Mitnehmen",
+    "subtitle": "Entdecken Sie limitierte Pakete und Angebote für ein besseres, schnelleres Setup.",
+    "filterBy": "Filtern nach:",
+    "filterAll": "Alle Aktionen",
+    "filterKits": "Kits",
+    "filterCables": "Kabel",
+    "promoPrice": "Aktionspreis",
+    "viewOffer": "Angebot ansehen",
+    "items": [
+      {
+        "id": "bundle-pro",
+        "title": "PowerBundle 100W",
+        "subtitle": "Combo: Ladegerät + Kabel",
+        "category": "kituri",
+        "discount": "25% Rabatt",
+        "oldPrice": "75.00 RON",
+        "newPrice": "56.25 RON",
+        "description": "Das komplette Kit für Ihr Setup. Enthält 65W GaN-Ladegerät und 100W geflochtenes Kabel."
+      },
+      {
+        "id": "promo-lightning",
+        "title": "Dual Apple Pack",
+        "subtitle": "Paket mit 2 Lightning-Kabeln",
+        "category": "cabluri",
+        "discount": "15% Rabatt",
+        "oldPrice": "19.00 RON",
+        "newPrice": "16.15 RON",
+        "description": "Nie ohne Akku. Zwei ultra-langlebige Kabel für Ihr iPhone."
+      }
+    ]
+  },
+  "legalTerms": {
+    "badge": "Rechtliche Vereinbarung",
+    "title": "AGB",
+    "titleHighlight": "",
+    "lastUpdated": "Letzte Aktualisierung: Juli 2026 · Bitte lesen Sie dieses Dokument sorgfältig, bevor Sie den Shop nutzen.",
+    "contactTitle": "Fragen und Klärungen",
+    "contactIntro": "Bei Unklarheiten oder für weitere Details zu unseren rechtlichen Bedingungen:",
+    "officialEmail": "Offizielle E-Mail:",
+    "platform": "Plattform:",
+    "sections": [
+      {
+        "title": "Annahme der Bedingungen",
+        "paragraphs": [
+          "Durch den Zugriff auf, das Durchsuchen oder die Nutzung der NOVRA-Website (die \"Website\") stimmen Sie diesen AGB und dem geltenden Recht vollständig und bedingungslos zu. Wenn Sie mit einer Bestimmung nicht einverstanden sind, beenden Sie die Nutzung der Plattform sofort."
+        ]
+      },
+      {
+        "title": "Geistiges Eigentum",
+        "paragraphs": [
+          "Der gesamte Inhalt dieser Website — einschließlich Grafikdesign, Text, Bilder, Logos, Quellcode, Branding-Konzepte und Struktur — ist ausschließliches geistiges Eigentum von NOVRA und durch nationales und internationales Urheber- und gewerbliches Schutzrecht geschützt.",
+          "Das Kopieren, Reproduzieren, erneute Veröffentlichen, Herunterladen oder die kommerzielle Nutzung von Material ohne vorherige schriftliche Zustimmung ist streng untersagt."
+        ]
+      },
+      {
+        "title": "Bestellungen, Kundenkonto und Checkout",
+        "paragraphs": [
+          "NOVRA Store ermöglicht Bestellungen mit oder ohne Konto (Gast-Checkout). Mit Abschluss einer Bestellung bestätigen Sie, dass die angegebenen Daten korrekt sind und Sie zur Nutzung der gewählten Zahlungsmethode berechtigt sind."
+        ],
+        "list": [
+          "Das Kundenkonto ermöglicht Bestellungen, AWB-Tracking, NovraCredits, Geschenkkarten und Gutscheine.",
+          "Angezeigte Preise enthalten MwSt.; Versand wird an der Kasse berechnet.",
+          "Die Bestellung wird nach Zahlungs- oder Zahlungsmethodenbestätigung verbindlich."
+        ]
+      },
+      {
+        "title": "Stripe-Zahlungen",
+        "paragraphs": [
+          "Online-Zahlungen werden sicher über Stripe verarbeitet. NOVRA speichert keine vollständigen Kartendaten. Wir akzeptieren Bankkartenzahlungen; Transaktionen unterliegen Betrugsprüfungen des Zahlungsdienstleisters."
+        ]
+      },
+      {
+        "title": "NovraCredits, Geschenkkarten und Gutscheine",
+        "list": [
+          "NovraCredits und Geschenkkarten haben eigene Nutzungsbedingungen; sie sind nicht in Bargeld umwandelbar.",
+          "Rabattgutscheine sind persönlich, nicht übertragbar und können Einschränkungen haben (Gültigkeit, Mindestwert).",
+          "NOVRA kann Aktionen mit angemessener Vorankündigung ändern oder zurückziehen."
+        ]
+      },
+      {
+        "title": "Lieferung, AWB und Rückgabe",
+        "paragraphs": [
+          "Die Lieferung erfolgt über Partnerkurierdienste; die AWB wird per E-Mail und im Kundenkonto mitgeteilt. Rückgabe- und Garantiebedingungen finden Sie unter <shippingLink>Versand & Zahlung</shippingLink> und <warrantyLink>Garantie & Rückgabe</warrantyLink>."
+        ]
+      },
+      {
+        "title": "Ordnungsgemäße Nutzung der Website",
+        "paragraphs": [
+          "Als Nutzer verpflichten Sie sich, die Plattform nur für legitime Zwecke zu nutzen. Folgendes ist streng untersagt:"
+        ],
+        "list": [
+          "Eingabe falscher, fehlerhafter oder fremder Daten im Kontaktformular.",
+          "Jeder Versuch, die Sicherheit der Website zu stören oder Schadcode (Viren, Malware) einzuschleusen.",
+          "Nutzung automatisierter Systeme (Bots, Scraper) zum Extrahieren von Daten."
+        ]
+      },
+      {
+        "title": "Haftungsbeschränkung",
+        "paragraphs": [
+          "Das NOVRA-Team bemüht sich, dass die Informationen auf der Website korrekt und aktuell sind. Der Inhalt wird jedoch \"wie besehen\" ohne ausdrückliche oder stillschweigende Garantie bereitgestellt.",
+          "Wir haften nicht für vorübergehende technische Fehler, Website-Unterbrechungen oder direkte oder indirekte Schäden durch Nutzung oder Unmöglichkeit der Nutzung der Plattform."
+        ]
+      },
+      {
+        "title": "Links zu Dritten",
+        "paragraphs": [
+          "Unsere Website kann Links zu Drittanbieterdiensten enthalten (Stripe, Kurierdienste, soziale Netzwerke). Diese haben eigene Bedingungen und Datenschutzrichtlinien; NOVRA kontrolliert deren Inhalt nicht."
+        ]
+      },
+      {
+        "title": "Änderung der Bedingungen",
+        "paragraphs": [
+          "Wir behalten uns vor, diese AGB regelmäßig zu aktualisieren, um gesetzliche oder geschäftliche Änderungen widerzuspiegeln. Änderungen gelten unmittelbar nach Veröffentlichung auf dieser Seite. Wir empfehlen, diese Seite regelmäßig zu prüfen."
+        ]
+      },
+      {
+        "title": "Anwendbares Recht und Streitigkeiten",
+        "paragraphs": [
+          "Dieses Dokument unterliegt dem geltenden rumänischen und europäischen Recht. Streitigkeiten werden nach Möglichkeit einvernehmlich gelöst; andernfalls sind die zuständigen rumänischen Gerichte zuständig."
+        ]
+      }
+    ]
+  },
+  "legalPrivacy": {
+    "badge": "Recht & Transparenz",
+    "title": "Datenschutz",
+    "titleHighlight": "richtlinie",
+    "lastUpdated": "Letzte Aktualisierung: Juli 2026 · DSGVO (EU-Verordnung 2016/679)",
+    "rightsTitle": "Ihre DSGVO-Rechte",
+    "rights": [
+      {
+        "title": "Auskunft & Berichtigung",
+        "desc": "Sie können die Bestätigung der Verarbeitung und die Korrektur unrichtiger Daten verlangen."
+      },
+      {
+        "title": "Löschung (\"Recht auf Vergessenwerden\")",
+        "desc": "Sie können die Löschung der Daten verlangen, außer wenn gesetzlich erforderlich."
+      },
+      {
+        "title": "Einschränkung & Widerspruch",
+        "desc": "Sie können der Verarbeitung für Direktmarketing widersprechen."
+      },
+      {
+        "title": "Portabilität & Beschwerden",
+        "desc": "Sie können Datenexport verlangen oder ANSPDCP kontaktieren (www.dataprotection.ro)."
+      }
+    ],
+    "stripeTitle": "Stripe-Zahlungen",
+    "stripeText": "Online-Zahlungen werden von Stripe Payments Europe Ltd. verarbeitet. NOVRA speichert keine vollständige Kartennummer. Stripe verarbeitet Zahlungsdaten gemäß eigener Datenschutzrichtlinie. Transaktionen sind SSL/TLS-verschlüsselt.",
+    "affiliateTitle": "Affiliate-Programm",
+    "affiliateText": "Affiliates liefern Identifikations- und Zahlungsdaten (IBAN/Karte) für Provisionsauszahlungen. Das Attributions-Cookie (?ref=) dauert 30 Tage. Details in <affiliateTermsLink>Affiliate-Programm AGB</affiliateTermsLink>.",
+    "securityTitle": "Datensicherheit",
+    "securityText": "Wir setzen technische und organisatorische Maßnahmen um: SSL-Verschlüsselung, gehashte Passwörter, eingeschränkter Admin-Zugang, sichere Speicherung. Keine Internetübertragung ist 100% sicher; wir unternehmen angemessene Schutzmaßnahmen.",
+    "contactTitle": "DSB / Datenschutz-Kontakt",
+    "contactIntro": "Zur Ausübung von DSGVO-Rechten oder Fragen zu personenbezogenen Daten:",
+    "sections": [
+      {
+        "title": "Allgemeine Informationen",
+        "paragraphs": [
+          "Der Schutz der Privatsphäre von Besuchern und Kunden von NOVRA Store (www.novra.ro) ist uns sehr wichtig. Diese Richtlinie erklärt, welche personenbezogenen Daten wir erheben, wie wir sie nutzen, wie lange wir sie speichern und welche Rechte Sie nach DSGVO (EU-Verordnung 2016/679) und rumänischem Recht haben."
+        ]
+      },
+      {
+        "title": "Welche personenbezogenen Daten wir erheben",
+        "paragraphs": [
+          "Je nach Interaktion mit NOVRA Store können wir folgende Datenkategorien erheben:"
+        ],
+        "list": [
+          "Identifikationsdaten: Name, Vorname, E-Mail-Adresse, Telefonnummer.",
+          "Liefer- und Rechnungsdaten: Postadresse, Stadt, Bezirk, Postleitzahl, Bestelldetails.",
+          "Kundenkontodaten: Anmeldedaten (verschlüsseltes Passwort), Bestellhistorie, Präferenzen, NovraCredits, Geschenkkarten, Gutscheine.",
+          "Affiliate-Programmdaten: Affiliate-Name, E-Mail, Referenzcode, Klick- und Bestellstatistiken, IBAN oder Bankkartendaten für Auszahlungen.",
+          "Zahlungsdaten: von Stripe verarbeitete Informationen (ohne vollständige Kartenspeicherung auf NOVRA-Servern).",
+          "Newsletter: E-Mail-Adresse und Werbekommunikationspräferenzen (nur mit Einwilligung).",
+          "Technische Daten: IP-Adresse, Browsertyp, besuchte Seiten, Sitzungs-Cookies, Affiliate-Attributions-Cookie (?ref=, 30 Tage)."
+        ]
+      },
+      {
+        "title": "Zweck und Rechtsgrundlage der Verarbeitung",
+        "paragraphs": [
+          "Wir verarbeiten Ihre Daten zu legitimen und transparenten Zwecken:"
+        ],
+        "list": [
+          "Vertragserfüllung: Bestellabwicklung (inkl. Gast-Checkout), Lieferung, AWB-Tracking, Rückgaben und Garantien.",
+          "Kundenkonto: Erstellung und Verwaltung des Kontos, NovraCredits, Geschenkkarten, Rabattgutscheine.",
+          "Zahlungen: Transaktionsverarbeitung über Stripe.",
+          "Affiliate-Programm: Bestellzuordnung, Provisionsberechnung, Auszahlungsanfragen.",
+          "Marketing: Newsletter und Werbekommunikation (mit ausdrücklicher, jederzeit widerrufbarer Einwilligung).",
+          "Rechtliche Pflichten: Buchhaltung, Steuern, Antworten an Behörden."
+        ]
+      },
+      {
+        "title": "Cookies und ähnliche Technologien",
+        "paragraphs": [
+          "Wir verwenden Cookies und lokalen Speicher für Warenkorb, Authentifizierung, Affiliate-Attribution (?ref=, 30 Tage) und Website-Präferenzen. Details in <cookieLink>Cookie-Richtlinie</cookieLink>."
+        ]
+      },
+      {
+        "title": "Speicherdauer",
+        "list": [
+          "Konto- und Bestelldaten: für die Dauer der Vertragsbeziehung + gesetzliche Fristen (meist 5–10 Jahre für Steuerunterlagen).",
+          "Affiliate-Cookie: maximal 30 Tage nach letztem Link-Klick.",
+          "Newsletter: bis zur Abmeldung oder Einwilligungswiderruf.",
+          "Affiliate-Auszahlungsdaten: für die Programmdauer + anwendbare Buchhaltungsfristen."
+        ]
+      },
+      {
+        "title": "Empfänger und Auftragsverarbeiter",
+        "paragraphs": [
+          "Wir verkaufen Ihre Daten nicht. Wir können sie nur weitergeben an:"
+        ],
+        "list": [
+          "Stripe — Online-Zahlungsverarbeitung (PCI-DSS).",
+          "Kurierdienste — Lieferung und AWB-Tracking (Fan Courier, Sameday usw.).",
+          "Upstash Redis / Hosting — sichere Anwendungsdatenspeicherung.",
+          "Behörden, wenn gesetzlich vorgeschrieben."
+        ]
+      }
+    ],
+    "contactLinks": {
+      "terms": "Shop AGB",
+      "shipping": "Versand & Zahlung"
+    }
+  },
+  "legalCookies": {
+    "badge": "Cookies",
+    "title": "Cookie",
+    "titleHighlight": "Richtlinie",
+    "lastUpdated": "Letzte Aktualisierung: Juli 2026",
+    "whatTitle": "Was sind Cookies?",
+    "whatText": "Cookies sind kleine Dateien auf Ihrem Gerät beim Besuch von NOVRA Store. Sie ermöglichen essenzielle Funktionen (Warenkorb, Konto, Checkout) und optional die Zuordnung von Bestellungen im Affiliate-Programm.",
+    "typesTitle": "Verwendete Cookie-Typen",
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "durationLabel": "Dauer:",
+    "cookieTypes": [
+      {
+        "name": "Essenziell (unbedingt erforderlich)",
+        "purpose": "Warenkorb-Funktion, Konto-Authentifizierung, Sitzungssicherheit.",
+        "duration": "Sitzung / bis zu 30 Tage",
+        "required": true
+      },
+      {
+        "name": "novra_affiliate_ref",
+        "purpose": "Affiliate-Programm Bestellzuordnung (?ref= Parameter). Dauer: 30 Tage.",
+        "duration": "30 Tage",
+        "required": false
+      },
+      {
+        "name": "Website-Präferenzen",
+        "purpose": "Speicherung lokaler Einstellungen (z.B. Warenkorb, UI-Präferenzen).",
+        "duration": "Variabel",
+        "required": false
+      }
+    ],
+    "affiliateTitle": "Affiliate-Cookie (?ref=)",
+    "affiliateText": "Bei Zugriff über einen Affiliate-Link (z.B. novra.ro/?ref=CODE) setzen wir ein Cookie mit dem Affiliate-Code für {days} Tage. Bei Bestellung in dieser Zeit kann die Provision zugeordnet werden. Cookies können in den Browsereinstellungen gelöscht werden.",
+    "manageTitle": "Cookie-Verwaltung",
+    "manageText": "Sie können Ihren Browser so einstellen, dass Cookies abgelehnt oder gemeldet werden. Das Deaktivieren essenzieller Cookies kann Warenkorb, Checkout und Konto beeinträchtigen.",
+    "manageMore": "Weitere Details in",
+    "privacyLink": "Datenschutzrichtlinie",
+    "questions": "Fragen:"
+  },
+  "legalAffiliate": {
+    "badge": "Affiliate-Programm",
+    "title": "Affiliate-Programm",
+    "titleHighlight": "AGB",
+    "lastUpdated": "Letzte Aktualisierung: Juli 2026",
+    "contactTitle": "Affiliate-Programm Kontakt",
+    "sections": [
+      {
+        "title": "Definitionen und Annahme",
+        "paragraphs": [
+          "Das NOVRA Affiliate-Programm (das \"Programm\") ermöglicht zugelassenen Nutzern, NOVRA Store Produkte zu bewerben und Provision für validierte, ihrem Link zugeordnete Bestellungen zu erhalten. Mit Bewerbung und Teilnahme akzeptieren Sie diese Bedingungen und die <privacyLink>Datenschutzrichtlinie</privacyLink>."
+        ]
+      },
+      {
+        "title": "Teilnahmeberechtigung",
+        "list": [
+          "Mindestalter 18 Jahre und Wohnsitz in Rumänien.",
+          "Aktives NOVRA Store Konto und Präsenz in sozialen Medien oder auf einem Werbekanal.",
+          "Ausdrückliche Genehmigung durch das NOVRA-Team.",
+          "Eigenreferral verboten (eigene Bestellungen über Affiliate-Link)."
+        ]
+      },
+      {
+        "title": "Links, Tracking und Zuordnung",
+        "paragraphs": [
+          "Jeder Affiliate erhält einen eindeutigen Link wie https://www.novra.ro/?ref=CODE. Die Bestellzuordnung funktioniert so:"
+        ],
+        "list": [
+          "Attributions-Cookie: {days} Tage ab letztem Link-Klick.",
+          "Eine Bestellung wird nur einmal zugeordnet (idempotent pro orderId).",
+          "Provision wird aus Produktzwischensumme berechnet (Gesamt minus Versand), außer bei individuellen Sätzen.",
+          "Standardprovision: {rate}% der Produkte; Admin kann Satz oder Festbetrag setzen."
+        ]
+      },
+      {
+        "title": "Provisionen und Status",
+        "list": [
+          "Provision erscheint als \"ausstehend\" nach Abschluss der zugeordneten Bestellung.",
+          "NOVRA kann Provision bei Betrug, vollständiger Rückgabe oder Stornierung anpassen oder stornieren.",
+          "Provision wird gemäß Kontostand für Auszahlung verfügbar."
+        ]
+      },
+      {
+        "title": "Provisionsauszahlungen (Payout)",
+        "paragraphs": [
+          "Sie können Provisionsauszahlung im Affiliate-Panel beantragen:"
+        ],
+        "list": [
+          "Mindestbetrag: {minAmount} RON.",
+          "Erforderliche Daten: Kontoinhaber, IBAN (bevorzugt) oder Kartennummer, Bank (optional).",
+          "Zahlung erfolgt manuell per Banküberweisung nach NOVRA-Team-Genehmigung.",
+          "Geschätzte Bearbeitungszeit: 5–15 Werktage ab Genehmigung.",
+          "Sie sind für die Richtigkeit der Bankdaten verantwortlich."
+        ]
+      },
+      {
+        "title": "Personenbezogene Daten und Datenschutz",
+        "paragraphs": [
+          "Die Teilnahme am Programm umfasst die Verarbeitung personenbezogener Daten gemäß DSGVO (EU-Verordnung 2016/679) und der <privacyLink>NOVRA Datenschutzrichtlinie</privacyLink>:"
+        ],
+        "list": [
+          "Bei Bewerbung: Name, E-Mail, Teilnahmeberechtigungsbestätigungen.",
+          "Im Affiliate-Konto: Referenzcode, Klick- und zugeordnete Bestellstatistiken.",
+          "Attributions-Cookie ?ref= (30 Tage) zur Verknüpfung von Bestellungen mit Ihrem Link.",
+          "Bei Provisionsauszahlung: Kontoinhaber, IBAN oder Kartennummer, Bank (optional) — ausschließlich für Zahlung.",
+          "Bankdaten sind nur autorisiertem NOVRA-Personal für manuelle Überweisung zugänglich."
+        ]
+      },
+      {
+        "title": "Verbotenes Verhalten",
+        "list": [
+          "Spam, irreführende Werbung oder falsche Produktversprechen.",
+          "Cookie Stuffing, Click Fraud oder künstlicher Traffic.",
+          "Nutzung der NOVRA-Marke ohne vorherige schriftliche Zustimmung.",
+          "Verstoß gegen Online-Werberecht."
+        ]
+      },
+      {
+        "title": "Änderungen und Kündigung",
+        "paragraphs": [
+          "NOVRA behält sich vor, Provision, Bedingungen zu ändern oder das Affiliate-Konto mit angemessener Vorankündigung zu sperren/schließen. Sie können das Programm jederzeit verlassen; validierte Provisionen unterliegen den zum Bestellzeitpunkt geltenden Bedingungen."
+        ]
+      }
+    ]
+  },
+  "comingSoon": {
+    "badge": "Demnächst",
+    "defaultHeadline": "Etwas Außergewöhnliches steht bevor",
+    "defaultSubtitle": "Wir bereiten etwas Besonderes vor. Seien Sie der Erste, der vom Launch erfährt.",
+    "socialProof": "Bald verfügbar • Premium-Kabel & Adapter",
+    "countdownLabel": "Launch in",
+    "days": "Tage",
+    "hours": "Std",
+    "minutes": "Min",
+    "seconds": "Sek",
+    "invalidDate": "Ungültiges Datum",
+    "launched": "Wir sind live!",
+    "timeRemaining": "Verbleibende Zeit: {time}",
+    "newsletterTitle": "Seien Sie der Erste — {percent}% Rabatt auf die erste Bestellung",
+    "newsletterSubtitle": "Abonnieren Sie und erhalten Sie Ihren Rabattcode per E-Mail.",
+    "emailPlaceholder": "Ihre E-Mail-Adresse",
+    "subscribe": "Benachrichtigen",
+    "sending": "Wird gesendet...",
+    "successMessage": "Prüfen Sie Ihre E-Mail — Ihr 10%-Code kommt gleich",
+    "duplicateMessage": "Sie sind bereits für den NOVRA-Newsletter angemeldet.",
+    "errorMessage": "Anmeldung konnte nicht verarbeitet werden. Bitte erneut versuchen.",
+    "contact": "Kontakt",
+    "whatsappMessage": "Hallo! Ich habe eine Frage zu NOVRA.",
+    "tagline": "Precision · Performance · Power",
+    "features": {
+      "power120w": "120W Power Delivery",
+      "ganTech": "GaN-Technologie",
+      "warranty": "2 Jahre Garantie",
+      "premium": "Premium-Materialien"
     }
   }
 }

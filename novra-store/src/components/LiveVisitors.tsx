@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useIsClient } from "@/hooks/useIsClient";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,6 +18,7 @@ function fluctuate(current: number, min = 12, max = 47): number {
 }
 
 export default function LiveVisitors() {
+  const t = useTranslations("liveVisitors");
   const mounted = useIsClient();
   const [count, setCount] = useState<number | null>(null);
   const [pulse, setPulse] = useState(false);
@@ -56,7 +58,7 @@ export default function LiveVisitors() {
       transition={{ delay: 1.5, duration: 0.5 }}
       className="fixed z-[9989] pointer-events-none right-3 top-[calc(var(--header-height,148px)+0.375rem)]"
       aria-live="polite"
-      aria-label={`${count} clienți live pe site`}
+      aria-label={t("ariaLabel", { count })}
     >
       <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-novra-surface/60 backdrop-blur-sm border border-white/5 opacity-80">
         <div className="relative shrink-0">
@@ -80,7 +82,7 @@ export default function LiveVisitors() {
               {count}
             </motion.span>
           </AnimatePresence>
-          <span className="text-[9px] text-gray-500">live</span>
+          <span className="text-[9px] text-gray-500">{t("live")}</span>
         </div>
       </div>
     </motion.div>

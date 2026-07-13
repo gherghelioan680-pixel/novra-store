@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   CheckCircle,
   Clock,
@@ -16,7 +17,6 @@ import {
 import type { User } from "@/lib/auth";
 import {
   AFFILIATE_REQUIREMENT_KEYS,
-  AFFILIATE_REQUIREMENT_LABELS,
   buildAffiliateLink,
   DEFAULT_AFFILIATE_COMMISSION_RATE,
   formatCommissionLabel,
@@ -45,6 +45,8 @@ const defaultRequirements = (): AffiliateRequirements =>
   );
 
 export default function AffiliateProgramView({ user, onToast }: AffiliateProgramViewProps) {
+  const t = useTranslations("accountAffiliate");
+  const locale = useLocale();
   const [data, setData] = useState<AffiliateDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +73,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
   }, []);
 
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("ro-RO", {
+    new Date(iso).toLocaleDateString(locale === "ro" ? "ro-RO" : locale === "de" ? "de-DE" : "en-US", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -93,7 +95,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
       return;
     }
 
-    onToast("Cererea ta a fost trimisă! Vei primi un răspuns în curând.");
+    onToast(t("applicationSent"));
     await refresh();
   };
 
@@ -101,7 +103,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
     return (
       <div className="flex items-center justify-center py-20 text-gray-400">
         <RefreshCw size={20} className="mr-2 animate-spin" />
-        Se încarcă...
+        {t("loading")}
       </div>
     );
   }
@@ -113,9 +115,9 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
   const availableBalance = data?.availableBalance ?? 0;
 
   const payoutStatusLabel = (status: AffiliatePayout["status"]) => {
-    if (status === "paid") return "Plătit";
-    if (status === "rejected") return "Respins";
-    return "În așteptare";
+    if (status === "paid") return t("statusPaid");
+    if (status === "rejected") return t("statusRejected");
+    return t("statusPending");
   };
 
   const payoutStatusClass = (status: AffiliatePayout["status"]) => {
@@ -145,7 +147,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
       return;
     }
 
-    onToast("Cererea de retragere a fost trimisă!");
+    onToast(t("withdrawalSent"));
     setPayoutForm({
       beneficiaryName: "",
       iban: "",
@@ -169,33 +171,33 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-600/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">
             <Link2 size={12} />
-            Program Afiliere
+            {t("program")}
           </div>
-          <h2 className="text-2xl font-bold text-white">Panoul tău de afiliat</h2>
+          <h2 className="text-2xl font-bold text-white">{t("dashboardTitle")}</h2>
           <p className="mt-1 text-sm text-gray-400">
-            Promovează NOVRA și câștigă {formatCommissionLabel(affiliate)} pentru fiecare comandă atribuită.
+            {t("dashboardDesc", { commission: formatCommissionLabel(affiliate) })}
           </p>
         </div>
 
         <div className="rounded-2xl border border-purple-500/20 bg-purple-600/5 p-5">
-          <p className="text-xs uppercase tracking-widest text-purple-300">Link-ul tău de afiliat</p>
+          <p className="text-xs uppercase tracking-widest text-purple-300">{t("yourLink")}</p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
             <code className="flex-1 break-all rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-purple-200">
               {affiliateLink}
             </code>
-            <CopyButton text={affiliateLink} label="Copiază link" className="shrink-0 px-4 py-2" />
+            <CopyButton text={affiliateLink} label={t("copyLink")} className="shrink-0 px-4 py-2" />
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Cod: <span className="font-mono text-gray-300">{affiliate.code}</span> · Fereastră atribuire: 30 zile
+            {t("codeAttribution", { code: affiliate.code })}
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Click-uri", value: affiliate.totalClicks, icon: MousePointerClick },
-            { label: "Comenzi", value: affiliate.totalOrders, icon: ShoppingBag },
-            { label: "Rată conversie", value: `${conversionRate}%`, icon: CheckCircle },
-            { label: "Comision total", value: formatMoney(affiliate.totalCommission), icon: Wallet },
+            { label: t("clicks"), value: affiliate.totalClicks, icon: MousePointerClick },
+            { label: t("orders"), value: affiliate.totalOrders, icon: ShoppingBag },
+            { label: t("conversionRate"), value: `${conversionRate}%`, icon: CheckCircle },
+            { label: t("totalCommission"), value: formatMoney(affiliate.totalCommission), icon: Wallet },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -215,16 +217,16 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-            <p className="text-xs uppercase tracking-widest text-amber-300">Comision în așteptare</p>
+            <p className="text-xs uppercase tracking-widest text-amber-300">{t("pendingCommission")}</p>
             <p className="mt-2 text-2xl font-bold text-amber-200">
               {formatMoney(affiliate.pendingCommission)}
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Disponibil retragere: {formatMoney(availableBalance)}
+              {t("availableWithdrawal", { amount: formatMoney(availableBalance) })}
             </p>
           </div>
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-            <p className="text-xs uppercase tracking-widest text-emerald-300">Comision plătit</p>
+            <p className="text-xs uppercase tracking-widest text-emerald-300">{t("paidCommission")}</p>
             <p className="mt-2 text-2xl font-bold text-emerald-200">
               {formatMoney(affiliate.paidCommission)}
             </p>
@@ -234,18 +236,20 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
         <div className="rounded-2xl border border-white/10 bg-novra-card/30 p-5">
           <div className="mb-4 flex items-center gap-2">
             <Banknote size={18} className="text-purple-300" />
-            <h3 className="text-lg font-semibold text-white">Retrage banii</h3>
+            <h3 className="text-lg font-semibold text-white">{t("withdrawTitle")}</h3>
           </div>
           {availableBalance < MIN_AFFILIATE_PAYOUT_AMOUNT ? (
             <p className="text-sm text-gray-400">
-              Poți solicita retragerea când ai cel puțin {MIN_AFFILIATE_PAYOUT_AMOUNT} RON disponibili.
-              Sold curent: {formatMoney(availableBalance)}.
+              {t("minWithdrawal", {
+                min: MIN_AFFILIATE_PAYOUT_AMOUNT,
+                balance: formatMoney(availableBalance),
+              })}
             </p>
           ) : (
             <form onSubmit={handleWithdraw} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">Titular cont *</label>
+                  <label className="mb-1 block text-xs text-gray-400">{t("beneficiaryName")}</label>
                   <input
                     type="text"
                     required
@@ -253,17 +257,17 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                     onChange={(e) =>
                       setPayoutForm((p) => ({ ...p, beneficiaryName: e.target.value }))
                     }
-                    placeholder="Nume complet titular"
+                    placeholder={t("beneficiaryPlaceholder")}
                     className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white placeholder:text-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">Bancă (opțional)</label>
+                  <label className="mb-1 block text-xs text-gray-400">{t("bankOptional")}</label>
                   <input
                     type="text"
                     value={payoutForm.bankName}
                     onChange={(e) => setPayoutForm((p) => ({ ...p, bankName: e.target.value }))}
-                    placeholder="ex: BCR, ING, BT"
+                    placeholder={t("bankPlaceholder")}
                     className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white placeholder:text-gray-500"
                   />
                 </div>
@@ -279,7 +283,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                       : "bg-white/5 text-gray-400"
                   }`}
                 >
-                  IBAN (recomandat)
+                  {t("ibanRecommended")}
                 </button>
                 <button
                   type="button"
@@ -290,13 +294,13 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                       : "bg-white/5 text-gray-400"
                   }`}
                 >
-                  Card bancar
+                  {t("bankCard")}
                 </button>
               </div>
 
               {payoutMethod === "iban" ? (
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">IBAN *</label>
+                  <label className="mb-1 block text-xs text-gray-400">{t("iban")}</label>
                   <input
                     type="text"
                     required
@@ -308,7 +312,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                 </div>
               ) : (
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">Număr card *</label>
+                  <label className="mb-1 block text-xs text-gray-400">{t("cardNumber")}</label>
                   <input
                     type="text"
                     required
@@ -325,7 +329,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
 
               <div>
                 <label className="mb-1 block text-xs text-gray-400">
-                  Sumă de retras (max {formatMoney(availableBalance)})
+                  {t("withdrawAmount", { max: formatMoney(availableBalance) })}
                 </label>
                 <input
                   type="number"
@@ -335,7 +339,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                   step={0.01}
                   value={payoutForm.amount}
                   onChange={(e) => setPayoutForm((p) => ({ ...p, amount: e.target.value }))}
-                  placeholder={`Minim ${MIN_AFFILIATE_PAYOUT_AMOUNT} RON`}
+                  placeholder={t("minAmount", { min: MIN_AFFILIATE_PAYOUT_AMOUNT })}
                   className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white"
                 />
               </div>
@@ -349,9 +353,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                   }
                   className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent text-purple-500 focus:ring-purple-500"
                 />
-                <span className="text-sm text-gray-300">
-                  Confirm că datele de plată sunt corecte și că sunt titularul contului/cardului indicat.
-                </span>
+                <span className="text-sm text-gray-300">{t("confirmPayment")}</span>
               </label>
 
               <button
@@ -359,7 +361,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                 disabled={withdrawing || !payoutForm.confirmed}
                 className="w-full rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:opacity-50"
               >
-                {withdrawing ? "Se trimite..." : "Trimite cererea de retragere"}
+                {withdrawing ? t("submitting") : t("submitWithdrawal")}
               </button>
             </form>
           )}
@@ -368,21 +370,21 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
         <div>
           <div className="mb-3 flex items-center gap-2">
             <History size={18} className="text-gray-400" />
-            <h3 className="text-lg font-semibold text-white">Istoric retrageri</h3>
+            <h3 className="text-lg font-semibold text-white">{t("withdrawalHistory")}</h3>
           </div>
           {payouts.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-novra-card/30 px-4 py-8 text-center text-sm text-gray-400">
-              Nu ai cereri de retragere încă.
+              {t("noWithdrawals")}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full min-w-[520px] text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
                   <tr>
-                    <th className="px-4 py-3">Sumă</th>
-                    <th className="px-4 py-3">Titular</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Data</th>
+                    <th className="px-4 py-3">{t("amount")}</th>
+                    <th className="px-4 py-3">{t("beneficiary")}</th>
+                    <th className="px-4 py-3">{t("status")}</th>
+                    <th className="px-4 py-3">{t("date")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -408,21 +410,21 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
         </div>
 
         <div>
-          <h3 className="mb-3 text-lg font-semibold text-white">Comenzi atribuite</h3>
+          <h3 className="mb-3 text-lg font-semibold text-white">{t("attributedOrders")}</h3>
           {referrals.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-novra-card/30 px-4 py-8 text-center text-sm text-gray-400">
-              Încă nu ai comenzi atribuite. Distribuie link-ul tău pentru a începe!
+              {t("noAttributedOrders")}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full min-w-[520px] text-left text-sm">
                 <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-400">
                   <tr>
-                    <th className="px-4 py-3">Comandă</th>
-                    <th className="px-4 py-3">Total</th>
-                    <th className="px-4 py-3">Comision</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Data</th>
+                    <th className="px-4 py-3">{t("order")}</th>
+                    <th className="px-4 py-3">{t("total")}</th>
+                    <th className="px-4 py-3">{t("commission")}</th>
+                    <th className="px-4 py-3">{t("status")}</th>
+                    <th className="px-4 py-3">{t("date")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -441,7 +443,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                               : "bg-amber-500/15 text-amber-300"
                           }`}
                         >
-                          {ref.status === "paid" ? "Plătit" : "În așteptare"}
+                          {ref.status === "paid" ? t("statusPaid") : t("statusPending")}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-400">{formatDate(ref.createdAt)}</td>
@@ -460,14 +462,14 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Program Afiliere</h2>
-          <p className="mt-1 text-sm text-gray-400">Cererea ta este în curs de evaluare.</p>
+          <h2 className="text-2xl font-bold text-white">{t("program")}</h2>
+          <p className="mt-1 text-sm text-gray-400">{t("evaluating")}</p>
         </div>
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 text-center">
           <Clock size={40} className="mx-auto text-amber-300" />
-          <h3 className="mt-4 text-lg font-semibold text-white">Cerere în așteptare</h3>
+          <h3 className="mt-4 text-lg font-semibold text-white">{t("pendingTitle")}</h3>
           <p className="mt-2 text-sm text-gray-400">
-            Am primit cererea ta din {formatDate(application.createdAt)}. Echipa NOVRA o va analiza în curând.
+            {t("pendingDesc", { date: formatDate(application.createdAt) })}
           </p>
         </div>
       </div>
@@ -478,14 +480,13 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Program Afiliere</h2>
+          <h2 className="text-2xl font-bold text-white">{t("program")}</h2>
         </div>
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
           <XCircle size={40} className="mx-auto text-red-300" />
-          <h3 className="mt-4 text-lg font-semibold text-white">Cerere respinsă</h3>
+          <h3 className="mt-4 text-lg font-semibold text-white">{t("rejectedTitle")}</h3>
           <p className="mt-2 text-sm text-gray-400">
-            {application.adminNote ||
-              "Din păcate, cererea ta nu a fost aprobată de această dată. Contactează-ne pentru detalii."}
+            {application.adminNote || t("rejectedDefault")}
           </p>
         </div>
       </div>
@@ -497,32 +498,31 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
       <div>
         <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-600/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-300">
           <Link2 size={12} />
-          Program Afiliere
+          {t("program")}
         </div>
-        <h2 className="text-2xl font-bold text-white">Devino afiliat NOVRA</h2>
+        <h2 className="text-2xl font-bold text-white">{t("becomeAffiliate")}</h2>
         <p className="text-sm text-gray-400">
-          Câștigă {DEFAULT_AFFILIATE_COMMISSION_RATE}% din valoarea produselor pentru fiecare comandă generată prin
-          link-ul tău. Consultă{" "}
+          {t("earnCommission", { rate: DEFAULT_AFFILIATE_COMMISSION_RATE })}{" "}
           <a href="/termeni-program-afiliere" className="text-purple-400 hover:underline">
-            termenii programului
+            {t("programTerms")}
           </a>
           .
         </p>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-novra-card/30 p-5">
-        <h3 className="font-semibold text-white">Cum funcționează</h3>
+        <h3 className="font-semibold text-white">{t("howItWorks")}</h3>
         <ol className="mt-3 space-y-2 text-sm text-gray-400">
-          <li>1. Aplici și aștepți aprobarea echipei NOVRA</li>
-          <li>2. Primești un link unic de afiliat (ex: novra.ro/?ref=CODUL_TAU)</li>
-          <li>3. Distribui link-ul — vizitatorii au 30 zile pentru a cumpăra</li>
-          <li>4. Primești comision pentru fiecare comandă finalizată</li>
+          <li>{t("step1")}</li>
+          <li>{t("step2")}</li>
+          <li>{t("step3")}</li>
+          <li>{t("step4")}</li>
         </ol>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-novra-card/30 p-5">
-        <h3 className="font-semibold text-white">Cerințe de eligibilitate</h3>
-        <p className="text-sm text-gray-400">Confirmă că îndeplinești toate condițiile:</p>
+        <h3 className="font-semibold text-white">{t("eligibilityTitle")}</h3>
+        <p className="text-sm text-gray-400">{t("eligibilityDesc")}</p>
 
         <div className="space-y-3">
           {AFFILIATE_REQUIREMENT_KEYS.map((key) => (
@@ -538,7 +538,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
                 }
                 className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent text-purple-500 focus:ring-purple-500"
               />
-              <span className="text-sm text-gray-300">{AFFILIATE_REQUIREMENT_LABELS[key]}</span>
+              <span className="text-sm text-gray-300">{t(`requirement_${key}`)}</span>
             </label>
           ))}
         </div>
@@ -548,7 +548,7 @@ export default function AffiliateProgramView({ user, onToast }: AffiliateProgram
           disabled={submitting}
           className="w-full rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:opacity-50"
         >
-          {submitting ? "Se trimite..." : "Trimite cererea"}
+          {submitting ? t("submitting") : t("submitApplication")}
         </button>
       </form>
     </div>

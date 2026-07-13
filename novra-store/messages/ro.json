@@ -87,7 +87,138 @@
     "description": "Descriere",
     "selectVariant": "Selectează varianta",
     "bestseller": "Bestseller",
-    "bundleSavings": "Economisești {amount} RON"
+    "bundleSavings": "Economisești {amount} RON",
+    "bundleSavingsShort": "−{amount} lei"
+  },
+  "metadata": {
+    "description": "Cabluri premium create pentru viteză, siguranță și performanță fără compromis."
+  },
+  "productModal": {
+    "ariaLabel": "Detalii produs",
+    "closeAria": "Închide detaliile produsului",
+    "specPower": "Alimentare:",
+    "specSync": "Sincronizare:",
+    "specArch": "Arhitectură:",
+    "specMaterial": "Material:",
+    "adapterColor": "Culoare adaptor",
+    "cableColor": "Culoare cablu",
+    "combination": "Combinație:",
+    "chooseColor": "Alege Culoarea",
+    "chooseVariant": "Alege Varianta",
+    "comingSoon": "Disponibil în curând",
+    "finalPrice": "Preț Final",
+    "addedToCart": "Adăugat în coș!",
+    "whatsappOrderMessage": "Salut echipa NOVRA! Aș dori să comand următorul produs:\n\n- Produs: {title}\n- {variantField}: {variantLabel}\n- Preț: {price} RON\n\nVă rog să îmi confirmați disponibilitatea stocului!",
+    "variantConfiguration": "Configurație",
+    "variantColor": "Culoare",
+    "variantLength": "Varianta/Lungime"
+  },
+  "push": {
+    "closeAria": "Închide",
+    "title": "Primește oferte NOVRA",
+    "description": "Fii primul care află despre reduceri, lansări și campanii exclusive.",
+    "activating": "Se activează...",
+    "enable": "Activează",
+    "dismiss": "Nu acum"
+  },
+  "campaign": {
+    "discount": "−{percent}% reducere",
+    "specialOffer": "Ofertă specială",
+    "expiresIn": "Oferta expiră în",
+    "days": "zile",
+    "hours": "ore",
+    "minutes": "min",
+    "seconds": "sec",
+    "activeCampaign": "Campanie activă",
+    "discountNote": "Reducerea de {percent}% se aplică automat la checkout dacă accesezi site-ul din această campanie.",
+    "metadataTitle": "Campanie — NOVRA"
+  },
+  "countdown": {
+    "days": "zile",
+    "hours": "ore",
+    "minutes": "min",
+    "seconds": "sec",
+    "timeRemaining": "Timp rămas: {time}",
+    "staticAriaLabel": "Timp rămas: countdown ofertă limitată"
+  },
+  "copy": {
+    "copy": "Copiază",
+    "copied": "Copiat"
+  },
+  "whatsapp": {
+    "label": "WhatsApp",
+    "ctaMessage": "Salut! Am o întrebare despre produsele NOVRA.",
+    "floatMessage": "Salut! Am nevoie de informații despre produsele NOVRA.",
+    "tooltip": "Ai nevoie de ajutor? Suntem aici! 👋",
+    "chatAria": "Chat WhatsApp cu NOVRA",
+    "chatTitle": "Chat cu NOVRA",
+    "premiumSupport": "Asistență Premium",
+    "quickSupport": "Suport rapid",
+    "hereForYou": "Suntem aici",
+    "forYou": "pentru tine",
+    "hours": "L–V 08:00 – 21:00 · Răspundem rapid la orice întrebare",
+    "rapidResponse": "Răspuns rapid",
+    "rapidResponseDesc": "Discută direct cu echipa NOVRA. Timp mediu de răspuns: sub 30 de minute.",
+    "writeNow": "Scrie-ne acum",
+    "email": "Email",
+    "officialSupport": "Asistență oficială",
+    "officialSupportDesc": "Pentru comenzi, colaborări sau solicitări comerciale — support@novra.ro",
+    "sendEmail": "Trimite email",
+    "faq": "FAQ",
+    "faqTitle": "Întrebări frecvente",
+    "faqDesc": "Răspunsuri instant la cele mai comune întrebări despre livrare, plată și garanție.",
+    "viewFaq": "Vezi FAQ"
+  },
+  "liveVisitors": {
+    "ariaLabel": "{count} clienți live pe site",
+    "live": "live"
+  },
+  "marketingTicker": {
+    "fallback": "Livrare 24-48h în toată România"
+  },
+  "blog": {
+    "metadataTitle": "Ghiduri & Blog — NOVRA",
+    "metadataDescription": "Ghiduri, sfaturi și noutăți despre cabluri premium, încărcare rapidă și accesorii NOVRA.",
+    "badge": "Ghiduri NOVRA",
+    "title": "Blog & Ghiduri",
+    "subtitle": "Sfaturi practice, comparații și noutăți despre produsele NOVRA.",
+    "empty": "Articolele vor apărea în curând.",
+    "featured": "Articol recomandat",
+    "readFullGuide": "Citește ghidul complet",
+    "readArticle": "Citește articolul",
+    "backToGuides": "Înapoi la ghiduri",
+    "tags": "Tag-uri",
+    "ctaText": "Descoperă cablurile și accesoriile NOVRA menționate în acest ghid.",
+    "articleMetadataTitle": "Articol — NOVRA"
+  },
+  "creditsSuccess": {
+    "verifyingTitle": "Se verifică plata...",
+    "verifyingDesc": "Creditele vor fi încărcate automat.",
+    "successTitle": "Plată reușită!",
+    "creditsAdded": "{amount} NovraCredits au fost adăugate în contul tău.",
+    "creditsAddedGeneric": "NovraCredits au fost adăugate în contul tău.",
+    "viewBalance": "Vezi soldul",
+    "errorTitle": "Plata nu a putut fi confirmată",
+    "invalidSession": "Sesiune de plată invalidă.",
+    "paymentNotConfirmed": "Plata nu a putut fi confirmată.",
+    "backToGiftCards": "Înapoi la Gift Cards"
+  },
+  "accesorii": {
+    "backToCatalog": "Înapoi la catalog",
+    "categoryLabel": "Ecosistemul Hardware",
+    "titleHighlight": "Cablu + Adaptor",
+    "titleSuffix": "de Înaltă Găsire",
+    "description": "Completează-ți arsenalul tehnologic. Încărcătoare compacte de rețea și adaptoare auto proiectate din materiale de top, menite să livreze energie curată, eficientă și sigură cablurilor tale NOVRA.",
+    "specPerformance": "Performanță:",
+    "specProtocols": "Protocoale:",
+    "specTechnology": "Tehnologie:",
+    "specMaterial": "Material:",
+    "adapterColor": "Culoare adaptor",
+    "cableColor": "Culoare cablu",
+    "selectedCombination": "Combinație selectată:",
+    "finalPrice": "Preț final",
+    "addedToCart": "Adăugat în coș!",
+    "whatsappOrderMessage": "Salut echipa NOVRA! Aș dori să comand din gama Cablu + Adaptor:\n\n- Produs: {title}\n- Tip: {subtitle}\n- Configurație: {variantLabel}\n- Preț: {price} RON"
   },
   "cart": {
     "title": "Coșul tău",
@@ -129,7 +260,72 @@
     "emptyCartMessage": "Adaugă produse în coș înainte de checkout.",
     "guestCheckout": "Comandă fără cont",
     "loginCheckout": "Autentificare",
-    "registerCheckout": "Creează cont"
+    "registerCheckout": "Creează cont",
+    "orderSent": "Comandă trimisă!",
+    "successConfirmEmail": "Mulțumim! Am primit comanda ta și vei primi un email de confirmare în curând.",
+    "copyCode": "Copiază cod",
+    "keepCodeRef": "Păstrează acest cod pentru referință",
+    "backToProducts": "Înapoi la produse",
+    "paymentCancelled": "Plata a fost anulată. Poți încerca din nou sau alege ramburs.",
+    "checkoutLabel": "Finalizare",
+    "placeOrderTitle": "Plasează comanda",
+    "remove": "Elimină",
+    "codeApplied": "Cod aplicat!",
+    "discountAmount": "Reducere",
+    "useNovraCredits": "Folosește NovraCredits",
+    "creditsAvailable": "Sold disponibil: {credits} NovraCredits",
+    "creditsApplying": "· Se aplică {amount} Lei",
+    "ramburs": "Ramburs",
+    "rambursDesc": "Numerar la livrare",
+    "cardPayment": "Plată cu cardul",
+    "stripeSecure": "Plată securizată Stripe",
+    "cardUnavailable": "Indisponibil momentan",
+    "paidFullyWithCredits": "Comanda va fi plătită integral cu NovraCredits.",
+    "stripeNotConfigured": "Plata cu cardul nu este disponibilă momentan. Administratorul trebuie să adauge cheile Stripe în Vercel Environment Variables.",
+    "observations": "Observații (opțional)",
+    "stripeRedirect": "Redirecționare către Stripe...",
+    "redirectManual": "Dacă nu ești redirecționat automat,",
+    "clickToPay": "apasă aici pentru plată",
+    "payWithCredits": "Plătește cu NovraCredits",
+    "payNow": "Plătește acum ({total} RON)",
+    "sendOrder": "Trimite comanda ({total} RON)",
+    "authRequired": "Autentifică-te sau creează un cont pentru a continua, sau alege „Continuă fără cont”.",
+    "subtotalProducts": "Subtotal produse",
+    "campaign": "Campanie",
+    "paymentLabel": "Plată",
+    "freeShippingOver": "Livrare gratuită pentru comenzi peste {threshold} RON",
+    "stripeInitError": "Nu s-a putut inițializa plata cu cardul.",
+    "stripeNetworkError": "Eroare de rețea la conectarea cu Stripe. Încearcă din nou.",
+    "freeShippingCode": "(cod {code})"
+  },
+  "checkoutSuccess": {
+    "verifyingPayment": "Se verifică plata...",
+    "pleaseWait": "Te rugăm să aștepți câteva secunde.",
+    "paymentSuccess": "Plată reușită!",
+    "cardSuccessMessage": "Mulțumim! Plata cu cardul a fost procesată cu succes. Vei primi un email de confirmare cu detaliile comenzii.",
+    "copyCode": "Copiază cod",
+    "purchaseCode": "Cod comandă",
+    "noPurchaseCode": "Plata a fost procesată. Dacă nu primești emailul de confirmare în câteva minute, contactează-ne.",
+    "myOrders": "Comenzile mele",
+    "paymentNotConfirmed": "Plata nu a putut fi confirmată",
+    "chargedContact": "Dacă ai fost taxat, contactează-ne pe WhatsApp cu dovada plății.",
+    "backToCheckout": "Înapoi la checkout"
+  },
+  "checkoutAuth": {
+    "account": "Cont",
+    "login": "Autentificare",
+    "register": "Înregistrare",
+    "continueGuest": "Continuă fără cont",
+    "guestDescription": "Plasează comanda cu datele de livrare — fără parolă. Poți crea un cont după finalizare, din pagina de confirmare.",
+    "authenticatedAs": "Autentificat ca {name}",
+    "emailPlaceholder": "exemplu@email.com"
+  },
+  "checkoutGuest": {
+    "saveDetailsTitle": "Salvează aceste detalii pentru viitoarele comenzi?",
+    "createWithEmail": "Creează un cont rapid cu emailul {email}",
+    "password": "Parolă",
+    "choosePassword": "Alege o parolă",
+    "createAccountButton": "Crează un cont cu o singură parolă"
   },
   "trackOrder": {
     "title": "Urmărește comanda",
@@ -148,27 +344,27 @@
     "openTracking": "Deschide tracking"
   },
   "account": {
-    "overview": "Overview",
-    "orders": "Orders",
-    "myOrders": "My Orders",
-    "myReturns": "My Returns",
-    "account": "Account",
-    "myProfile": "My Profile",
-    "shippingAddress": "Shipping Address",
-    "manageAccount": "Manage Account",
-    "assets": "Asset",
-    "myCoupons": "My Coupons",
-    "myCredits": "My NovraCredits",
-    "giftCards": "Gift Cards",
+    "overview": "Prezentare generală",
+    "orders": "Comenzi",
+    "myOrders": "Comenzile mele",
+    "myReturns": "Returnările mele",
+    "account": "Cont",
+    "myProfile": "Profilul meu",
+    "shippingAddress": "Adresă livrare",
+    "manageAccount": "Administrare cont",
+    "assets": "Active",
+    "myCoupons": "Cupoanele mele",
+    "myCredits": "NovraCredits",
+    "giftCards": "Carduri cadou",
     "affiliateProgram": "Program Afiliere",
     "referFriend": "Recomandă un prieten",
-    "customerService": "Customer Service",
-    "emailPreferences": "Email Preferences",
-    "supportCenter": "Support Center",
-    "signOut": "Sign Out",
-    "more": "More",
-    "profile": "Profile",
-    "credits": "Credits",
+    "customerService": "Serviciu clienți",
+    "emailPreferences": "Preferințe email",
+    "supportCenter": "Centru suport",
+    "signOut": "Deconectare",
+    "more": "Mai mult",
+    "profile": "Profil",
+    "credits": "Credite",
     "menuAria": "Meniu cont",
     "login": "Autentificare",
     "register": "Înregistrare",
@@ -195,7 +391,249 @@
     "noAccountCreate": "Nu ai cont? Creează-l",
     "hasAccountLogin": "Ai deja cont? Intră în cont",
     "backToLogin": "Înapoi la autentificare",
-    "processing": "Se procesează..."
+    "processing": "Se procesează...",
+    "logoutSuccess": "Ai ieșit din cont.",
+    "preferencesSaved": "Preferințele au fost salvate.",
+    "greeting": "Salut, {name}",
+    "welcome": "Bine ai venit în contul tău NOVRA",
+    "coupons": "Cupoane",
+    "edit": "Editează",
+    "backToSite": "Înapoi pe site",
+    "logoAlt": "Logo NOVRA",
+    "emailPlaceholder": "exemplu@email.com"
+  },
+  "accountOverview": {
+    "adminPanel": "Panou Admin",
+    "earnCreditsTitle": "Cum câștigi NovraCredits",
+    "signup": "Înregistrare",
+    "signupDesc": "Primești 50 NovraCredits la crearea contului",
+    "newsletter": "Newsletter",
+    "newsletterDesc": "Primești noutăți și NovraCredits exclusive",
+    "shop": "Cumpără",
+    "shopDesc": "1 NovraCredit pentru fiecare leu cheltuit",
+    "profile": "Profil",
+    "profileDesc": "Completează profilul și primești până la 100 NovraCredits",
+    "completed": "Finalizat",
+    "subscribed": "Abonat",
+    "subscribe": "Abonează-te",
+    "complete": "Completează",
+    "recentOrders": "Comenzi recente",
+    "viewAll": "Vezi toate"
+  },
+  "accountOrders": {
+    "title": "Comenzile mele",
+    "filterAll": "Toate",
+    "statusPending": "În așteptare",
+    "statusProcessing": "În procesare",
+    "statusShipped": "Expediată",
+    "statusDelivered": "Livrată",
+    "statusCancelled": "Anulată",
+    "loading": "Se încarcă comenzile...",
+    "orderDetails": "Detalii comandă",
+    "orderCode": "Cod comandă:",
+    "copyCode": "Copiază cod",
+    "copy": "Copiază",
+    "placed": "Plasată:",
+    "updated": "Actualizată:",
+    "orderCancelled": "Această comandă a fost anulată.",
+    "products": "Produse",
+    "discount": "Reducere",
+    "shipping": "Livrare",
+    "total": "Total",
+    "shippingAddress": "Adresă livrare",
+    "notes": "Obs:",
+    "cardPayment": "Plată cu cardul",
+    "cashOnDelivery": "Ramburs (numerar la livrare)",
+    "paid": "Plătit",
+    "tracking": "Urmărire colet",
+    "trackFanCourier": "Urmărește pe Fan Courier"
+  },
+  "accountCoupons": {
+    "title": "Cupoanele mele",
+    "subtitle": "Codurile tale de reducere. Aplică un cod activ la checkout.",
+    "loading": "Se încarcă...",
+    "emptyTitle": "Niciun cupon disponibil",
+    "emptyDesc": "Abonează-te la newsletter pentru a primi un cod de reducere exclusiv.",
+    "activeCount": "{count, plural, one {# cupon activ} few {# cupoane active} other {# de cupoane active}}",
+    "copyCodeAria": "Copiază cod",
+    "discountLabel": "reducere",
+    "freeShipping": "· Livrare gratuită",
+    "sourceNewsletter": "Newsletter",
+    "sourceAdmin": "Admin",
+    "created": "Creat",
+    "expires": "Expiră",
+    "statusActive": "Activ",
+    "statusUsed": "Folosit",
+    "statusExpired": "Expirat"
+  },
+  "accountCredits": {
+    "title": "NovraCredits",
+    "currentBalance": "Sold curent",
+    "creditsEqual": "NovraCredits (= {credits} Lei reducere)",
+    "howToUseTitle": "Cum folosești creditele",
+    "howToUseDesc": "1 NovraCredit = 1 Leu reducere la checkout. Câștigă credite completând profilul, abonându-te la newsletter sau cumpărând pachete Gift Card.",
+    "transactionHistory": "Istoric tranzacții",
+    "loading": "Se încarcă...",
+    "noTransactions": "Nicio tranzacție încă.",
+    "balance": "Sold:"
+  },
+  "accountGiftCards": {
+    "title": "Gift Cards",
+    "subtitle": "Cumpără pachete de NovraCredits și folosește-le la checkout. 1 NovraCredit = 1 Leu reducere.",
+    "paymentCancelled": "Plata a fost anulată. Poți încerca din nou.",
+    "lei": "Lei",
+    "securePaymentTitle": "Plată securizată Stripe",
+    "creditsAutoLoad": "După plata cu cardul, creditele se încarcă automat în contul tău.",
+    "cardUnavailableContact": "Plata cu cardul nu este disponibilă momentan. Contactează-ne pentru asistență."
+  },
+  "accountRefer": {
+    "loading": "Se încarcă...",
+    "programInactive": "Programul de recomandări nu este activ momentan.",
+    "title": "Recomandă un prieten",
+    "description": "Trimite linkul tău unic prietenilor. Când se înregistrează și plasează prima comandă, amândoi primiți {reward}.",
+    "yourCode": "Codul tău",
+    "invitationLink": "Link de invitație",
+    "copyCode": "Copiază cod",
+    "copyLink": "Copiază link",
+    "programNote": "Program separat de afiliere (?ref=). Invitațiile folosesc ?invite=.",
+    "yourInvites": "Invitațiile tale ({count})",
+    "noInvites": "Niciun prieten invitat încă. Distribuie linkul de mai sus!",
+    "pending": "În așteptare",
+    "registered": "Înregistrat {date}",
+    "linkAccessed": "Link accesat",
+    "firstOrder": "Prima comandă",
+    "awaitingOrder": "Așteaptă comandă",
+    "rewardCredits": "{amount} NovraCredits",
+    "rewardCoupon": "cupon −{amount}%"
+  },
+  "accountAffiliate": {
+    "loading": "Se încarcă...",
+    "program": "Program Afiliere",
+    "dashboardTitle": "Panoul tău de afiliat",
+    "dashboardDesc": "Promovează NOVRA și câștigă {commission} pentru fiecare comandă atribuită.",
+    "yourLink": "Link-ul tău de afiliat",
+    "copyLink": "Copiază link",
+    "codeAttribution": "Cod: {code} · Fereastră atribuire: 30 zile",
+    "clicks": "Click-uri",
+    "orders": "Comenzi",
+    "conversionRate": "Rată conversie",
+    "totalCommission": "Comision total",
+    "pendingCommission": "Comision în așteptare",
+    "availableWithdrawal": "Disponibil retragere: {amount}",
+    "paidCommission": "Comision plătit",
+    "withdrawTitle": "Retrage banii",
+    "minWithdrawal": "Poți solicita retragerea când ai cel puțin {min} RON disponibili. Sold curent: {balance}.",
+    "beneficiaryName": "Titular cont *",
+    "beneficiaryPlaceholder": "Nume complet titular",
+    "bankOptional": "Bancă (opțional)",
+    "bankPlaceholder": "ex: BCR, ING, BT",
+    "ibanRecommended": "IBAN (recomandat)",
+    "bankCard": "Card bancar",
+    "iban": "IBAN *",
+    "cardNumber": "Număr card *",
+    "withdrawAmount": "Sumă de retras (max {max})",
+    "minAmount": "Minim {min} RON",
+    "confirmPayment": "Confirm că datele de plată sunt corecte și că sunt titularul contului/cardului indicat.",
+    "submitting": "Se trimite...",
+    "submitWithdrawal": "Trimite cererea de retragere",
+    "withdrawalSent": "Cererea de retragere a fost trimisă!",
+    "withdrawalHistory": "Istoric retrageri",
+    "noWithdrawals": "Nu ai cereri de retragere încă.",
+    "amount": "Sumă",
+    "beneficiary": "Titular",
+    "status": "Status",
+    "date": "Data",
+    "statusPaid": "Plătit",
+    "statusRejected": "Respins",
+    "statusPending": "În așteptare",
+    "attributedOrders": "Comenzi atribuite",
+    "noAttributedOrders": "Încă nu ai comenzi atribuite. Distribuie link-ul tău pentru a începe!",
+    "order": "Comandă",
+    "total": "Total",
+    "commission": "Comision",
+    "applicationSent": "Cererea ta a fost trimisă! Vei primi un răspuns în curând.",
+    "pendingTitle": "Cerere în așteptare",
+    "pendingDesc": "Am primit cererea ta din {date}. Echipa NOVRA o va analiza în curând.",
+    "evaluating": "Cererea ta este în curs de evaluare.",
+    "rejectedTitle": "Cerere respinsă",
+    "rejectedDefault": "Din păcate, cererea ta nu a fost aprobată de această dată. Contactează-ne pentru detalii.",
+    "becomeAffiliate": "Devino afiliat NOVRA",
+    "earnCommission": "Câștigă {rate}% din valoarea produselor pentru fiecare comandă generată prin link-ul tău. Consultă",
+    "programTerms": "termenii programului",
+    "howItWorks": "Cum funcționează",
+    "step1": "1. Aplici și aștepți aprobarea echipei NOVRA",
+    "step2": "2. Primești un link unic de afiliat (ex: novra.ro/?ref=CODUL_TAU)",
+    "step3": "3. Distribui link-ul — vizitatorii au 30 zile pentru a cumpăra",
+    "step4": "4. Primești comision pentru fiecare comandă finalizată",
+    "eligibilityTitle": "Cerințe de eligibilitate",
+    "eligibilityDesc": "Confirmă că îndeplinești toate condițiile:",
+    "requirement_hasAccount": "Am un cont activ pe NOVRA Store",
+    "requirement_agreedToTerms": "Accept termenii și condițiile programului de afiliere",
+    "requirement_minimumAge": "Am cel puțin 18 ani",
+    "requirement_socialMediaPresence": "Am prezență pe rețele sociale sau un canal de promovare (blog, YouTube, TikTok etc.)",
+    "requirement_romanianResident": "Sunt rezident în România",
+    "submitApplication": "Trimite cererea"
+  },
+  "accountManage": {
+    "title": "Setări cont",
+    "email": "Email",
+    "verified": "verificat",
+    "password": "Parolă",
+    "changePassword": "Schimbă parola",
+    "currentPassword": "Parola curentă",
+    "newPassword": "Parola nouă",
+    "confirmPassword": "Confirmă parola nouă",
+    "passwordsMismatch": "Parolele noi nu coincid.",
+    "updatePassword": "Actualizează parola",
+    "deleteAccount": "Șterge contul",
+    "areYouSure": "Ești sigur?",
+    "deleteWarning": "Această acțiune este permanentă. Contul tău și toate datele asociate vor fi șterse.",
+    "deleting": "Se șterge...",
+    "confirmDelete": "Confirmă ștergerea",
+    "closeAria": "Închide"
+  },
+  "accountShipping": {
+    "title": "Adresa de livrare",
+    "subtitle": "Adaugă sau actualizează adresa ta pentru livrări rapide.",
+    "fullName": "Nume complet",
+    "address": "Adresă",
+    "city": "Oraș",
+    "county": "Județ",
+    "postalCode": "Cod poștal",
+    "phone": "Telefon",
+    "country": "Țară",
+    "selectCounty": "Selectează județul",
+    "romania": "România",
+    "fullNamePlaceholder": "Ion Popescu",
+    "addressPlaceholder": "Strada, număr, bloc, apartament",
+    "cityPlaceholder": "București",
+    "postalCodePlaceholder": "010101",
+    "phonePlaceholder": "+40 7XX XXX XXX"
+  },
+  "accountEmail": {
+    "title": "Preferințe email",
+    "offers": "Oferte și promoții",
+    "orderStatus": "Status comenzi",
+    "recommendations": "Recomandări personalizate",
+    "savePreferences": "Salvează preferințele"
+  },
+  "accountSupport": {
+    "title": "Centru suport",
+    "whatsappTitle": "Suport WhatsApp",
+    "whatsappDesc": "Răspuns rapid de la echipa NOVRA",
+    "whatsappMessage": "Salut! Am nevoie de ajutor cu contul meu NOVRA.",
+    "contactTitle": "Formular contact",
+    "contactDesc": "Trimite-ne un mesaj",
+    "faqTitle": "Întrebări frecvente",
+    "faqDesc": "Întrebări frecvente",
+    "supportHoursTitle": "Program suport",
+    "supportHours": "Luni – Vineri, 09:00 – 18:00"
+  },
+  "cartToasts": {
+    "productUnavailable": "Produsul nu mai este disponibil.",
+    "outOfStock": "Stoc epuizat pentru acest produs.",
+    "insufficientStock": "Stoc insuficient. Disponibil: {available} bucăți.",
+    "addedToCart": "Produs adăugat în coș"
   },
   "home": {
     "heroTitle": "Precision. Performance. Power.",
@@ -216,13 +654,119 @@
     "emailPlaceholder": "Adresa ta de email",
     "subscribe": "Abonează-te",
     "reviews": "Ce spun clienții",
-    "whatsappMessage": "Salut! Sunt interesat de produsele NOVRA."
+    "whatsappMessage": "Salut! Sunt interesat de produsele NOVRA.",
+    "badge": "NOVRA Premium Accessories",
+    "heroLine1": "PRECISION.",
+    "heroLine2": "PERFORMANCE.",
+    "heroLine3": "POWER.",
+    "orderWhatsapp": "Comandă pe WhatsApp",
+    "heroImageAlt": "Cablu NOVRA Premium",
+    "showCategory": "Afișează {label}",
+    "currency": "Lei",
+    "benefitFastCharge": "Încărcare rapidă",
+    "benefitFastChargeSub": "până la 100W",
+    "benefitDataTransfer": "Transfer de date",
+    "benefitDataTransferSub": "până la 480Mbps",
+    "benefitMaterials": "Materiale premium",
+    "benefitMaterialsSub": "durabile și sigure",
+    "benefitWarranty": "Garanție",
+    "benefitWarrantySub": "2 ani",
+    "popularProducts": "Produse populare",
+    "choosePerformance": "Alege performanța",
+    "productsSubtitle": "Cabluri și adaptoare testate riguros — Power Delivery, materiale premium, garanție 2 ani.",
+    "viewAllProducts": "Vezi toate produsele",
+    "bundleBadge": "Pachet Ecosystem",
+    "bundleTitle": "Cablu + Adaptor — totul într-un singur pachet",
+    "bundleDesc": "Combină un cablu premium NOVRA cu un adaptor de înaltă performanță. Economisești și obții compatibilitate completă pentru birou, acasă sau călătorii.",
+    "bundlePrice": "159,99 Lei",
+    "bundleOldPrice": "179,98 Lei",
+    "bundleSavings": "Economisești ~20 Lei",
+    "viewBundles": "Vezi pachetele",
+    "exploreRange": "Explorează gama",
+    "bundleImageAlt": "Pachet Cablu + Adaptor NOVRA",
+    "aboutBadge": "Despre NOVRA",
+    "aboutTitle": "Tehnologie care",
+    "aboutTitleHighlight": "conectează viitorul",
+    "aboutDesc": "NOVRA este mai mult decât un cablu. Este promisiunea performanței, a siguranței și a designului premium, creat pentru cei care cer mai mult de la tehnologie.",
+    "aboutFeature1": "Power Delivery până la 100W",
+    "aboutFeature2": "Materiale premium, finisaje impecabile",
+    "aboutFeature3": "Garanție 2 ani la fiecare produs",
+    "discoverStory": "Descoperă povestea noastră",
+    "quickSummary": "Rezumat rapid",
+    "aboutImageAlt": "Despre NOVRA",
+    "customersCount": "Peste 10.000+ clienți",
+    "brandTagline": "Brand românesc, standarde internaționale",
+    "reviewsBadge": "Recenzii clienți",
+    "reviewsTitle": "Peste",
+    "reviewsTitleHighlight": "10.000+",
+    "reviewsTitleEnd": "clienți mulțumiți",
+    "viewAllReviews": "Vezi toate recenziile",
+    "verifiedCustomer": "Client verificat",
+    "starsLabel": "{count} stele",
+    "newsletterBadge": "Newsletter NOVRA",
+    "newsletterTitle": "Fii primul care află",
+    "newsletterTitleHighlight": "noutățile",
+    "newsletterLongDesc": "Abonează-te și primești oferte exclusive, lansări speciale și acces prioritar la promoțiile NOVRA. Comunitatea noastră primește reduceri înaintea tuturor.",
+    "newsletterPerk1": "Reduceri exclusive pentru abonați",
+    "newsletterPerk2": "Acces prioritar la lansări noi",
+    "newsletterPerk3": "Sfaturi de la echipa NOVRA",
+    "sending": "Se trimite...",
+    "newsletterSuccess": "Abonat cu succes! Mulțumim că te-ai abonat la newsletter-ul NOVRA.",
+    "newsletterDuplicate": "Ești deja abonat!",
+    "newsletterError": "Trimiterea a eșuat. Te rugăm să încerci din nou.",
+    "noSpam": "Fără spam. Dezabonare oricând.",
+    "welcomeOffer": "Ofertă de bun venit",
+    "welcomeDiscount": "Primești 10% reducere la prima comandă",
+    "newsletterImageAlt": "Newsletter NOVRA",
+    "modalTitle": "Rezumat rapid NOVRA",
+    "modalDesc": "Accesează rapid categoriile noastre sau explorează întregul catalog de cabluri și adaptoare premium.",
+    "allProducts": "Toate produsele",
+    "quickAdd": "Adaugă rapid",
+    "quickAddTitle": "Adaugă rapid în coș",
+    "goToCart": "Mergi la coș",
+    "saveAmount": "Economisești {amount} lei",
+    "productWhatsappMessage": "Salut, aș dori să comand produsul: {title} ({category}) — Preț: {price}.",
+    "orderWhatsappTitle": "Comandă pe WhatsApp",
+    "orderWhatsappAria": "Comandă {title} pe WhatsApp",
+    "addToCartAria": "Adaugă rapid {title} în coș",
+    "outOfStockAria": "{title} — stoc epuizat"
   },
   "affiliate": {
     "title": "Program de Afiliere NOVRA",
     "subtitle": "Câștigă comision pentru fiecare vânzare generată prin linkul tău unic.",
     "join": "Înscrie-te acum",
-    "learnMore": "Află mai multe"
+    "learnMore": "Află mai multe",
+    "badge": "Program Afiliere",
+    "titleEarn": "Câștigă",
+    "titleCommission": "{rate}% comision",
+    "titlePromote": "promovând NOVRA",
+    "intro": "Alătură-te programului de afiliere NOVRA Store. Distribuie link-ul tău unic, urmărește performanța în cont și retrage comisionul când atingi pragul minim de {amount} RON.",
+    "applyNow": "Aplică acum",
+    "programTerms": "Termeni program",
+    "highlightCommissionTitle": "{rate}% comision",
+    "highlightCommissionDesc": "Din subtotalul produselor (fără transport) pentru fiecare comandă validată.",
+    "highlightTrackingTitle": "{days} zile tracking",
+    "highlightTrackingDesc": "Cookie de atribuire după click pe ?ref= — vizitatorul are 30 zile să comande.",
+    "highlightMinTitle": "Minim {amount} RON",
+    "highlightMinDesc": "Solicită retragerea din panoul de afiliat; plata se face prin transfer bancar.",
+    "howItWorks": "Cum funcționează",
+    "step1Title": "Aplici în cont",
+    "step1Desc": "Intră în Contul meu → Program Afiliere, confirmă eligibilitatea și trimite cererea.",
+    "step2Title": "Primești linkul",
+    "step2Desc": "După aprobare, primești un link unic de forma novra.ro/?ref=CODUL_TAU.",
+    "step3Title": "Promovezi NOVRA",
+    "step3Desc": "Distribui link-ul pe rețele sociale, blog sau canalul tău de conținut.",
+    "step4Title": "Câștigi comision",
+    "step4Desc": "Pentru fiecare comandă finalizată atribuită link-ului tău, primești comision în cont.",
+    "payoutTitle": "Proces retragere comision",
+    "payout1": "Comisionul apare în cont după comenzi finalizate atribuite link-ului tău.",
+    "payout2": "Când soldul disponibil atinge minim {amount} RON, soliciți retragerea.",
+    "payout3": "Introduci titular cont, IBAN (recomandat) sau card, și suma dorită.",
+    "payout4": "Echipa NOVRA procesează plata manual prin transfer bancar (5–15 zile lucrătoare).",
+    "gdprTitle": "Date colectate & GDPR",
+    "gdprText": "Pentru programul de afiliere colectăm: nume, email, cod de referință, statistici click-uri/comenzi și, la retragere, date bancare (IBAN sau card) pentru transferul comisionului. Folosim cookie de atribuire ?ref= (30 zile). Prelucrarea respectă GDPR — detalii în <privacyLink>Politica de confidențialitate</privacyLink> și <termsLink>Termenii programului</termsLink>.",
+    "readyToStart": "Gata să începi?",
+    "accountLink": "Contul meu → Program Afiliere"
   },
   "categories": {
     "usb-c": "Cabluri",
@@ -283,6 +827,649 @@
       "subtitle": "GaN Travel Charger + Braided Cable Kit",
       "tag": "Kit Călătorie",
       "description": "Set complet pentru mobilitate: încărcător GaN compact cu cablu premium împletit. Ideal pentru birou, călătorii sau cadou."
+    }
+  },
+  "errorBoundary": {
+    "message": "Catalogul nu s-a încărcat complet. Reîmprospătează pagina sau folosește meniul de navigare."
+  },
+  "subscribeModal": {
+    "title": "Abonează-te acum!",
+    "description": "Introdu emailul pentru noutăți și oferte exclusive în newsletter-ul NOVRA.",
+    "emailPlaceholder": "exemplu@email.com",
+    "subscribeAria": "Abonează-te",
+    "closeAria": "Închide",
+    "agreePrefix": "Continuând, accepți",
+    "termsLink": "Termenii de utilizare",
+    "and": "și",
+    "privacyLink": "Politica de confidențialitate",
+    "mustAgree": "Trebuie să accepți Termenii și Politica de confidențialitate."
+  },
+  "faq": {
+    "badge": "Suport NOVRA",
+    "title": "Întrebări",
+    "titleHighlight": "frecvente",
+    "subtitle": "Răspunsuri rapide la cele mai comune întrebări despre comenzi, livrare și asistență.",
+    "catOrders": "Comenzi",
+    "catPayment": "Plată",
+    "catDelivery": "Livrare",
+    "catWarranty": "Garanție",
+    "searchPlaceholder": "Caută o întrebare...",
+    "noResults": "Nu am găsit întrebări care să corespundă căutării tale.",
+    "ctaTitle": "Nu ai găsit răspunsul?",
+    "ctaDesc": "Echipa NOVRA îți stă la dispoziție pe WhatsApp sau email.",
+    "contactUs": "Contactează-ne",
+    "warrantyLink": "Garanție și retur",
+    "items": [
+      {
+        "q": "Cum pot plasa o comandă?",
+        "a": "Selectează produsul dorit din <catalogLink>catalog</catalogLink>, configurează varianta (culoare, lungime etc.) și apasă butonul de comandă. Poți finaliza prin WhatsApp sau prin formularul de checkout de pe site."
+      },
+      {
+        "q": "Ce metode de plată acceptați?",
+        "a": "Acceptăm plată cu cardul online (Visa, Mastercard) și ramburs la livrare. La ramburs plătești doar după ce verifici coletul. Vezi detalii complete în pagina <shippingLink>Livrare și plată</shippingLink>."
+      },
+      {
+        "q": "În cât timp primesc comanda?",
+        "a": "Expediem comenzile în 24–48 de ore lucrătoare prin curier rapid, cu asigurare completă. Timpul exact de livrare depinde de localitatea ta și de disponibilitatea stocului la momentul comenzii."
+      },
+      {
+        "q": "Livrați în toată România?",
+        "a": "Da, livrăm în toată țara prin parteneri logistici de încredere. La finalizarea comenzii, confirmăm adresa de livrare și îți comunicăm estimarea de primire a coletului."
+      },
+      {
+        "q": "Cum vă pot contacta pentru asistență?",
+        "a": "Ne poți scrie pe WhatsApp, pe support@novra.ro sau prin <contactLink>pagina de contact</contactLink>. Răspundem în cel mai scurt timp posibil."
+      },
+      {
+        "q": "Unde găsesc informații despre garanție și retur?",
+        "a": "Politica completă de garanție (24 luni) și retur (14 zile) este disponibilă în pagina dedicată <warrantyLink>Garanție și retur</warrantyLink>."
+      },
+      {
+        "q": "Produsele NOVRA sunt compatibile cu dispozitivele mele?",
+        "a": "Fiecare produs din catalog include specificațiile tehnice relevante (tip conector, lungime, compatibilitate iOS/Android etc.). Dacă ai dubii înainte de comandă, contactează-ne și îți confirmăm compatibilitatea cu dispozitivul tău."
+      }
+    ]
+  },
+  "contact": {
+    "badge": "Relații clienți",
+    "title": "Contactează",
+    "titleHighlight": "NOVRA",
+    "subtitle": "Suntem aici pentru tine — comenzi, asistență tehnică sau colaborări. Alege canalul preferat.",
+    "program": "Program",
+    "programValue": "L–V 08:00 – 21:00",
+    "phone": "Telefon",
+    "delivery": "Livrare",
+    "deliveryValue": "Toată România",
+    "whatsappLabel": "Suport rapid",
+    "whatsappDesc": "Discută direct cu noi. Timp mediu de răspuns: sub 30 de minute.",
+    "emailLabel": "Asistență oficială",
+    "emailDesc": "Pentru comenzi, colaborări sau solicitări comerciale.",
+    "formTitle": "Trimite un mesaj",
+    "nameLabel": "Nume complet",
+    "namePlaceholder": "Ex: Andrei Popescu",
+    "emailFieldLabel": "Adresă de email",
+    "emailPlaceholder": "Ex: nume@companie.ro",
+    "subjectLabel": "Subiect",
+    "subjectPlaceholder": "Cu ce te putem ajuta?",
+    "messageLabel": "Mesaj",
+    "messagePlaceholder": "Scrie detaliile solicitării tale aici...",
+    "sending": "Se trimite...",
+    "submit": "Trimite mesajul",
+    "success": "Mesajul tău a fost trimis cu succes! Echipa NOVRA te va contacta în cel mai scurt timp.",
+    "error": "A apărut o eroare la trimiterea mesajului. Te rugăm să încerci din nou.",
+    "viewFaq": "Consultă întrebările frecvente",
+    "whatsappMessage": "Salut! Am o întrebare pentru echipa NOVRA."
+  },
+  "about": {
+    "badge": "Esența NOVRA",
+    "title": "Definim",
+    "titleHighlight": "standardul",
+    "subtitle": "NOVRA s-a născut dintr-o convingere simplă: excelența nu lasă loc pentru compromis. Într-o piață saturată de soluții generice, am ales calea preciziei absolute.",
+    "storyTitle": "Povestea noastră",
+    "storyP1": "Fiecare fibră din nailonul nostru împletit și fiecare conector din aliaj aerospațial sunt rezultatul unei căutări neîncetate pentru perfecțiune. Nu creăm doar cabluri — arhitecturăm legături invizibile între ambiția ta și tehnologia care o alimentează.",
+    "storyP2": "Suntem dedicați celor care înțeleg că detaliile mici dictează succesul. NOVRA este semnătura celor care aleg să nu se mulțumească niciodată cu „suficient de bun”.",
+    "storyImageAlt": "Tehnologie NOVRA",
+    "pillarsBadge": "De ce NOVRA",
+    "pillarsTitle": "Patru piloni. O singură promisiune.",
+    "pillar1Title": "Performanță pură",
+    "pillar1Desc": "Power Delivery până la 100W și transfer de date stabil — fără pierderi, fără compromisuri.",
+    "pillar2Title": "Materiale premium",
+    "pillar2Desc": "Nailon împletit de înaltă densitate, conectori din aliaj aerospațial și finisaje impecabile.",
+    "pillar3Title": "Siguranță certificată",
+    "pillar3Desc": "Protecție la supratensiune, supracurent și supraîncălzire. Garanție 2 ani la fiecare produs.",
+    "pillar4Title": "Design de lux",
+    "pillar4Desc": "Estetică minimalistă, culori NOVRA distinctive și o experiență tactilă care inspiră încredere.",
+    "visionTitle": "Viziunea noastră",
+    "visionQuote": "„Să transformăm utilitatea cotidiană într-o experiență de lux, oferind performanță pură îmbrăcată în estetică desăvârșită”.",
+    "timelineBadge": "Evoluția NOVRA",
+    "timelineTitle": "Drumul spre excelență",
+    "milestone2024": "Nașterea brandului NOVRA — o viziune clară: zero compromis.",
+    "milestone2025": "Lansarea gamei UltraCharge 100W — standardul industriei, redefinit.",
+    "milestone2026": "Peste 10.000 de clienți mulțumiți în toată România.",
+    "ctaTitle": "Alătură-te comunității NOVRA",
+    "ctaDesc": "Descoperă produse create pentru cei care cer mai mult. Performanță, siguranță și design — într-un singur brand.",
+    "viewProducts": "Vezi produsele",
+    "contactUs": "Contactează-ne"
+  },
+  "reviews": {
+    "badge": "Gândurile lor",
+    "title": "Ce spun clienții",
+    "titleHighlight": "NOVRA",
+    "subtitle": "Opinia comunității noastre este cartea noastră de vizită. Descoperă experiențele celor care au ales deja rafinamentul pieselor noastre.",
+    "statCustomers": "Clienți mulțumiți",
+    "statRating": "Rating mediu",
+    "statRecommend": "Recomandă NOVRA",
+    "verifiedClient": "Client Verificat",
+    "formBadge": "Feedback-ul tău",
+    "formTitle": "Ai cumpărat de la noi?",
+    "formDesc": "Părerea ta ne ajută să evoluăm. Trimite feedback-ul tău instant prin formularul securizat de mai jos.",
+    "nameLabel": "Nume complet",
+    "namePlaceholder": "Ex: Elena Popa",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nume@exemplu.com",
+    "ratingLabel": "Rating",
+    "rating5": "5 Stele ★★★★★",
+    "rating4": "4 Stele ★★★★☆",
+    "rating3": "3 Stele ★★★☆☆",
+    "rating2": "2 Stele ★★☆☆☆",
+    "rating1": "1 Stea  ★☆☆☆☆",
+    "reviewLabel": "Experiența ta (Recenzia)",
+    "reviewPlaceholder": "Spune-ne ce ți-a plăcut cel mai mult la produsele sau serviciile NOVRA...",
+    "sending": "Se trimite...",
+    "submit": "Trimite feedback-ul tău",
+    "success": "Îți mulțumim! Feedback-ul a fost trimis direct echipei noastre.",
+    "error": "Trimiterea a eșuat. Te rugăm să încerci din nou.",
+    "discoverProducts": "Descoperă produsele NOVRA",
+    "formSubject": "Recenzie Noua primita pe site-ul NOVRA"
+  },
+  "shipping": {
+    "badge": "Logistica NOVRA",
+    "title": "Livrare",
+    "titleHighlight": "& Plată",
+    "subtitle": "Expediere rapidă în toată România, ambalare premium și flexibilitate la plată — card online sau ramburs la livrare.",
+    "highlight1Label": "24–48 ore",
+    "highlight1Sub": "Expediere rapidă",
+    "highlight2Label": "Toată România",
+    "highlight2Sub": "Livrare națională",
+    "highlight3Label": "Asigurat",
+    "highlight3Sub": "Colet protejat",
+    "highlight4Label": "2 metode",
+    "highlight4Sub": "Card sau ramburs",
+    "deliveryTitle": "Livrare",
+    "deliverySubtitle": "Logistică de elită, de la depozit la ușa ta",
+    "expressTitle": "Curierat Rapid",
+    "expressDesc": "Expediem prin parteneri logistici de încredere, cu urmărire colet și asigurare completă pentru siguranța ta.",
+    "packagingTitle": "Ambalare Premium",
+    "packagingDesc": "Fiecare produs NOVRA este protejat suplimentar pentru a garanta că experiența ta de unboxing este impecabilă.",
+    "flowTitle": "Cum ajunge comanda la tine",
+    "step1Title": "Plasezi comanda",
+    "step1Desc": "Alegi produsele din catalog și finalizezi comanda online sau prin WhatsApp.",
+    "step2Title": "Confirmăm detaliile",
+    "step2Desc": "Te contactăm pentru confirmare, adresă de livrare și metoda de plată preferată.",
+    "step3Title": "Expediem coletul",
+    "step3Desc": "Ambalăm cu grijă și predăm coletul curierului în 24–48 de ore lucrătoare.",
+    "step4Title": "Primești produsul",
+    "step4Desc": "Verifici coletul la livrare și plătești cu cardul sau ramburs, după preferință.",
+    "timeTitle": "Timp livrare",
+    "timeSubtitle": "Estimări clare, fără surprize",
+    "timeValue": "24–48h",
+    "timeValueSub": "Ore lucrătoare de la confirmare",
+    "timeP1": "Comenzile plasate până la ora 14:00 sunt procesate în aceeași zi lucrătoare.",
+    "timeP2": "Timpul exact de livrare depinde de localitatea ta — te ținem la curent prin SMS sau telefon.",
+    "costsTitle": "Costuri livrare",
+    "costsSubtitle": "Transparente și competitive",
+    "standardLabel": "standard",
+    "standardDesc": "Tarif unic pentru livrare prin curier rapid în orice localitate din România.",
+    "freeShipping": "Livrare gratuită",
+    "freeShippingDesc": "Pentru comenzi de peste {threshold} RON. Beneficiază de transport gratuit automat la checkout.",
+    "paymentTitle": "Metode de plată",
+    "paymentSubtitle": "Alege varianta care ți se potrivește",
+    "cardTitle": "Plată cu cardul (online)",
+    "cardBadge": "Recomandat",
+    "cardDesc": "Plătești securizat cu Visa, Mastercard sau alte carduri bancare. Primești link-ul de plată după confirmarea comenzii.",
+    "cardF1": "Tranzacție criptată SSL",
+    "cardF2": "Confirmare instantă",
+    "cardF3": "Fără comisioane suplimentare",
+    "codTitle": "Ramburs la livrare",
+    "codBadge": "Clasic",
+    "codDesc": "Plătești numerar exact la primirea coletului, după ce te-ai asigurat de calitatea produsului.",
+    "codF1": "Zero plată în avans",
+    "codF2": "Verifici înainte de plată",
+    "codF3": "Transparență totală",
+    "secureTitle": "Plată 100% securizată",
+    "secureDesc": "Toate tranzacțiile cu cardul sunt procesate prin gateway-uri certificate, cu criptare SSL. La ramburs, plătești doar după ce ai verificat coletul — zero risc, zero surprize.",
+    "footerText": "Ai întrebări despre livrare sau plată? Consultă",
+    "footerFaq": "întrebările frecvente",
+    "footerOr": "sau",
+    "footerContact": "contactează-ne"
+  },
+  "warranty": {
+    "badge": "Angajamentul NOVRA",
+    "title": "Garanție",
+    "titleHighlight": "& Retur",
+    "subtitle": "Standarde clare, proces transparent. Fiecare produs NOVRA vine cu garanție de 24 luni și drept de retur în 14 zile — fără complicații.",
+    "highlight1": "24 luni",
+    "highlight1Sub": "Garanție completă",
+    "highlight2": "14 zile",
+    "highlight2Sub": "Drept de retur",
+    "highlight3": "48h",
+    "highlight3Sub": "Procesare retur",
+    "highlight4": "100%",
+    "highlight4Sub": "Ramburs integral",
+    "qualityTitle": "Garanția calității",
+    "qualitySubtitle": "Încredere totală în fiecare produs",
+    "months": "Luni garanție",
+    "qualityDesc": "Fiecare produs NOVRA trece printr-un proces riguros de testare înainte de a părăsi depozitul nostru. Suntem atât de încrezători în durabilitatea accesoriilor noastre, încât oferim garanție completă pentru defectele de fabricație.",
+    "coversTitle": "Ce acoperă garanția",
+    "cover1": "Defecte de fabricație sau materiale",
+    "cover2": "Funcționare necorespunzătoare în condiții normale de utilizare",
+    "cover3": "Probleme la conectori sau la împletitura cablului",
+    "cover4": "Înlocuire sau reparare gratuită în perioada garanției",
+    "excludesTitle": "Ce nu acoperă garanția",
+    "exclude1": "Deteriorări cauzate de utilizare necorespunzătoare",
+    "exclude2": "Uzură normală sau deteriorări mecanice accidentale",
+    "exclude3": "Modificări sau reparații efectuate de terți neautorizați",
+    "exclude4": "Deteriorări cauzate de lichide, foc sau forță majoră",
+    "returnTitle": "Politică de retur",
+    "returnSubtitle": "14 zile calendaristice, fără explicații",
+    "conditionsTitle": "Condiții de retur",
+    "conditionsDesc": "Dacă nu ești pe deplin mulțumit, poți returna produsele în termen de 14 zile calendaristice de la primirea coletului. Produsele trebuie să fie în starea originală, cu ambalajul intact.",
+    "refundTitle": "Rambursare",
+    "refundDesc": "După recepționarea și verificarea produsului, returnăm suma integrală în contul tău bancar. Costurile de transport pentru retur sunt suportate de client, cu excepția produselor defecte.",
+    "howTitle": "Cum procedezi?",
+    "returnStep1Title": "Contactează-ne",
+    "returnStep1Desc": "Scrie-ne pe WhatsApp sau email pentru a iniția cererea de retur. Îți confirmăm procedura în aceeași zi.",
+    "returnStep2Title": "Pregătește coletul",
+    "returnStep2Desc": "Ambalează produsul în starea originală, cu accesoriile și ambalajul intact. Urmează instrucțiunile primite.",
+    "returnStep3Title": "Expediere retur",
+    "returnStep3Desc": "Predă coletul curierului conform indicațiilor. Îți comunicăm adresa de retur și detaliile logistice.",
+    "returnStep4Title": "Rambursare",
+    "returnStep4Desc": "După verificarea produsului, returnăm suma integrală în contul tău bancar în maximum 14 zile lucrătoare.",
+    "ctaTitle": "Ai nevoie de asistență?",
+    "ctaDesc": "Echipa NOVRA te ghidează pas cu pas prin procesul de garanție sau retur.",
+    "viewFaq": "Vezi FAQ",
+    "whatsappMessage": "Salut! Am o solicitare legată de garanție/retur."
+  },
+  "promotions": {
+    "backHome": "Înapoi acasă",
+    "badge": "Promoții speciale",
+    "title": "Oferta NOVRA, gata de luat",
+    "subtitle": "Descoperă pachetele și ofertele limitate, pregătite pentru un setup mai bun, mai rapid și mai eficient.",
+    "filterBy": "Filtrează după:",
+    "filterAll": "Toate promoțiile",
+    "filterKits": "Kituri",
+    "filterCables": "Cabluri",
+    "promoPrice": "Preț promoțional",
+    "viewOffer": "Vezi Oferta",
+    "items": [
+      {
+        "id": "bundle-pro",
+        "title": "PowerBundle 100W",
+        "subtitle": "Combo: Încărcător + Cablu",
+        "category": "kituri",
+        "discount": "Reducere 25%",
+        "oldPrice": "75.00 RON",
+        "newPrice": "56.25 RON",
+        "description": "Kit-ul complet pentru setup-ul tău. Include încărcător GaN 65W și cablu 100W împletit."
+      },
+      {
+        "id": "promo-lightning",
+        "title": "Dual Apple Pack",
+        "subtitle": "Pachet 2 Cabluri Lightning",
+        "category": "cabluri",
+        "discount": "Reducere 15%",
+        "oldPrice": "19.00 RON",
+        "newPrice": "16.15 RON",
+        "description": "Nu rămâne niciodată fără baterie. Două cabluri ultra-durabile pentru iPhone-ul tău."
+      }
+    ]
+  },
+  "legalTerms": {
+    "badge": "Acord legal",
+    "title": "Termeni și",
+    "titleHighlight": "Condiții",
+    "lastUpdated": "Ultima actualizare: Iulie 2026 · Te rugăm să citești cu atenție prezentul document înainte de a utiliza magazinul.",
+    "contactTitle": "Întrebări și clarificări",
+    "contactIntro": "Dacă ai neclarități sau vrei să soliciți detalii suplimentare cu privire la termenii noștri legali:",
+    "officialEmail": "Email oficial:",
+    "platform": "Platformă:",
+    "sections": [
+      {
+        "title": "Acceptarea termenilor",
+        "paragraphs": [
+          "Prin accesarea, navigarea sau utilizarea site-ului NOVRA (numit în continuare „Site-ul”), ești de acord, în mod integral și necondiționat, cu respectarea prezentului set de Termeni și Condiții, precum și a legislației aplicabile. Dacă nu ești de acord cu oricare dintre aceste prevederi, te rugăm să oprești imediat utilizarea platformei."
+        ]
+      },
+      {
+        "title": "Proprietatea intelectuală",
+        "paragraphs": [
+          "Întregul conținut al acestui Site — incluzând, dar fără a se limita la elemente de design grafic, text, imagini, logo-uri, cod sursă, concepte de branding și structură — reprezintă proprietatea intelectuală exclusivă a NOVRA și este protejat de legislația națională și internațională privind drepturile de autor și proprietatea industrială.",
+          "Este strict interzisă copierea, reproducerea, republicarea, descărcarea sau utilizarea comercială a oricărui material fără un acord prealabil scris din partea echipei noastre."
+        ]
+      },
+      {
+        "title": "Comenzi, cont client și checkout",
+        "paragraphs": [
+          "NOVRA Store permite plasarea comenzilor cu sau fără cont (guest checkout). Prin finalizarea unei comenzi, confirmi că datele furnizate sunt corecte și că ești autorizat să utilizezi metoda de plată aleasă."
+        ],
+        "list": [
+          "Contul client permite vizualizarea comenzilor, AWB tracking, NovraCredits, carduri cadou și cupoane.",
+          "Prețurile afișate includ TVA; transportul se calculează la checkout.",
+          "Comanda devine fermă după confirmarea plății sau a metodei de plată alese."
+        ]
+      },
+      {
+        "title": "Plăți Stripe",
+        "paragraphs": [
+          "Plățile online sunt procesate securizat prin Stripe. NOVRA nu stochează datele complete ale cardului. Acceptăm plăți cu card bancar; tranzacțiile sunt supuse verificărilor antifraudă ale procesatorului de plăți."
+        ]
+      },
+      {
+        "title": "NovraCredits, carduri cadou și cupoane",
+        "list": [
+          "NovraCredits și cardurile cadou au termeni de utilizare proprii; nu sunt convertibile în numerar.",
+          "Cupoanele de reducere sunt personale, netransferabile și pot avea restricții (valabilitate, valoare minimă).",
+          "NOVRA poate modifica sau retrage promoțiile cu notificare rezonabilă."
+        ]
+      },
+      {
+        "title": "Livrare, AWB și retur",
+        "paragraphs": [
+          "Livrarea se face prin curieri parteneri; AWB-ul este comunicat prin email și în contul client. Condițiile de retur și garanție sunt detaliate în paginile <shippingLink>Livrare și plată</shippingLink> și <warrantyLink>Garanție și retur</warrantyLink>."
+        ]
+      },
+      {
+        "title": "Utilizarea corectă a Site-ului",
+        "paragraphs": [
+          "În calitate de utilizator al site-ului, te angajezi să folosești platforma exclusiv în scopuri legitime. Sunt strict interzise:"
+        ],
+        "list": [
+          "Introducerea de date false, eronate sau care nu îți aparțin în formularul de contact.",
+          "Orice încercare de a perturba securitatea Site-ului sau de a introduce cod malițios (viruși, malware).",
+          "Folosirea de sisteme automate (boti, scrapers) pentru a extrage date de pe platformă."
+        ]
+      },
+      {
+        "title": "Limitarea răspunderii",
+        "paragraphs": [
+          "Echipa NOVRA depune toate eforturile pentru ca informațiile prezentate pe site să fie corecte și actualizate. Cu toate acestea, conținutul este oferit „ca atare”, fără nicio garanție explicită sau implicită.",
+          "Nu ne asumăm răspunderea pentru eventuale erori tehnice temporare, întreruperi ale funcționării site-ului sau daune directe ori indirecte cauzate de utilizarea sau imposibilitatea utilizării platformei."
+        ]
+      },
+      {
+        "title": "Link-uri către terțe părți",
+        "paragraphs": [
+          "Site-ul nostru poate conține legături către servicii terțe (Stripe, curieri, rețele sociale). Aceste servicii au proprii termeni și politici de confidențialitate; NOVRA nu controlează conținutul lor."
+        ]
+      },
+      {
+        "title": "Modificarea Termenilor",
+        "paragraphs": [
+          "Ne rezervăm dreptul de a actualiza, modifica sau înlocui periodic orice parte din acești Termeni și Condiții pentru a reflecta schimbările legislative sau de funcționare ale afacerii noastre. Orice modificare va deveni aplicabilă imediat după publicarea ei pe această pagină. Îți recomandăm să consulți periodic această pagină pentru a rămâne informat."
+        ]
+      },
+      {
+        "title": "Legea aplicabilă și litigii",
+        "paragraphs": [
+          "Prezentul document este guvernat și interpretat în conformitate cu legislația română și europeană în vigoare. Orice dispută sau litigiu apărut în legătură cu utilizarea acestui Site va fi soluționat pe cale amiabilă, iar în cazul în care acest lucru nu este posibil, competența va reveni instanțelor judecătorești românești competente."
+        ]
+      }
+    ]
+  },
+  "legalPrivacy": {
+    "badge": "Legal & Transparență",
+    "title": "Politica de",
+    "titleHighlight": "Confidențialitate",
+    "lastUpdated": "Ultima actualizare: Iulie 2026 · GDPR (Regulament UE 2016/679)",
+    "rightsTitle": "Drepturile tale GDPR",
+    "rights": [
+      {
+        "title": "Acces & Rectificare",
+        "desc": "Poți solicita confirmarea prelucrării și corectarea datelor inexacte."
+      },
+      {
+        "title": "Ștergere („dreptul de a fi uitat”)",
+        "desc": "Poți solicita ștergerea datelor, cu excepția cazurilor prevăzute legal."
+      },
+      {
+        "title": "Restricționare & Opoziție",
+        "desc": "Te poți opune prelucrării în scop de marketing direct."
+      },
+      {
+        "title": "Portabilitate & Plângeri",
+        "desc": "Poți solicita exportul datelor sau te poți adresa ANSPDCP (www.dataprotection.ro)."
+      }
+    ],
+    "stripeTitle": "Plăți Stripe",
+    "stripeText": "Plățile online sunt procesate de Stripe Payments Europe Ltd. NOVRA nu stochează numărul complet al cardului. Stripe prelucrează datele de plată conform propriei politici de confidențialitate. Tranzacțiile sunt criptate SSL/TLS.",
+    "affiliateTitle": "Program afiliere",
+    "affiliateText": "Afiliații furnizează date de identificare și plată (IBAN/card) pentru retrageri comision. Cookie-ul de atribuire (?ref=) durează 30 zile. Detalii în <affiliateTermsLink>Termenii Programului de Afiliere</affiliateTermsLink>.",
+    "securityTitle": "Securitatea datelor",
+    "securityText": "Implementăm măsuri tehnice și organizatorice: criptare SSL, parole hash, acces restricționat admin, stocare securizată. Nicio metodă de transmisie pe internet nu este 100% sigură; depunem eforturi rezonabile pentru protecția datelor.",
+    "contactTitle": "Contact DPO / confidențialitate",
+    "contactIntro": "Pentru exercitarea drepturilor GDPR sau întrebări despre datele personale:",
+    "sections": [
+      {
+        "title": "Informații generale",
+        "paragraphs": [
+          "Confidențialitatea vizitatorilor și clienților site-ului NOVRA Store (www.novra.ro) este extrem de importantă pentru noi. Această politică explică ce date personale colectăm, cum le utilizăm, cât timp le păstrăm și ce drepturi ai în calitate de persoană vizată, în conformitate cu Regulamentul (UE) 2016/679 (GDPR) și legislația română aplicabilă."
+        ]
+      },
+      {
+        "title": "Ce date personale colectăm",
+        "paragraphs": [
+          "În funcție de modul în care interacționezi cu NOVRA Store, putem colecta următoarele categorii de date:"
+        ],
+        "list": [
+          "Date de identificare: nume, prenume, adresă de email, număr de telefon.",
+          "Date de livrare și facturare: adresă poștală, localitate, județ, cod poștal, detalii comandă.",
+          "Date cont client: credențiale de autentificare (parolă stocată criptat), istoric comenzi, preferințe, NovraCredits, carduri cadou, cupoane.",
+          "Date program afiliere: nume afiliat, email, cod de referință, statistici click-uri și comenzi, IBAN sau date card bancar pentru retrageri comision.",
+          "Date plată: informații procesate de Stripe (fără stocarea completă a datelor cardului pe serverele NOVRA).",
+          "Newsletter: adresa de email și preferințe de comunicare comercială (doar cu consimțământ).",
+          "Date tehnice: adresă IP, tip browser, pagini vizitate, cookie-uri de sesiune, cookie de atribuire afiliere (?ref=, 30 zile)."
+        ]
+      },
+      {
+        "title": "Scopul și temeiul prelucrării",
+        "paragraphs": [
+          "Prelucrăm datele tale în scopuri legitime și transparente:"
+        ],
+        "list": [
+          "Executarea contractului: procesarea comenzilor (inclusiv checkout fără cont), livrare, AWB tracking, gestionare retururi și garanții.",
+          "Cont client: crearea și administrarea contului, NovraCredits, carduri cadou, cupoane de reducere.",
+          "Plăți: procesarea tranzacțiilor prin Stripe.",
+          "Program afiliere: atribuirea comenzilor, calcul comision, procesarea cererilor de retragere.",
+          "Marketing: newsletter și comunicări promoționale (cu consimțământ explicit, retragibil oricând).",
+          "Obligații legale: evidențe contabile, fiscalitate, răspuns la solicitări ale autorităților."
+        ]
+      },
+      {
+        "title": "Cookie-uri și tehnologii similare",
+        "paragraphs": [
+          "Utilizăm cookie-uri și stocare locală pentru funcționarea coșului, autentificare, atribuire afiliere (?ref=, 30 zile) și preferințe site. Detalii complete în <cookieLink>Politica de cookie-uri</cookieLink>."
+        ]
+      },
+      {
+        "title": "Perioada de stocare",
+        "list": [
+          "Date cont și comenzi: pe durata relației contractuale + termene legale (de obicei 5–10 ani pentru documente fiscale).",
+          "Cookie afiliere: maximum 30 zile de la ultimul click pe link.",
+          "Newsletter: până la dezabonare sau retragerea consimțământului.",
+          "Date payout afiliat: pe durata programului + termene contabile aplicabile."
+        ]
+      },
+      {
+        "title": "Destinatari și procesatori",
+        "paragraphs": [
+          "Nu vindem datele tale. Le putem transmite doar către:"
+        ],
+        "list": [
+          "Stripe — procesare plăți online (PCI-DSS).",
+          "Curieri — livrare și AWB tracking (Fan Courier, Sameday etc.).",
+          "Upstash Redis / hosting — stocare securizată date aplicație.",
+          "Autorități publice, când legea o impune."
+        ]
+      }
+    ],
+    "contactLinks": {
+      "terms": "Termeni și condiții magazin",
+      "shipping": "Livrare și plată"
+    }
+  },
+  "legalCookies": {
+    "badge": "Cookie-uri",
+    "title": "Politica de",
+    "titleHighlight": "Cookie-uri",
+    "lastUpdated": "Ultima actualizare: Iulie 2026",
+    "whatTitle": "Ce sunt cookie-urile?",
+    "whatText": "Cookie-urile sunt fișiere mici stocate pe dispozitivul tău când vizitezi NOVRA Store. Ne ajută să oferim funcționalități esențiale (coș, cont, checkout) și, opțional, să atribuim comenzi în programul de afiliere.",
+    "typesTitle": "Tipuri de cookie-uri utilizate",
+    "required": "Necesar",
+    "optional": "Opțional",
+    "durationLabel": "Durată:",
+    "cookieTypes": [
+      {
+        "name": "Esențiale (strict necesare)",
+        "purpose": "Funcționarea coșului, autentificarea contului, securitatea sesiunii.",
+        "duration": "Sesiune / până la 30 zile",
+        "required": true
+      },
+      {
+        "name": "novra_affiliate_ref",
+        "purpose": "Atribuire comenzi program afiliere (parametru ?ref=). Durată: 30 zile.",
+        "duration": "30 zile",
+        "required": false
+      },
+      {
+        "name": "Preferințe site",
+        "purpose": "Salvare setări locale (ex. coș, preferințe UI).",
+        "duration": "Variabil",
+        "required": false
+      }
+    ],
+    "affiliateTitle": "Cookie afiliere (?ref=)",
+    "affiliateText": "Când accesezi site-ul printr-un link de afiliat (ex. novra.ro/?ref=COD), setăm un cookie care reține codul afiliatului timp de {days} zile. Dacă plasezi o comandă în această perioadă, comisionul poate fi atribuit afiliatului respectiv. Poți șterge cookie-urile din setările browserului.",
+    "manageTitle": "Gestionarea cookie-urilor",
+    "manageText": "Poți configura browserul să refuze cookie-urile sau să te alerteze când sunt setate. Dezactivarea cookie-urilor esențiale poate afecta funcționarea coșului, checkout-ului și contului.",
+    "manageMore": "Mai multe detalii în",
+    "privacyLink": "Politica de confidențialitate",
+    "questions": "Întrebări:"
+  },
+  "legalAffiliate": {
+    "badge": "Program Afiliere",
+    "title": "Termeni",
+    "titleHighlight": "Program Afiliere",
+    "lastUpdated": "Ultima actualizare: Iulie 2026",
+    "contactTitle": "Contact program afiliere",
+    "sections": [
+      {
+        "title": "Definiții și acceptare",
+        "paragraphs": [
+          "Programul de Afiliere NOVRA („Programul”) permite utilizatorilor aprobați să promoveze produsele NOVRA Store și să primească comision pentru comenzile validate atribuite link-ului lor. Prin aplicarea și participarea la Program, accepți integral prezentele termeni, precum și <privacyLink>Politica de confidențialitate</privacyLink>."
+        ]
+      },
+      {
+        "title": "Eligibilitate",
+        "list": [
+          "Vârsta minimă 18 ani și rezidență în România.",
+          "Cont activ NOVRA Store și prezență pe rețele sociale sau canal de promovare.",
+          "Aprobare explicită din partea echipei NOVRA.",
+          "Interzis auto-referral (comenzi proprii prin link-ul de afiliat)."
+        ]
+      },
+      {
+        "title": "Link-uri, tracking și atribuire",
+        "paragraphs": [
+          "Fiecare afiliat primește un link unic de forma https://www.novra.ro/?ref=COD. Atribuirea comenzilor se face astfel:"
+        ],
+        "list": [
+          "Cookie de atribuire: {days} zile de la ultimul click pe link.",
+          "O comandă este atribuită o singură dată (idempotent per orderId).",
+          "Comisionul se calculează din subtotalul produselor (total minus transport), cu excepția ratelor personalizate.",
+          "Comision implicit: {rate}% din produse; adminul poate seta rată sau sumă fixă."
+        ]
+      },
+      {
+        "title": "Comisioane și status",
+        "list": [
+          "Comisionul apare ca „în așteptare” după finalizarea comenzii atribuite.",
+          "NOVRA poate ajusta sau anula comisionul în caz de fraudă, retur total sau anulare comandă.",
+          "Comisionul devine disponibil pentru retragere conform soldului afișat în cont."
+        ]
+      },
+      {
+        "title": "Retrageri comision (payout)",
+        "paragraphs": [
+          "Poți solicita retragerea comisionului din panoul de afiliat:"
+        ],
+        "list": [
+          "Suma minimă: {minAmount} RON.",
+          "Date necesare: titular cont, IBAN (preferat) sau număr card, bancă (opțional).",
+          "Plata se face manual prin transfer bancar, după aprobarea echipei NOVRA.",
+          "Termen estimativ procesare: 5–15 zile lucrătoare de la aprobare.",
+          "Ești responsabil pentru corectitudinea datelor bancare furnizate."
+        ]
+      },
+      {
+        "title": "Date personale și confidențialitate",
+        "paragraphs": [
+          "Participarea la Program implică prelucrarea unor date personale în conformitate cu GDPR (Regulament UE 2016/679) și <privacyLink>Politica de confidențialitate NOVRA</privacyLink>:"
+        ],
+        "list": [
+          "La aplicare: nume, email, confirmări de eligibilitate.",
+          "În contul de afiliat: cod referință, statistici click-uri și comenzi atribuite.",
+          "Cookie de atribuire ?ref= (30 zile) pentru legarea comenzilor de link-ul tău.",
+          "La retragere comision: titular cont, IBAN sau număr card, bancă (opțional) — exclusiv pentru efectuarea plății.",
+          "Datele bancare sunt accesibile doar personalului autorizat NOVRA, pentru procesarea transferului manual."
+        ]
+      },
+      {
+        "title": "Conduite interzise",
+        "list": [
+          "Spam, publicitate înșelătoare sau promisiuni false despre produse.",
+          "Cookie stuffing, click fraud sau trafic artificial.",
+          "Utilizarea mărcii NOVRA fără acord scris prealabil.",
+          "Încălcarea legislației privind publicitatea online."
+        ]
+      },
+      {
+        "title": "Modificări și reziliere",
+        "paragraphs": [
+          "NOVRA își rezervă dreptul de a modifica comisionul, termenii sau de a suspenda/închide contul de afiliat, cu notificare rezonabilă când este posibil. Poți renunța oricând la Program; comisioanele validate rămân supuse procesării conform termenilor în vigoare la data comenzii."
+        ]
+      }
+    ]
+  },
+  "comingSoon": {
+    "badge": "În curând",
+    "defaultHeadline": "Ceva extraordinar se apropie",
+    "defaultSubtitle": "Pregătim ceva special. Fii primul care află când lansăm.",
+    "socialProof": "Lansare în curând • Cabluri & adaptoare premium",
+    "countdownLabel": "Lansare în",
+    "days": "zile",
+    "hours": "ore",
+    "minutes": "min",
+    "seconds": "sec",
+    "invalidDate": "Dată invalidă",
+    "launched": "Lansare!",
+    "timeRemaining": "Timp rămas: {time}",
+    "newsletterTitle": "Fii primul — {percent}% reducere la prima comandă",
+    "newsletterSubtitle": "Abonează-te și primești codul de reducere direct pe email.",
+    "emailPlaceholder": "Adresa ta de email",
+    "subscribe": "Anunță-mă",
+    "sending": "Se trimite...",
+    "successMessage": "Verifică emailul — codul tău de 10% vine imediat",
+    "duplicateMessage": "Ești deja abonat la newsletter-ul NOVRA.",
+    "errorMessage": "Nu s-a putut procesa abonarea. Încearcă din nou.",
+    "contact": "Contact",
+    "whatsappMessage": "Salut! Am o întrebare despre NOVRA.",
+    "tagline": "Precision · Performance · Power",
+    "features": {
+      "power120w": "120W Power Delivery",
+      "ganTech": "Tehnologie GaN",
+      "warranty": "Garanție 2 ani",
+      "premium": "Materiale premium"
     }
   }
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getReviewAvatarUrl } from "@/lib/reviews";
@@ -17,18 +18,21 @@ import {
   PenLine,
   ArrowRight,
 } from "lucide-react";
-
 import { fadeUp } from "@/lib/motion";
 
-const stats = [
-  { icon: Users, value: "10.000+", label: "Clienți mulțumiți" },
-  { icon: Star, value: "4.9/5", label: "Rating mediu" },
-  { icon: ThumbsUp, value: "98%", label: "Recomandă NOVRA" },
-];
-
 export default function Recenzii() {
+  const t = useTranslations("reviews");
   const reviews = useReviews();
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  const stats = useMemo(
+    () => [
+      { icon: Users, value: "10.000+", label: t("statCustomers") },
+      { icon: Star, value: "4.9/5", label: t("statRating") },
+      { icon: ThumbsUp, value: "98%", label: t("statRecommend") },
+    ],
+    [t]
+  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,35 +63,27 @@ export default function Recenzii() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      {/* Hero */}
       <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 px-4 sm:px-6">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(139,92,246,0.12),transparent)] pointer-events-none" />
         <div className="max-w-6xl mx-auto relative">
           <motion.div {...fadeUp} className="text-center md:text-left max-w-3xl">
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-6">
               <Sparkles size={14} aria-hidden />
-              Gândurile lor
+              {t("badge")}
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05] mb-6">
-              Ce spun clienții{" "}
+              {t("title")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-600">
-                NOVRA
+                {t("titleHighlight")}
               </span>
             </h1>
-            <p className="text-gray-300 text-lg sm:text-xl leading-relaxed font-light max-w-2xl">
-              Opinia comunității noastre este cartea noastră de vizită. Descoperă experiențele celor care au ales deja
-              rafinamentul pieselor noastre.
-            </p>
+            <p className="text-gray-300 text-lg sm:text-xl leading-relaxed font-light max-w-2xl">{t("subtitle")}</p>
           </motion.div>
         </div>
       </section>
 
       <main className="px-4 sm:px-6 md:px-12 max-w-6xl mx-auto pb-page">
-        {/* Stats bar */}
-        <motion.div
-          {...fadeUp}
-          className="grid grid-cols-3 gap-3 sm:gap-4 mb-12 sm:mb-16"
-        >
+        <motion.div {...fadeUp} className="grid grid-cols-3 gap-3 sm:gap-4 mb-12 sm:mb-16">
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -100,7 +96,6 @@ export default function Recenzii() {
           ))}
         </motion.div>
 
-        {/* Review grid — masonry-style with featured first card */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-16 sm:mb-20">
           {reviews.map((review, i) => (
             <motion.div
@@ -115,7 +110,7 @@ export default function Recenzii() {
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-[30px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
               <Quote size={18} className="text-purple-500/40 mb-3" aria-hidden />
-              <div className="flex gap-0.5 mb-4" aria-label={`${review.rating} stele`}>
+              <div className="flex gap-0.5 mb-4" aria-label={t("starsLabel", { count: review.rating })}>
                 {Array.from({ length: review.rating }).map((_, j) => (
                   <Star key={j} size={14} className="text-yellow-500 fill-yellow-500" aria-hidden />
                 ))}
@@ -138,7 +133,7 @@ export default function Recenzii() {
                       <CheckCircle2 size={12} className="text-purple-400 shrink-0" aria-hidden />
                     </h4>
                     <p className="text-xs text-purple-400 uppercase tracking-widest font-medium mt-0.5">
-                      {review.location || "Client Verificat"}
+                      {review.location || t("verifiedClient")}
                     </p>
                   </div>
                 </div>
@@ -148,7 +143,6 @@ export default function Recenzii() {
           ))}
         </div>
 
-        {/* Review form */}
         <motion.section
           {...fadeUp}
           className="p-8 sm:p-10 relative overflow-hidden rounded-3xl border border-white/8 bg-gradient-to-br from-purple-500/8 to-transparent max-w-3xl mx-auto"
@@ -158,12 +152,10 @@ export default function Recenzii() {
           <div className="text-center mb-8 relative z-10">
             <span className="inline-flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-widest mb-3">
               <PenLine size={14} aria-hidden />
-              Feedback-ul tău
+              {t("formBadge")}
             </span>
-            <h3 className="text-2xl font-bold mb-2 tracking-tight text-white">Ai cumpărat de la noi?</h3>
-            <p className="text-gray-400 font-light text-sm max-w-lg mx-auto">
-              Părerea ta ne ajută să evoluăm. Trimite feedback-ul tău instant prin formularul securizat de mai jos.
-            </p>
+            <h3 className="text-2xl font-bold mb-2 tracking-tight text-white">{t("formTitle")}</h3>
+            <p className="text-gray-400 font-light text-sm max-w-lg mx-auto">{t("formDesc")}</p>
           </div>
 
           <form
@@ -173,55 +165,53 @@ export default function Recenzii() {
             className="space-y-5 relative z-10"
           >
             <input type="hidden" name="access_key" value="b7020925-857c-4f6e-97eb-23f4c1139e97" />
-            <input type="hidden" name="subject" value="Recenzie Noua primita pe site-ul NOVRA" />
+            <input type="hidden" name="subject" value={t("formSubject")} />
             <input type="hidden" name="from_name" value="NOVRA Platform" />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2 space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">Nume complet</label>
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">{t("nameLabel")}</label>
                 <input
                   type="text"
                   name="name"
                   required
-                  placeholder="Ex: Elena Popa"
+                  placeholder={t("namePlaceholder")}
                   className="w-full bg-novra-card/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">Email</label>
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">{t("emailLabel")}</label>
                 <input
                   type="email"
                   name="email"
                   required
-                  placeholder="nume@exemplu.com"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full bg-novra-card/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">Rating</label>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">{t("ratingLabel")}</label>
               <select
                 name="rating"
                 className="w-full bg-novra-card/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors font-light"
               >
-                <option value="5 Stele ★★★★★">5 Stele ★★★★★</option>
-                <option value="4 Stele ★★★★☆">4 Stele ★★★★☆</option>
-                <option value="3 Stele ★★★☆☆">3 Stele ★★★☆☆</option>
-                <option value="2 Stele ★★☆☆☆">2 Stele ★★☆☆☆</option>
-                <option value="1 Stea  ★☆☆☆☆">1 Stea  ★☆☆☆☆</option>
+                <option value="5 Stele ★★★★★">{t("rating5")}</option>
+                <option value="4 Stele ★★★★☆">{t("rating4")}</option>
+                <option value="3 Stele ★★★☆☆">{t("rating3")}</option>
+                <option value="2 Stele ★★☆☆☆">{t("rating2")}</option>
+                <option value="1 Stea  ★☆☆☆☆">{t("rating1")}</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">
-                Experiența ta (Recenzia)
-              </label>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">{t("reviewLabel")}</label>
               <textarea
                 rows={4}
                 name="message"
                 required
-                placeholder="Spune-ne ce ți-a plăcut cel mai mult la produsele sau serviciile NOVRA..."
+                placeholder={t("reviewPlaceholder")}
                 className="w-full bg-novra-card/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light resize-none"
               />
             </div>
@@ -232,7 +222,7 @@ export default function Recenzii() {
                 disabled={status === "sending"}
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 font-semibold transition-all duration-300 text-sm cursor-pointer shadow-lg shadow-purple-900/30"
               >
-                {status === "sending" ? "Se trimite..." : "Trimite feedback-ul tău"}
+                {status === "sending" ? t("sending") : t("submit")}
                 {status !== "sending" && <ArrowRight size={16} aria-hidden />}
               </button>
             </div>
@@ -240,14 +230,12 @@ export default function Recenzii() {
             {status === "success" && (
               <p className="text-purple-300 font-medium text-center text-sm mt-3 flex items-center justify-center gap-2">
                 <CheckCircle2 size={16} className="text-green-400 shrink-0" aria-hidden />
-                Îți mulțumim! Feedback-ul a fost trimis direct echipei noastre.
+                {t("success")}
               </p>
             )}
 
             {status === "error" && (
-              <p className="text-red-400 font-medium text-center text-sm mt-3">
-                Trimiterea a eșuat. Te rugăm să încerci din nou.
-              </p>
+              <p className="text-red-400 font-medium text-center text-sm mt-3">{t("error")}</p>
             )}
           </form>
         </motion.section>
@@ -257,7 +245,7 @@ export default function Recenzii() {
             href="/produse"
             className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition text-sm font-medium"
           >
-            Descoperă produsele NOVRA
+            {t("discoverProducts")}
             <ArrowRight size={14} aria-hidden />
           </Link>
         </div>

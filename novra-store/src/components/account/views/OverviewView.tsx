@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Lock, Mail, ShoppingBag, User, Check, Shield } from "lucide-react";
 import type { User as AuthUser } from "@/lib/auth";
 import { isProfileComplete, getCurrentUser, isAdmin } from "@/lib/auth";
 import {
   getOrdersForUserFromApi,
   ORDER_STATUS_COLORS,
-  ORDER_STATUS_LABELS,
   type Order,
+  type OrderStatus,
 } from "@/lib/orders";
 import { createStoreRefreshEffect } from "@/lib/store";
 import type { AccountSection } from "../types";
@@ -22,7 +23,25 @@ type OverviewViewProps = {
   onUserUpdate: (user: AuthUser) => void;
 };
 
+const STATUS_KEYS: Record<OrderStatus, "statusPending" | "statusProcessing" | "statusShipped" | "statusDelivered" | "statusCancelled"> = {
+  pending: "statusPending",
+  processing: "statusProcessing",
+  shipped: "statusShipped",
+  delivered: "statusDelivered",
+  cancelled: "statusCancelled",
+};
+
+function getDateLocale(locale: string) {
+  if (locale === "ro") return "ro-RO";
+  if (locale === "de") return "de-DE";
+  return "en-US";
+}
+
 export default function OverviewView({ user, onNavigate, onUserUpdate }: OverviewViewProps) {
+  const t = useTranslations("accountOverview");
+  const to = useTranslations("accountOrders");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const [subscribeOpen, setSubscribeOpen] = useState(false);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const profileComplete = isProfileComplete(user);
@@ -52,21 +71,21 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
   const earnItems = [
     {
       icon: Lock,
-      title: "Înregistrare",
-      description: "Primești 50 NovraCredits la crearea contului",
+      title: t("signup"),
+      description: t("signupDesc"),
       action: signupDone ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
-          <Check size={14} /> Finalizat
+          <Check size={14} /> {t("completed")}
         </span>
       ) : null,
     },
     {
       icon: Mail,
-      title: "Newsletter",
-      description: "Primești noutăți și NovraCredits exclusive",
+      title: t("newsletter"),
+      description: t("newsletterDesc"),
       action: user.subscribedToNewsletter ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
-          <Check size={14} /> Abonat
+          <Check size={14} /> {t("subscribed")}
         </span>
       ) : (
         <button
@@ -74,30 +93,30 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
           onClick={() => setSubscribeOpen(true)}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          Abonează-te
+          {t("subscribe")}
         </button>
       ),
     },
     {
       icon: ShoppingBag,
-      title: "Cumpără",
-      description: "1 NovraCredit pentru fiecare leu cheltuit",
+      title: t("shop"),
+      description: t("shopDesc"),
       action: (
         <Link
           href="/produse"
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          Vezi produse
+          {tc("viewProducts")}
         </Link>
       ),
     },
     {
       icon: User,
-      title: "Profil",
-      description: "Completează profilul și primești până la 100 NovraCredits",
+      title: t("profile"),
+      description: t("profileDesc"),
       action: profileComplete ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
-          <Check size={14} /> Finalizat
+          <Check size={14} /> {t("completed")}
         </span>
       ) : (
         <button
@@ -105,14 +124,14 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
           onClick={() => onNavigate("my-profile")}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          Completează
+          {t("complete")}
         </button>
       ),
     },
   ];
 
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(iso).toLocaleDateString(getDateLocale(locale), { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <div className="space-y-8">
@@ -122,12 +141,12 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
           className="inline-flex items-center gap-2 rounded-xl border border-purple-500/25 bg-purple-600/10 px-4 py-2.5 text-sm text-purple-200 transition hover:border-purple-500/40 hover:bg-purple-600/15"
         >
           <Shield size={16} className="text-purple-400" />
-          Panou Admin
+          {t("adminPanel")}
         </Link>
       )}
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-white">Cum câștigi NovraCredits</h2>
+        <h2 className="mb-4 text-lg font-semibold text-white">{t("earnCreditsTitle")}</h2>
         <div className="space-y-3">
           {earnItems.map((item) => {
             const Icon = item.icon;
@@ -154,13 +173,13 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Comenzi recente</h2>
+          <h2 className="text-lg font-semibold text-white">{t("recentOrders")}</h2>
           <button
             type="button"
             onClick={() => onNavigate("my-orders")}
             className="text-sm font-medium text-blue-400 transition hover:text-blue-300"
           >
-            Vezi toate
+            {t("viewAll")}
           </button>
         </div>
         <div className="rounded-xl border border-white/10 bg-novra-card/30">
@@ -176,7 +195,7 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${ORDER_STATUS_COLORS[order.status]}`}
                     >
-                      {ORDER_STATUS_LABELS[order.status]}
+                      {to(STATUS_KEYS[order.status])}
                     </span>
                     <span className="text-sm font-semibold text-white">{order.total.toFixed(2)} RON</span>
                   </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { createAccountFromGuestOrder } from "@/lib/auth";
 import type { Order } from "@/lib/orders";
@@ -11,6 +12,7 @@ type GuestAccountPromptProps = {
 };
 
 export default function GuestAccountPrompt({ order, onAccountCreated }: GuestAccountPromptProps) {
+  const t = useTranslations("checkoutGuest");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,16 +47,16 @@ export default function GuestAccountPrompt({ order, onAccountCreated }: GuestAcc
   return (
     <div className="mt-10 rounded-2xl border border-white/10 bg-novra-card/30 px-6 py-8 text-left">
       <p className="text-center text-lg font-medium tracking-tight text-white">
-        Salvează aceste detalii pentru viitoarele comenzi?
+        {t("saveDetailsTitle")}
       </p>
       <p className="mt-2 text-center text-sm text-gray-500">
-        Creează un cont rapid cu emailul <span className="text-purple-300">{order.userEmail}</span>
+        {t("createWithEmail", { email: order.userEmail })}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 mx-auto max-w-sm space-y-4" noValidate>
         <div>
           <label htmlFor="guest-account-password" className="sr-only">
-            Parolă
+            {t("password")}
           </label>
           <input
             id="guest-account-password"
@@ -62,7 +64,7 @@ export default function GuestAccountPrompt({ order, onAccountCreated }: GuestAcc
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Alege o parolă"
+            placeholder={t("choosePassword")}
             className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none transition focus:border-purple-500/50"
           />
         </div>
@@ -73,7 +75,7 @@ export default function GuestAccountPrompt({ order, onAccountCreated }: GuestAcc
           className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-          Crează un cont cu o singură parolă
+          {t("createAccountButton")}
         </button>
       </form>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Gift, Loader2, CreditCard } from "lucide-react";
 import { GIFT_CARD_AMOUNTS, createCreditPurchaseCheckout } from "@/lib/credits";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -8,6 +9,7 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 export default function GiftCardsView() {
+  const t = useTranslations("accountGiftCards");
   const searchParams = useSearchParams();
   const cancelled = searchParams.get("cancelled") === "1";
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
@@ -43,14 +45,12 @@ export default function GiftCardsView() {
 
   return (
     <div>
-      <h2 className="mb-2 text-xl font-semibold text-white">Gift Cards</h2>
-      <p className="mb-6 text-sm text-gray-400">
-        Cumpără pachete de NovraCredits și folosește-le la checkout. 1 NovraCredit = 1 Leu reducere.
-      </p>
+      <h2 className="mb-2 text-xl font-semibold text-white">{t("title")}</h2>
+      <p className="mb-6 text-sm text-gray-400">{t("subtitle")}</p>
 
       {cancelled && (
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          Plata a fost anulată. Poți încerca din nou.
+          {t("paymentCancelled")}
         </div>
       )}
 
@@ -71,7 +71,7 @@ export default function GiftCardsView() {
           >
             <Gift className="mb-3 h-8 w-8 text-purple-400 transition group-hover:scale-110" />
             <span className="text-2xl font-bold text-white">{amount}</span>
-            <span className="text-xs text-gray-500">Lei</span>
+            <span className="text-xs text-gray-500">{t("lei")}</span>
             <span className="mt-2 text-[10px] uppercase tracking-widest text-purple-300">
               NovraCredits
             </span>
@@ -88,11 +88,9 @@ export default function GiftCardsView() {
         <div className="flex items-start gap-3">
           <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-purple-400" />
           <div>
-            <h3 className="text-sm font-medium text-white">Plată securizată Stripe</h3>
+            <h3 className="text-sm font-medium text-white">{t("securePaymentTitle")}</h3>
             <p className="mt-1 text-sm text-gray-400">
-              {cardAvailable
-                ? "După plata cu cardul, creditele se încarcă automat în contul tău."
-                : "Plata cu cardul nu este disponibilă momentan. Contactează-ne pentru asistență."}
+              {cardAvailable ? t("creditsAutoLoad") : t("cardUnavailableContact")}
             </p>
           </div>
         </div>

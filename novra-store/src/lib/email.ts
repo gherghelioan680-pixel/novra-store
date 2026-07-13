@@ -379,3 +379,52 @@ export async function sendTrackingEmail(order: Order, awb: string): Promise<bool
     return false;
   }
 }
+
+export async function sendNewsletterWelcomeEmail(
+  email: string,
+  discountCode: string,
+  discountPercent: number
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not configured — skipping newsletter welcome for", email);
+    return false;
+  }
+
+  const body = `
+    <p style="margin:0 0 16px;color:#e5e7eb;font-size:15px;line-height:1.6;">
+      Bună!<br>
+      Mulțumim că te-ai abonat la newsletter-ul NOVRA. Iată codul tău exclusiv pentru prima comandă:
+    </p>
+    <div style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;">
+      <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;">Cod reducere</p>
+      <p style="margin:0;font-family:monospace;font-size:22px;font-weight:700;color:#c4b5fd;">${escapeHtml(discountCode)}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#a78bfa;">${discountPercent}% reducere la prima comandă</p>
+    </div>
+    <p style="margin:0 0 20px;color:#9ca3af;font-size:14px;line-height:1.6;">
+      Introdu codul la checkout. Valabil o singură dată per email. Lansarea este foarte aproape — fii pregătit!
+    </p>
+    <p style="margin:0;text-align:center;">
+      <a href="${getStripeCheckoutOrigin()}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Vizitează NOVRA</a>
+    </p>
+  `;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Codul tău NOVRA — ${discountPercent}% reducere la prima comandă`,
+      html: baseEmailHtml("Bine ai venit la NOVRA", body),
+    });
+
+    if (error) {
+      console.error("[email] Newsletter welcome failed:", email, error);
+      return false;
+    }
+    console.log("[email] Newsletter welcome sent:", email);
+    return true;
+  } catch (err) {
+    console.error("[email] Newsletter welcome error:", email, err);
+    return false;
+  }
+}

@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ArrowLeft, CheckCircle, CreditCard, Banknote, Tag, Loader2, Coins } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -45,11 +46,13 @@ type StripeConfig = {
 };
 
 export default function CheckoutPage() {
+  const tc = useTranslations("common");
+
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-novra-bg text-white flex items-center justify-center">
-          <p className="text-gray-500 text-sm">Se încarcă...</p>
+          <p className="text-gray-500 text-sm">{tc("loading")}</p>
         </div>
       }
     >
@@ -61,6 +64,8 @@ export default function CheckoutPage() {
 function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("checkout");
+  const tc = useTranslations("common");
   const { items, totalPrice, clearCart, hydrated } = useCart();
   const { freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
   const [status, setStatus] = useState<"idle" | "sending" | "redirecting" | "success" | "error">("idle");
@@ -148,7 +153,7 @@ function CheckoutPageContent() {
       <div className="min-h-screen bg-novra-bg text-white">
         <Navbar />
         <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto text-center">
-          <p className="text-gray-500 text-sm">Se încarcă coșul...</p>
+          <p className="text-gray-500 text-sm">{tc("loadingCart")}</p>
         </main>
         <Footer />
       </div>
@@ -160,12 +165,12 @@ function CheckoutPageContent() {
       <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
         <Navbar />
         <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto text-center">
-          <p className="text-gray-300 mb-6">Coșul tău este gol.</p>
+          <p className="text-gray-300 mb-6">{t("emptyCart")}</p>
           <Link
             href="/produse"
             className="inline-flex items-center justify-center min-h-11 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-all touch-manipulation"
           >
-            Vezi produsele
+            {tc("viewProducts")}
           </Link>
         </main>
         <Footer />
@@ -262,7 +267,7 @@ function CheckoutPageContent() {
 
     setAppliedDiscount(result.discount);
     setDiscountInput(result.discount.code);
-    setDiscountSuccess("Cod aplicat!");
+    setDiscountSuccess(t("codeApplied"));
   };
 
   const handleRemoveDiscount = () => {
@@ -368,7 +373,7 @@ function CheckoutPageContent() {
 
         const data = (await response.json()) as { url?: string; error?: string };
         if (!response.ok || !data.url) {
-          setStripeError(data.error ?? "Nu s-a putut inițializa plata cu cardul.");
+          setStripeError(data.error ?? t("stripeInitError"));
           setStatus("error");
           return;
         }
@@ -380,7 +385,7 @@ function CheckoutPageContent() {
         window.location.assign(data.url);
         return;
       } catch {
-        setStripeError("Eroare de rețea la conectarea cu Stripe. Încearcă din nou.");
+        setStripeError(t("stripeNetworkError"));
         setStatus("error");
         return;
       }
@@ -415,16 +420,14 @@ function CheckoutPageContent() {
         <Navbar />
         <main className="pb-page px-4 sm:px-6 md:px-12 max-w-2xl mx-auto text-center">
           <CheckCircle size={56} className="mx-auto text-green-500 mb-6" />
-          <h1 className="text-4xl font-bold tracking-tighter mb-4">Comandă trimisă!</h1>
-          <p className="text-gray-300 mb-4 leading-relaxed px-2">
-            Mulțumim! Am primit comanda ta și vei primi un email de confirmare în curând.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tighter mb-4">{t("orderSent")}</h1>
+          <p className="text-gray-300 mb-4 leading-relaxed px-2">{t("successConfirmEmail")}</p>
           {placedOrder?.purchaseCode && (
             <div className="mb-8 inline-flex flex-col items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 px-6 py-4">
-              <p className="text-xs uppercase tracking-widest text-gray-400">Cod comandă</p>
+              <p className="text-xs uppercase tracking-widest text-gray-400">{t("purchaseCode")}</p>
               <p className="font-mono text-lg font-semibold text-purple-300">{placedOrder.purchaseCode}</p>
-              <CopyButton text={placedOrder.purchaseCode} label="Copiază cod" />
-              <p className="text-xs text-gray-500">Păstrează acest cod pentru referință</p>
+              <CopyButton text={placedOrder.purchaseCode} label={t("copyCode")} />
+              <p className="text-xs text-gray-500">{t("keepCodeRef")}</p>
             </div>
           )}
           {placedOrder?.isGuest && !getCurrentUser() && (
@@ -435,7 +438,7 @@ function CheckoutPageContent() {
             onClick={() => router.push("/produse")}
             className="min-h-11 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-10 py-4 rounded-xl text-sm transition-all touch-manipulation"
           >
-            Înapoi la produse
+            {t("backToProducts")}
           </button>
         </main>
         <Footer />
@@ -453,20 +456,20 @@ function CheckoutPageContent() {
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group touch-manipulation min-h-11"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          Înapoi la coș
+          {t("backToCart")}
         </Link>
 
         {cancelled && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-            Plata a fost anulată. Poți încerca din nou sau alege ramburs.
+            {t("paymentCancelled")}
           </div>
         )}
 
         <div className="border-b border-white/10 pb-10 mb-10">
           <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">
-            Finalizare
+            {t("checkoutLabel")}
           </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter">Plasează comanda</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter">{t("placeOrderTitle")}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -492,7 +495,7 @@ function CheckoutPageContent() {
             {/* form fields - same as before */}
             <div>
               <label htmlFor="checkout-name" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Nume complet *
+                {t("fullName")} *
               </label>
               <input
                 id="checkout-name"
@@ -507,7 +510,7 @@ function CheckoutPageContent() {
 
             <div>
               <label htmlFor="checkout-email" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Email *
+                {t("email")} *
               </label>
               <input
                 id="checkout-email"
@@ -523,7 +526,7 @@ function CheckoutPageContent() {
 
             <div>
               <label htmlFor="checkout-phone" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Telefon *
+                {t("phone")} *
               </label>
               <input
                 id="checkout-phone"
@@ -539,7 +542,7 @@ function CheckoutPageContent() {
 
             <div>
               <label htmlFor="checkout-address" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Adresă livrare *
+                {t("shippingAddress")} *
               </label>
               <input
                 id="checkout-address"
@@ -554,7 +557,7 @@ function CheckoutPageContent() {
 
             <div>
               <label htmlFor="checkout-city" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Oraș *
+                {t("city")} *
               </label>
               <input
                 id="checkout-city"
@@ -569,7 +572,7 @@ function CheckoutPageContent() {
 
             <div>
               <label htmlFor="checkout-discount" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Cod reducere
+                {t("discountCode")}
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -590,7 +593,7 @@ function CheckoutPageContent() {
                     onClick={handleRemoveDiscount}
                     className="min-h-11 shrink-0 rounded-xl border border-white/10 px-4 text-xs text-gray-300 hover:bg-white/5"
                   >
-                    Elimină
+                    {t("remove")}
                   </button>
                 ) : (
                   <button
@@ -599,24 +602,24 @@ function CheckoutPageContent() {
                     disabled={discountLoading || !discountInput.trim()}
                     className="min-h-11 shrink-0 rounded-xl bg-purple-600/20 border border-purple-500/30 px-4 text-xs font-semibold text-purple-200 hover:bg-purple-600/30 disabled:opacity-50"
                   >
-                    {discountLoading ? "..." : "Aplică"}
+                    {discountLoading ? "..." : t("applyDiscount")}
                   </button>
                 )}
               </div>
               {appliedDiscount && (
                 <p className="mt-2 text-xs text-emerald-400">
-                  {discountSuccess || "Cod aplicat!"}
+                  {discountSuccess || t("codeApplied")}
                   {productDiscountApplies && discountAmount > 0 && (
                     <>
                       {" "}
-                      Reducere {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
+                      {t("discountAmount")} {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
                       {discountAmount.toFixed(2)} RON)
                     </>
                   )}
                   {freeShippingFromCode && (
                     <>
                       {productDiscountApplies && discountAmount > 0 ? " · " : " "}
-                      Livrare gratuită
+                      {t("freeShipping")}
                     </>
                   )}
                 </p>
@@ -636,14 +639,13 @@ function CheckoutPageContent() {
                   <div className="flex-1">
                     <span className="flex items-center gap-2 text-sm font-semibold text-white">
                       <Coins size={16} className="text-purple-400" />
-                      Folosește NovraCredits
+                      {t("useNovraCredits")}
                     </span>
                     <p className="mt-1 text-xs text-gray-400">
-                      Sold disponibil: {userCredits} NovraCredits
+                      {t("creditsAvailable", { credits: userCredits })}
                       {useCredits && creditsToApply > 0 && (
                         <span className="text-emerald-400">
-                          {" "}
-                          · Se aplică {creditsToApply.toFixed(2)} Lei
+                          {t("creditsApplying", { amount: creditsToApply.toFixed(2) })}
                         </span>
                       )}
                     </p>
@@ -654,7 +656,7 @@ function CheckoutPageContent() {
 
             <div>
               <span className="text-xs uppercase tracking-widest text-gray-500 block mb-3">
-                Metodă de plată *
+                {t("paymentMethod")} *
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
@@ -671,8 +673,8 @@ function CheckoutPageContent() {
                 >
                   <Banknote size={22} className={paymentMethod === "ramburs" ? "text-purple-400" : ""} />
                   <div>
-                    <span className="block text-sm font-semibold text-white">Ramburs</span>
-                    <span className="block text-xs mt-0.5 opacity-70">Numerar la livrare</span>
+                    <span className="block text-sm font-semibold text-white">{t("ramburs")}</span>
+                    <span className="block text-xs mt-0.5 opacity-70">{t("rambursDesc")}</span>
                   </div>
                 </button>
 
@@ -690,29 +692,24 @@ function CheckoutPageContent() {
                 >
                   <CreditCard size={22} className={paymentMethod === "card" ? "text-purple-400" : ""} />
                   <div>
-                    <span className="block text-sm font-semibold text-white">Plată cu cardul</span>
+                    <span className="block text-sm font-semibold text-white">{t("cardPayment")}</span>
                     <span className="block text-xs mt-0.5 opacity-70">
-                      {cardAvailable ? "Plată securizată Stripe" : "Indisponibil momentan"}
+                      {cardAvailable ? t("stripeSecure") : t("cardUnavailable")}
                     </span>
                   </div>
                 </button>
               </div>
               {fullyPaidWithCredits && (
-                <p className="mt-2 text-xs text-emerald-400">
-                  Comanda va fi plătită integral cu NovraCredits.
-                </p>
+                <p className="mt-2 text-xs text-emerald-400">{t("paidFullyWithCredits")}</p>
               )}
               {cardPaymentEnabled && !cardAvailable && !fullyPaidWithCredits && stripeConfig !== null && (
-                <p className="mt-2 text-xs text-amber-400/90">
-                  Plata cu cardul nu este disponibilă momentan. Administratorul trebuie să adauge cheile Stripe în
-                  Vercel Environment Variables.
-                </p>
+                <p className="mt-2 text-xs text-amber-400/90">{t("stripeNotConfigured")}</p>
               )}
             </div>
 
             <div>
               <label htmlFor="checkout-notes" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
-                Observații (opțional)
+                {t("observations")}
               </label>
               <textarea
                 id="checkout-notes"
@@ -725,7 +722,7 @@ function CheckoutPageContent() {
 
             {status === "error" && (
               <p className="text-red-400 text-sm">
-                {stripeError || "A apărut o eroare. Te rugăm să încerci din nou."}
+                {stripeError || tc("error")}
               </p>
             )}
 
@@ -733,15 +730,15 @@ function CheckoutPageContent() {
               <div className="rounded-xl border border-purple-500/30 bg-purple-600/10 px-4 py-3 text-sm text-purple-100">
                 <p className="inline-flex items-center gap-2">
                   <Loader2 size={16} className="animate-spin shrink-0" />
-                  Redirecționare către Stripe...
+                  {t("stripeRedirect")}
                 </p>
                 <p className="mt-2 text-xs text-gray-400">
-                  Dacă nu ești redirecționat automat,{" "}
+                  {t("redirectManual")}{" "}
                   <a
                     href={stripeRedirectUrl}
                     className="text-purple-300 underline underline-offset-2 touch-manipulation"
                   >
-                    apasă aici pentru plată
+                    {t("clickToPay")}
                   </a>
                   .
                 </p>
@@ -757,26 +754,26 @@ function CheckoutPageContent() {
                 <Loader2 size={16} className="animate-spin" />
               )}
               {status === "redirecting"
-                ? "Redirecționare către Stripe..."
+                ? t("stripeRedirect")
                 : status === "sending"
-                  ? "Se procesează..."
+                  ? t("processing")
                   : fullyPaidWithCredits
-                    ? `Plătește cu NovraCredits`
+                    ? t("payWithCredits")
                     : paymentMethod === "card" && cardAvailable && !fullyPaidWithCredits
-                      ? `Plătește acum (${orderTotal.toFixed(2)} RON)`
-                      : `Trimite comanda (${orderTotal.toFixed(2)} RON)`}
+                      ? t("payNow", { total: orderTotal.toFixed(2) })
+                      : t("sendOrder", { total: orderTotal.toFixed(2) })}
             </button>
           </form>
             ) : (
               <p className="rounded-xl border border-white/10 bg-novra-card/20 px-4 py-4 text-sm text-gray-400">
-                Autentifică-te sau creează un cont pentru a continua, sau alege „Continuă fără cont”.
+                {t("authRequired")}
               </p>
             )}
           </div>
 
           <div className="bg-novra-card/30 border border-white/8 rounded-2xl p-5 sm:p-6 h-fit order-1 lg:order-2">
             <h2 className="text-sm uppercase tracking-widest text-gray-500 font-semibold mb-4">
-              Rezumat comandă
+              {t("orderSummary")}
             </h2>
             <div className="space-y-3 mb-6">
               {items.map((item) => (
@@ -793,55 +790,55 @@ function CheckoutPageContent() {
             </div>
             <div className="border-t border-white/10 pt-4 space-y-2">
               <div className="flex justify-between text-sm text-gray-300">
-                <span>Subtotal produse</span>
+                <span>{t("subtotalProducts")}</span>
                 <span>{totalPrice.toFixed(2)} RON</span>
               </div>
               {discountAmount > 0 && appliedDiscount && (
                 <div className="flex justify-between text-sm text-emerald-400">
-                  <span>Reducere ({appliedDiscount.code})</span>
+                  <span>{t("discountAmount")} ({appliedDiscount.code})</span>
                   <span>−{discountAmount.toFixed(2)} RON</span>
                 </div>
               )}
               {campaignDiscountAmount > 0 && campaignDiscount && (
                 <div className="flex justify-between text-sm text-emerald-400">
-                  <span>Campanie ({campaignDiscount.title})</span>
+                  <span>{t("campaign")} ({campaignDiscount.title})</span>
                   <span>−{campaignDiscountAmount.toFixed(2)} RON</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">
                 <span>
-                  Livrare
+                  {t("shipping")}
                   {freeShippingFromCode && appliedDiscount && (
-                    <span className="text-emerald-400"> (cod {appliedDiscount.code})</span>
+                    <span className="text-emerald-400"> {t("freeShippingCode", { code: appliedDiscount.code })}</span>
                   )}
                 </span>
                 <span className={freeShippingFromCode ? "text-emerald-400" : undefined}>
-                  {shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}
+                  {shippingCost === 0 ? t("freeShipping") : `${shippingCost.toFixed(2)} RON`}
                 </span>
               </div>
               {shippingCost > 0 && !freeShippingFromCode && (
                 <p className="text-xs text-purple-300">
-                  Livrare gratuită pentru comenzi peste {freeShippingThreshold} RON
+                  {t("freeShippingOver", { threshold: freeShippingThreshold })}
                 </p>
               )}
               {creditsToApply > 0 && (
                 <div className="flex justify-between text-sm text-emerald-400">
-                  <span>NovraCredits</span>
+                  <span>{t("useNovraCredits")}</span>
                   <span>−{creditsToApply.toFixed(2)} RON</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">
-                <span>Plată</span>
+                <span>{t("paymentLabel")}</span>
                 <span>
                   {fullyPaidWithCredits
-                    ? "NovraCredits"
+                    ? t("useNovraCredits")
                     : paymentMethod === "card"
-                      ? "Plată cu cardul"
-                      : "Ramburs"}
+                      ? t("cardPayment")
+                      : t("ramburs")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold">Total</span>
+                <span className="font-semibold">{tc("total")}</span>
                 <span className="text-xl font-bold text-purple-400">{orderTotal.toFixed(2)} RON</span>
               </div>
             </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -7,10 +8,11 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/store";
 
 export default function FloatingWhatsApp() {
+  const t = useTranslations("whatsapp");
   const { whatsappNumber } = useSiteSettings();
   const isMounted = useIsClient();
   const [showTooltip, setShowTooltip] = useState(false);
-  const message = "Salut! Am nevoie de informații despre produsele NOVRA.";
+  const message = t("floatMessage");
 
   useEffect(() => {
     if (!isMounted) return;
@@ -35,7 +37,7 @@ export default function FloatingWhatsApp() {
             exit={{ opacity: 0 }}
             className="hidden sm:block bg-white/90 backdrop-blur-sm text-purple-900 px-4 py-2 rounded-2xl shadow-xl text-xs font-bold max-w-[220px] text-right border border-purple-200"
           >
-            Ai nevoie de ajutor? Suntem aici! 👋
+            {t("tooltip")}
           </motion.div>
         )}
       </AnimatePresence>
@@ -47,7 +49,7 @@ export default function FloatingWhatsApp() {
           href={buildWhatsAppUrl(whatsappNumber, message)}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Chat WhatsApp cu NOVRA"
+          aria-label={t("chatAria")}
           className="relative flex items-center gap-2 sm:gap-3 bg-gradient-to-br from-purple-600 to-purple-900 text-white p-2 sm:p-2.5 sm:pr-6 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] border border-white/10 backdrop-blur-md overflow-hidden group"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine" />
@@ -58,9 +60,9 @@ export default function FloatingWhatsApp() {
           </div>
 
           <div className="hidden sm:flex flex-col overflow-hidden transition-all duration-500 min-w-0">
-            <span className="font-bold text-sm tracking-wide whitespace-nowrap">Chat cu NOVRA</span>
+            <span className="font-bold text-sm tracking-wide whitespace-nowrap">{t("chatTitle")}</span>
             <span className="text-[10px] text-purple-200 uppercase tracking-widest font-medium whitespace-nowrap">
-              Asistență Premium
+              {t("premiumSupport")}
             </span>
           </div>
 

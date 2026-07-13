@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import {
   getCartQuantityForProduct,
@@ -80,6 +81,7 @@ function writeStoredCart(items: CartItem[]): boolean {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const t = useTranslations("cartToasts");
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [storageAvailable, setStorageAvailable] = useState(true);
@@ -119,13 +121,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback((input: AddItemInput) => {
     const product = getProductById(input.productId);
     if (!product) {
-      setToast("Produsul nu mai este disponibil.");
+      setToast(t("productUnavailable"));
       return;
     }
 
     const available = getProductStockQuantity(product);
     if (available <= 0) {
-      setToast("Stoc epuizat pentru acest produs.");
+      setToast(t("outOfStock"));
       return;
     }
 
@@ -136,7 +138,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const totalForProduct = getCartQuantityForProduct(prev, input.productId) - (existing?.quantity ?? 0) + requestedQty;
 
       if (totalForProduct > available) {
-        setToast(`Stoc insuficient. Disponibil: ${available} bucăți.`);
+        setToast(t("insufficientStock", { available }));
         return prev;
       }
 
@@ -162,8 +164,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       writeStoredCart(next);
       return next;
     });
-    setToast("Produs adăugat în coș");
-  }, []);
+    setToast(t("addedToCart"));
+  }, [t]);
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => {
@@ -196,7 +198,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         getCartQuantityForProduct(prev, target.productId) - target.quantity + quantity;
 
       if (totalForProduct > available) {
-        setToast(`Stoc insuficient. Disponibil: ${available} bucăți.`);
+        setToast(t("insufficientStock", { available }));
         return prev;
       }
 
@@ -204,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       writeStoredCart(next);
       return next;
     });
-  }, []);
+  }, [t]);
 
   const clearCart = useCallback(() => {
     setItems([]);

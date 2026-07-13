@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Check, Cpu, Layers, Lock, ShieldCheck, ShoppingBag, X, Zap } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -56,6 +57,9 @@ export function ProductModal({
   bundleColors,
   adapterColorStyles,
 }: ProductModalProps) {
+  const t = useTranslations("productModal");
+  const tc = useTranslations("common");
+  const tw = useTranslations("whatsapp");
   const backdropPressedRef = useRef(false);
 
   useEffect(() => {
@@ -86,7 +90,7 @@ export function ProductModal({
       onPointerUp={handleBackdropPointerUp}
       role="dialog"
       aria-modal="true"
-      aria-label="Detalii produs"
+      aria-label={t("ariaLabel")}
     >
       <div
         className="bg-novra-surface border border-white/10 rounded-t-2xl sm:rounded-2xl max-w-4xl w-full max-h-[92dvh] overflow-y-auto p-4 sm:p-6 md:p-8 relative flex flex-col md:flex-row gap-4 md:gap-8 text-left"
@@ -97,7 +101,7 @@ export function ProductModal({
           href={closeHref}
           scroll={false}
           onClick={onClose}
-          aria-label="Închide detaliile produsului"
+          aria-label={t("closeAria")}
           className="absolute top-4 right-4 text-gray-400 hover:text-white bg-novra-card/40 hover:bg-novra-elevated rounded-full transition cursor-pointer z-10 touch-manipulation min-w-11 min-h-11 flex items-center justify-center"
         >
           <X size={20} />
@@ -147,25 +151,25 @@ export function ProductModal({
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Zap size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Alimentare:</strong> {product.specs.power}
+                  <strong>{t("specPower")}</strong> {product.specs.power}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Layers size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Sincronizare:</strong> {product.specs.speed}
+                  <strong>{t("specSync")}</strong> {product.specs.speed}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Cpu size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Arhitectură:</strong> {product.specs.chip}
+                  <strong>{t("specArch")}</strong> {product.specs.chip}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <ShieldCheck size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Material:</strong> {product.specs.material}
+                  <strong>{t("specMaterial")}</strong> {product.specs.material}
                 </span>
               </div>
             </div>
@@ -175,7 +179,7 @@ export function ProductModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {(["adapter", "cable"] as const).map((colorType) => {
                     const activeIdx = colorType === "adapter" ? bundleSelection.adapterIdx : bundleSelection.cableIdx;
-                    const label = colorType === "adapter" ? "Culoare adaptor" : "Culoare cablu";
+                    const label = colorType === "adapter" ? t("adapterColor") : t("cableColor");
 
                     return (
                       <div key={colorType}>
@@ -219,7 +223,7 @@ export function ProductModal({
                   })}
                 </div>
                 <p className="text-[10px] text-gray-500 font-light mt-3">
-                  Combinație:{" "}
+                  {t("combination")}{" "}
                   <span className="text-purple-400 font-medium">
                     {getBundleVariantLabel(bundleSelection.adapterIdx, bundleSelection.cableIdx)}
                   </span>
@@ -228,7 +232,7 @@ export function ProductModal({
             ) : (
               <div className="mb-2">
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 block mb-2 font-bold">
-                  {isAdapterProduct(product.category) ? "Alege Culoarea" : "Alege Varianta"}
+                  {isAdapterProduct(product.category) ? t("chooseColor") : t("chooseVariant")}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {product.options.map((option, optionIdx) => {
@@ -261,7 +265,7 @@ export function ProductModal({
                             <Lock size={11} className="text-red-500 shrink-0" />
                             <span className="text-red-400 font-semibold">{option}</span>
                             <span className="text-[8px] text-red-400 uppercase tracking-wider font-bold sm:whitespace-nowrap">
-                              Disponibil în curând
+                              {t("comingSoon")}
                             </span>
                           </>
                         ) : (
@@ -292,12 +296,12 @@ export function ProductModal({
 
           <div className="border-t border-white/10 shrink-0 bg-novra-surface pt-4 mt-4 sticky bottom-0">
             <div className="mb-3">
-              <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">Preț Final</span>
+              <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
               <span className="text-2xl font-bold text-white tracking-tight">
                 {isBundleProduct(product.category)
                   ? product.basePrice.toFixed(2)
                   : (product.basePrice + product.modifiers[activeOptionIdx]).toFixed(2)}{" "}
-                RON
+                {tc("ron")}
               </span>
             </div>
 
@@ -311,7 +315,7 @@ export function ProductModal({
                 }`}
               >
                 <ShoppingBag size={15} />
-                {addedFeedback ? "Adăugat în coș!" : "Adaugă în coș"}
+                {addedFeedback ? t("addedToCart") : tc("addToCart")}
               </button>
               {whatsAppUrl ? (
                 <a
@@ -324,12 +328,12 @@ export function ProductModal({
                   aria-disabled={isCurrentVariantUnavailable}
                 >
                   <FaWhatsapp size={16} />
-                  WhatsApp
+                  {tw("label")}
                 </a>
               ) : (
                 <span className="flex-1 flex items-center justify-center gap-2 bg-[#25D366]/50 text-white/70 font-semibold px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider min-h-11 opacity-50">
                   <FaWhatsapp size={16} />
-                  WhatsApp
+                  {tw("label")}
                 </span>
               )}
             </div>

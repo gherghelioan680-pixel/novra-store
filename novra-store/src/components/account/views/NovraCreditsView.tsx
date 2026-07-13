@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Coins, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -14,17 +15,15 @@ type NovraCreditsViewProps = {
   user: User;
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ro-RO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function getDateLocale(locale: string) {
+  if (locale === "ro") return "ro-RO";
+  if (locale === "de") return "de-DE";
+  return "en-US";
 }
 
 export default function NovraCreditsView({ user }: NovraCreditsViewProps) {
+  const t = useTranslations("accountCredits");
+  const locale = useLocale();
   const [refreshedUser, setRefreshedUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<CreditTransactionClient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +42,18 @@ export default function NovraCreditsView({ user }: NovraCreditsViewProps) {
 
   const credits = getNovraCredits(liveUser);
 
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(getDateLocale(locale), {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   return (
     <div>
-      <h2 className="mb-6 text-xl font-semibold text-white">NovraCredits</h2>
+      <h2 className="mb-6 text-xl font-semibold text-white">{t("title")}</h2>
 
       <div className="mb-6 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-600/20 to-novra-card/40 p-6">
         <div className="flex items-center gap-4">
@@ -53,31 +61,28 @@ export default function NovraCreditsView({ user }: NovraCreditsViewProps) {
             <Coins className="h-7 w-7 text-purple-300" />
           </div>
           <div>
-            <p className="text-sm text-gray-400">Sold curent</p>
+            <p className="text-sm text-gray-400">{t("currentBalance")}</p>
             <p className="text-3xl font-bold text-white">{credits}</p>
-            <p className="text-xs text-gray-500">NovraCredits (= {credits} Lei reducere)</p>
+            <p className="text-xs text-gray-500">{t("creditsEqual", { credits })}</p>
           </div>
         </div>
       </div>
 
       <div className="mb-6 rounded-xl border border-white/10 bg-novra-card/30 p-5">
-        <h3 className="text-sm font-medium text-white">Cum folosești creditele</h3>
-        <p className="mt-2 text-sm text-gray-400">
-          1 NovraCredit = 1 Leu reducere la checkout. Câștigă credite completând profilul,
-          abonându-te la newsletter sau cumpărând pachete Gift Card.
-        </p>
+        <h3 className="text-sm font-medium text-white">{t("howToUseTitle")}</h3>
+        <p className="mt-2 text-sm text-gray-400">{t("howToUseDesc")}</p>
       </div>
 
       <div>
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-widest text-gray-500">
-          Istoric tranzacții
+          {t("transactionHistory")}
         </h3>
 
         {loading ? (
-          <p className="text-sm text-gray-500">Se încarcă...</p>
+          <p className="text-sm text-gray-500">{t("loading")}</p>
         ) : transactions.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-novra-card/30 px-4 py-8 text-center">
-            <p className="text-sm text-gray-500">Nicio tranzacție încă.</p>
+            <p className="text-sm text-gray-500">{t("noTransactions")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -116,7 +121,9 @@ export default function NovraCreditsView({ user }: NovraCreditsViewProps) {
                       {isCredit ? "+" : ""}
                       {tx.amount}
                     </p>
-                    <p className="text-[10px] text-gray-500">Sold: {tx.balanceAfter}</p>
+                    <p className="text-[10px] text-gray-500">
+                      {t("balance")} {tx.balanceAfter}
+                    </p>
                   </div>
                 </div>
               );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { findBlogArticleBySlug } from "@/lib/blog-server";
@@ -10,21 +11,34 @@ import { renderMarkdown } from "@/lib/markdown";
 import { ArrowLeft, Tag, Clock } from "lucide-react";
 
 type PageProps = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  const t = await getTranslations({ locale, namespace: "blog" });
   const article = await findBlogArticleBySlug(slug);
-  if (!article || !article.published) return { title: "Articol — NOVRA" };
+  if (!article || !article.published) return { title: t("articleMetadataTitle") };
   return {
     title: article.metaTitle || article.title,
     description: article.metaDescription || article.excerpt,
   };
 }
 
+function formatDate(iso: string, locale: string): string {
+  const dateLocale = locale === "ro" ? "ro-RO" : locale === "de" ? "de-DE" : "en-US";
+  return new Date(iso).toLocaleDateString(dateLocale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default async function BlogArticlePage({ params }: PageProps) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("blog");
+  const tc = await getTranslations("common");
   const article = await findBlogArticleBySlug(slug);
 
   if (!article || !article.published) {
@@ -76,7 +90,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition mb-8"
           >
             <ArrowLeft size={16} />
-            Înapoi la ghiduri
+            {t("backToGuides")}
           </Link>
 
           {!article.coverImageUrl && (
@@ -102,11 +116,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6 pb-6 border-b border-white/10">
             <time dateTime={article.createdAt}>
-              {new Date(article.createdAt).toLocaleDateString("ro-RO", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
+              {formatDate(article.createdAt, locale)}
             </time>
             <span className="inline-flex items-center gap-1.5 text-purple-300/80">
               <Clock size={14} />
@@ -124,7 +134,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
 
           {article.tags.length > 0 && (
             <div className="mt-12 pt-8 border-t border-white/10">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Tag-uri</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">{t("tags")}</p>
               <div className="flex flex-wrap gap-2">
                 {article.tags.map((tag) => (
                   <span
@@ -139,12 +149,12 @@ export default async function BlogArticlePage({ params }: PageProps) {
           )}
 
           <div className="mt-12 rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-950/30 to-novra-card/30 p-6 text-center">
-            <p className="text-sm text-gray-400 mb-4">Descoperă cablurile și accesoriile NOVRA menționate în acest ghid.</p>
+            <p className="text-sm text-gray-400 mb-4">{t("ctaText")}</p>
             <Link
               href="/produse"
               className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition"
             >
-              Vezi produsele
+              {tc("viewProducts")}
             </Link>
           </div>
         </div>

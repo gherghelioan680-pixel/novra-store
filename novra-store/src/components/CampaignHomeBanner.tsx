@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { loadActiveCampaigns } from "@/lib/campaigns";
@@ -8,6 +9,7 @@ import { CAMPAIGN_THEME_STYLES, type LandingCampaign } from "@/lib/campaigns-typ
 import { createStoreRefreshEffect } from "@/lib/store";
 
 export default function CampaignHomeBanner() {
+  const t = useTranslations("campaign");
   const [campaign, setCampaign] = useState<LandingCampaign | null>(null);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function CampaignHomeBanner() {
             className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${theme.badge} px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white`}
           >
             <Sparkles size={12} />
-            Campanie activă
+            {t("activeCampaign")}
           </span>
           <h2 className="mt-2 text-xl sm:text-2xl font-bold text-white">{campaign.title}</h2>
           <p className={`mt-1 text-sm ${theme.accent}`}>

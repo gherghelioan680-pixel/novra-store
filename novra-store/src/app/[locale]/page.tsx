@@ -40,26 +40,7 @@ const LiveVisitors = dynamic(() => import("@/components/LiveVisitors"), {
 
 const FEATURED_PRODUCT_IDS = ["usb-c-100w", "usb-c-lightning-pd", "bundle-travel-pack"];
 
-const HERO_CATEGORIES = [
-  {
-    id: "usb-c",
-    label: "Cabluri",
-    description: "Power Delivery până la 100W — viteză și durabilitate premium.",
-    image: "/cablu.png",
-  },
-  {
-    id: "lightning",
-    label: "Adaptoare",
-    description: "Compatibilitate iOS & Android — încărcare rapidă, design compact.",
-    image: "/cablu.png",
-  },
-  {
-    id: "accesorii",
-    label: "Cablu + Adaptor",
-    description: "Pachet complet — tot ce ai nevoie într-un singur kit NOVRA.",
-    image: "/cutie.png",
-  },
-] as const;
+const HERO_CATEGORY_IDS = ["usb-c", "lightning", "accesorii"] as const;
 
 function getCategoryMinPrice(categoryId: string): number {
   const products = getProductsByCategory(categoryId);
@@ -68,10 +49,14 @@ function getCategoryMinPrice(categoryId: string): number {
 }
 
 function HeroPriceRotator() {
+  const th = useTranslations("home");
+  const tc = useTranslations("categories");
   const [heroProducts, setHeroProducts] = useState(() =>
-    HERO_CATEGORIES.map((cat) => ({
-      ...cat,
-      price: getCategoryMinPrice(cat.id).toFixed(2),
+    HERO_CATEGORY_IDS.map((id) => ({
+      id,
+      label: tc(id),
+      description: th(`${id === "usb-c" ? "cables" : id === "lightning" ? "adapters" : "bundles"}Desc`),
+      price: getCategoryMinPrice(id).toFixed(2),
     }))
   );
   const [index, setIndex] = useState(0);
@@ -80,7 +65,7 @@ function HeroPriceRotator() {
   const startAutoRotate = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setIndex((prev) => (prev + 1) % HERO_CATEGORIES.length);
+      setIndex((prev) => (prev + 1) % HERO_CATEGORY_IDS.length);
     }, 4000);
   }, []);
 
@@ -88,9 +73,11 @@ function HeroPriceRotator() {
     return createStoreRefreshEffect(async () => {
       await loadProductOverrides();
       setHeroProducts(
-        HERO_CATEGORIES.map((cat) => ({
-          ...cat,
-          price: getCategoryMinPrice(cat.id).toFixed(2),
+        HERO_CATEGORY_IDS.map((id) => ({
+          id,
+          label: tc(id),
+          description: th(`${id === "usb-c" ? "cables" : id === "lightning" ? "adapters" : "bundles"}Desc`),
+          price: getCategoryMinPrice(id).toFixed(2),
         }))
       );
     }, { scopes: ["products"] });
@@ -127,7 +114,7 @@ function HeroPriceRotator() {
             </p>
             <p className="text-3xl min-[375px]:text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter text-white mb-2">
               {current.price}{" "}
-              <span className="text-lg sm:text-xl font-medium text-gray-400">Lei</span>
+              <span className="text-lg sm:text-xl font-medium text-gray-400">{th("currency")}</span>
             </p>
             <p className="text-gray-400 text-sm sm:text-base max-w-md">{current.description}</p>
           </motion.div>
@@ -139,7 +126,7 @@ function HeroPriceRotator() {
           <button
             key={product.label}
             type="button"
-            aria-label={`Afișează ${product.label}`}
+            aria-label={th("showCategory", { label: product.label })}
             aria-pressed={i === index}
             onClick={() => handleDotClick(i)}
             className="min-h-11 min-w-11 flex items-center justify-center touch-manipulation rounded-full"
@@ -159,19 +146,21 @@ function HeroPriceRotator() {
 
 export default function Home() {
   const th = useTranslations("home");
+  const tc = useTranslations("common");
+  const tcat = useTranslations("categories");
   const { whatsappNumber } = useSiteSettings();
   const reviews = useReviews(3);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "sending" | "success" | "duplicate" | "error">("idle");
   const [newsletterDiscountMessage, setNewsletterDiscountMessage] = useState("");
-  const [homepageProducts, setHomepageProducts] = useState(() => buildHomepageProducts());
+  const [homepageProducts, setHomepageProducts] = useState(() => buildHomepageProducts(tcat));
 
   useEffect(() => {
     return createStoreRefreshEffect(async () => {
       await loadProductOverrides();
-      setHomepageProducts(buildHomepageProducts());
+      setHomepageProducts(buildHomepageProducts(tcat));
     }, { scopes: ["products"] });
-  }, []);
+  }, [tcat]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -233,19 +222,19 @@ export default function Home() {
           className="w-full max-w-xl"
         >
           <p className="text-purple-400 text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] mb-4">
-            NOVRA Premium Accessories
+            {th("badge")}
           </p>
           <h1 className="text-3xl min-[375px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5 sm:mb-6 leading-[1.05]">
-            PRECISION.
+            {th("heroLine1")}
             <br />
-            PERFORMANCE.
+            {th("heroLine2")}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-              POWER.
+              {th("heroLine3")}
             </span>
           </h1>
           <p className="text-gray-300 text-base sm:text-lg mb-8 max-w-md leading-relaxed">
-            Cabluri și adaptoare premium create pentru viteză, siguranță și performanță fără compromis.
+            {th("heroSubtitle")}
           </p>
 
           <div className="mb-10 p-5 sm:p-6 rounded-2xl border border-novra-border bg-novra-card/30 backdrop-blur-sm">
@@ -257,7 +246,7 @@ export default function Home() {
               href="/produse"
               className="inline-flex items-center justify-center gap-2 bg-purple-600 px-6 sm:px-8 py-3.5 min-h-11 rounded-full font-semibold hover:bg-purple-700 transition duration-300 text-center text-sm sm:text-base shadow-lg shadow-purple-900/30 touch-manipulation"
             >
-              Descoperă produsele
+              {th("shopNow")}
               <ArrowRight size={16} aria-hidden />
             </Link>
             <a
@@ -267,7 +256,7 @@ export default function Home() {
               className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] px-6 sm:px-8 py-3.5 rounded-full font-semibold transition duration-300 text-center text-sm sm:text-base shadow-lg shadow-green-500/20"
             >
               <FaWhatsapp size={18} aria-hidden />
-              Comandă pe WhatsApp
+              {th("orderWhatsapp")}
             </a>
           </div>
         </motion.div>
@@ -282,7 +271,7 @@ export default function Home() {
           <div className="relative z-10 w-full">
             <Image
               src="/cablu.png"
-              alt="Cablu NOVRA Premium"
+              alt={th("heroImageAlt")}
               width={500}
               height={500}
               priority
@@ -303,29 +292,29 @@ export default function Home() {
         <div className="flex flex-col items-center text-center gap-3">
           <Zap className="text-purple-500" size={32} />
           <div>
-            <h3 className="font-semibold text-sm sm:text-lg">Încărcare rapidă</h3>
-            <p className="text-xs sm:text-sm text-gray-300">până la 100W</p>
+            <h3 className="font-semibold text-sm sm:text-lg">{th("benefitFastCharge")}</h3>
+            <p className="text-xs sm:text-sm text-gray-300">{th("benefitFastChargeSub")}</p>
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-3">
           <RefreshCcw className="text-purple-500" size={32} />
           <div>
-            <h3 className="font-semibold text-sm sm:text-lg">Transfer de date</h3>
-            <p className="text-xs sm:text-sm text-gray-300">până la 480Mbps</p>
+            <h3 className="font-semibold text-sm sm:text-lg">{th("benefitDataTransfer")}</h3>
+            <p className="text-xs sm:text-sm text-gray-300">{th("benefitDataTransferSub")}</p>
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-3">
           <Gem className="text-purple-500" size={32} />
           <div>
-            <h3 className="font-semibold text-sm sm:text-lg">Materiale premium</h3>
-            <p className="text-xs sm:text-sm text-gray-300">durabile și sigure</p>
+            <h3 className="font-semibold text-sm sm:text-lg">{th("benefitMaterials")}</h3>
+            <p className="text-xs sm:text-sm text-gray-300">{th("benefitMaterialsSub")}</p>
           </div>
         </div>
         <div className="flex flex-col items-center text-center gap-3">
           <ShieldCheck className="text-purple-500" size={32} />
           <div>
-            <h3 className="font-semibold text-sm sm:text-lg">Garanție</h3>
-            <p className="text-xs sm:text-sm text-gray-300">2 ani</p>
+            <h3 className="font-semibold text-sm sm:text-lg">{th("benefitWarranty")}</h3>
+            <p className="text-xs sm:text-sm text-gray-300">{th("benefitWarrantySub")}</p>
           </div>
         </div>
       </motion.section>
@@ -345,23 +334,23 @@ export default function Home() {
           <div>
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold text-xs sm:text-sm mb-3 uppercase tracking-[0.2em]">
               <Zap size={14} aria-hidden />
-              Produse populare
+              {th("popularProducts")}
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-              Alege performanța{" "}
+              {th("choosePerformance")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
                 NOVRA
               </span>
             </h2>
             <p className="text-gray-400 text-sm sm:text-base mt-2 max-w-lg">
-              Cabluri și adaptoare testate riguros — Power Delivery, materiale premium, garanție 2 ani.
+              {th("productsSubtitle")}
             </p>
           </div>
           <Link
             href="/produse"
             className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition font-medium"
           >
-            Vezi toate produsele
+            {th("viewAllProducts")}
             <ArrowRight size={14} aria-hidden />
           </Link>
         </div>
@@ -389,20 +378,19 @@ export default function Home() {
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
                 <Package size={14} aria-hidden />
-                Pachet Ecosystem
+                {th("bundleBadge")}
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Cablu + Adaptor — totul într-un singur pachet
+                {th("bundleTitle")}
               </h2>
               <p className="text-gray-300 text-sm sm:text-base mb-6 max-w-xl mx-auto lg:mx-0">
-                Combină un cablu premium NOVRA cu un adaptor de înaltă performanță. Economisești și obții compatibilitate
-                completă pentru birou, acasă sau călătorii.
+                {th("bundleDesc")}
               </p>
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-6">
-                <span className="text-3xl sm:text-4xl font-bold text-purple-400">159,99 Lei</span>
-                <span className="text-sm text-gray-500 line-through">179,98 Lei</span>
+                <span className="text-3xl sm:text-4xl font-bold text-purple-400">{th("bundlePrice")}</span>
+                <span className="text-sm text-gray-500 line-through">{th("bundleOldPrice")}</span>
                 <span className="text-xs font-semibold text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
-                  Economisești ~20 Lei
+                  {th("bundleSavings")}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
@@ -410,14 +398,14 @@ export default function Home() {
                   href="/produse?category=accesorii"
                   className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-semibold transition text-sm sm:text-base"
                 >
-                  Vezi pachetele
+                  {th("viewBundles")}
                   <ArrowRight size={16} aria-hidden />
                 </Link>
                 <Link
                   href="/accesorii"
                   className="inline-flex items-center justify-center gap-2 border border-novra-border hover:bg-novra-elevated px-6 py-3 rounded-full font-semibold transition text-sm sm:text-base"
                 >
-                  Explorează gama
+                  {th("exploreRange")}
                 </Link>
               </div>
             </div>
@@ -426,7 +414,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-purple-600/20 rounded-2xl blur-2xl" />
               <Image
                 src="/cutie.png"
-                alt="Pachet Cablu + Adaptor NOVRA"
+                alt={th("bundleImageAlt")}
                 width={320}
                 height={320}
                 className="relative z-10 w-full h-auto rounded-2xl"
@@ -449,23 +437,22 @@ export default function Home() {
           <div className="order-2 lg:order-1">
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
               <Sparkles size={14} aria-hidden />
-              Despre NOVRA
+              {th("aboutBadge")}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6 leading-[1.1]">
-              Tehnologie care{" "}
+              {th("aboutTitle")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-600">
-                conectează viitorul
+                {th("aboutTitleHighlight")}
               </span>
             </h2>
             <p className="text-gray-300 text-base sm:text-lg leading-relaxed font-light mb-6">
-              NOVRA este mai mult decât un cablu. Este promisiunea performanței, a siguranței și a designului premium,
-              creat pentru cei care cer mai mult de la tehnologie.
+              {th("aboutDesc")}
             </p>
             <ul className="space-y-3 mb-8">
               {[
-                { icon: Zap, text: "Power Delivery până la 100W" },
-                { icon: Gem, text: "Materiale premium, finisaje impecabile" },
-                { icon: ShieldCheck, text: "Garanție 2 ani la fiecare produs" },
+                { icon: Zap, text: th("aboutFeature1") },
+                { icon: Gem, text: th("aboutFeature2") },
+                { icon: ShieldCheck, text: th("aboutFeature3") },
               ].map((item) => (
                 <li key={item.text} className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/25 flex items-center justify-center shrink-0">
@@ -480,7 +467,7 @@ export default function Home() {
                 href="/despre-noi"
                 className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-semibold transition duration-300 text-sm sm:text-base"
               >
-                Descoperă povestea noastră
+                {th("discoverStory")}
                 <ArrowRight size={16} aria-hidden />
               </Link>
               <button
@@ -488,22 +475,22 @@ export default function Home() {
                 onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center justify-center gap-2 border border-novra-border hover:bg-novra-elevated px-6 py-3 min-h-11 rounded-full font-semibold transition duration-300 text-sm sm:text-base touch-manipulation"
               >
-                Rezumat rapid
+                {th("quickSummary")}
               </button>
             </div>
           </div>
           <div className="order-1 lg:order-2 relative h-64 sm:h-80 lg:h-[420px] rounded-3xl overflow-hidden border border-novra-border group">
             <Image
               src="/technologie.png"
-              alt="Despre NOVRA"
+              alt={th("aboutImageAlt")}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-novra-bg/80 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/70 backdrop-blur-md border border-novra-border/60">
-              <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">Peste 10.000+ clienți</p>
-              <p className="text-sm text-white font-medium">Brand românesc, standarde internaționale</p>
+              <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("customersCount")}</p>
+              <p className="text-sm text-white font-medium">{th("brandTagline")}</p>
             </div>
           </div>
         </div>
@@ -523,21 +510,21 @@ export default function Home() {
             <div>
               <span className="inline-flex items-center gap-2 text-purple-400 font-semibold text-xs sm:text-sm mb-3 uppercase tracking-[0.2em]">
                 <Star size={14} aria-hidden />
-                Recenzii clienți
+                {th("reviewsBadge")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-                Peste{" "}
+                {th("reviewsTitle")}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                  10.000+
+                  {th("reviewsTitleHighlight")}
                 </span>{" "}
-                clienți mulțumiți
+                {th("reviewsTitleEnd")}
               </h2>
             </div>
             <Link
               href="/recenzii"
               className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:text-purple-300 transition font-medium"
             >
-              Vezi toate recenziile
+              {th("viewAllReviews")}
               <ArrowRight size={14} aria-hidden />
             </Link>
           </div>
@@ -554,7 +541,7 @@ export default function Home() {
               >
                 <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 blur-[30px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
                 <Quote size={20} className="text-purple-500/40 mb-3" aria-hidden />
-                <div className="flex gap-0.5 mb-4" aria-label={`${review.rating} stele`}>
+                <div className="flex gap-0.5 mb-4" aria-label={th("starsLabel", { count: review.rating })}>
                   {Array.from({ length: review.rating }).map((_, j) => (
                     <Star key={j} size={14} className="text-yellow-500 fill-yellow-500" aria-hidden />
                   ))}
@@ -573,7 +560,7 @@ export default function Home() {
                   <div>
                     <p className="font-semibold text-sm flex items-center gap-1">
                       {review.name}
-                      <CheckCircle2 size={14} className="text-purple-400 shrink-0" aria-label="Client verificat" />
+                      <CheckCircle2 size={14} className="text-purple-400 shrink-0" aria-label={th("verifiedCustomer")} />
                     </p>
                     <p className="text-xs text-gray-500">{review.location}</p>
                   </div>
@@ -604,25 +591,20 @@ export default function Home() {
             <div>
               <span className="inline-flex items-center gap-2 bg-purple-500/15 text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5 border border-purple-500/20">
                 <Sparkles size={13} aria-hidden />
-                Newsletter NOVRA
+                {th("newsletterBadge")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Fii primul care află{" "}
+                {th("newsletterTitle")}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400">
-                  noutățile
+                  {th("newsletterTitleHighlight")}
                 </span>
               </h2>
               <p className="text-gray-300 text-sm sm:text-base mb-6 max-w-md leading-relaxed">
-                Abonează-te și primești oferte exclusive, lansări speciale și acces prioritar la promoțiile NOVRA.
-                Comunitatea noastră primește reduceri înaintea tuturor.
+                {th("newsletterLongDesc")}
               </p>
 
               <ul className="space-y-2.5 mb-8">
-                {[
-                  "Reduceri exclusive pentru abonați",
-                  "Acces prioritar la lansări noi",
-                  "Sfaturi de la echipa NOVRA",
-                ].map((perk) => (
+                {[th("newsletterPerk1"), th("newsletterPerk2"), th("newsletterPerk3")].map((perk) => (
                   <li key={perk} className="flex items-center gap-2.5 text-sm text-gray-300">
                     <Gift size={15} className="text-purple-400 shrink-0" aria-hidden />
                     {perk}
@@ -642,7 +624,7 @@ export default function Home() {
                       type="email"
                       name="email"
                       required
-                      placeholder="Adresa ta de email"
+                      placeholder={th("emailPlaceholder")}
                       className="w-full bg-transparent border-0 pl-11 pr-4 py-3.5 rounded-xl outline-none focus:ring-2 focus:ring-purple-500/40 text-white placeholder:text-novra-muted text-sm sm:text-base"
                     />
                   </div>
@@ -651,7 +633,7 @@ export default function Home() {
                     disabled={newsletterStatus === "sending"}
                     className="inline-flex items-center justify-center gap-2 min-h-11 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 px-6 sm:px-8 py-3.5 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 cursor-pointer whitespace-nowrap text-sm sm:text-base shadow-lg shadow-purple-900/30 touch-manipulation"
                   >
-                    {newsletterStatus === "sending" ? "Se trimite..." : "Abonează-te"}
+                    {newsletterStatus === "sending" ? th("sending") : th("subscribe")}
                     {newsletterStatus !== "sending" && <ArrowRight size={16} aria-hidden />}
                   </button>
                 </div>
@@ -664,7 +646,7 @@ export default function Home() {
                   >
                     <span className="inline-flex items-center gap-2">
                       <CheckCircle2 size={16} className="text-green-400 shrink-0" aria-hidden />
-                      Abonat cu succes! Mulțumim că te-ai abonat la newsletter-ul NOVRA.
+                      {th("newsletterSuccess")}
                     </span>
                     {newsletterDiscountMessage && (
                       <span className="text-emerald-400 text-xs font-semibold pl-6">{newsletterDiscountMessage}</span>
@@ -679,32 +661,32 @@ export default function Home() {
                     className="text-purple-300 font-medium text-sm flex items-center gap-2"
                   >
                     <CheckCircle2 size={16} className="text-amber-400 shrink-0" aria-hidden />
-                    Ești deja abonat!
+                    {th("newsletterDuplicate")}
                   </motion.p>
                 )}
 
                 {newsletterStatus === "error" && (
                   <p className="text-red-400 font-medium text-sm">
-                    Trimiterea a eșuat. Te rugăm să încerci din nou.
+                    {th("newsletterError")}
                   </p>
                 )}
               </form>
 
-              <p className="text-xs text-novra-muted mt-4">Fără spam. Dezabonare oricând.</p>
+              <p className="text-xs text-novra-muted mt-4">{th("noSpam")}</p>
             </div>
 
             <div className="relative h-56 sm:h-72 lg:h-80 rounded-2xl overflow-hidden border border-purple-500/15">
               <Image
                 src="/cutie.png"
-                alt="Newsletter NOVRA"
+                alt={th("newsletterImageAlt")}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-purple-950/60 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/70 backdrop-blur-md border border-novra-border/60">
-                <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">Ofertă de bun venit</p>
-                <p className="text-sm text-white font-medium">Primești 10% reducere la prima comandă</p>
+                <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("welcomeOffer")}</p>
+                <p className="text-sm text-white font-medium">{th("welcomeDiscount")}</p>
               </div>
             </div>
           </div>
@@ -738,10 +720,10 @@ export default function Home() {
               onClick={(e) => e.stopPropagation()}
             >
               <h2 id="rezumat-rapid-title" className="text-2xl font-bold mb-2">
-                Rezumat rapid NOVRA
+                {th("modalTitle")}
               </h2>
               <p className="text-gray-300 mb-6 text-sm sm:text-base">
-                Accesează rapid categoriile noastre sau explorează întregul catalog de cabluri și adaptoare premium.
+                {th("modalDesc")}
               </p>
 
               <div className="space-y-2.5 mb-6">
@@ -752,7 +734,7 @@ export default function Home() {
                     onClick={() => setIsModalOpen(false)}
                     className="flex items-center justify-between gap-3 min-h-11 px-4 py-3 rounded-xl border border-novra-border bg-novra-card/40 hover:border-purple-500/40 hover:bg-novra-card/70 transition-colors touch-manipulation"
                   >
-                    <span className="font-medium text-sm sm:text-base">{cat.label}</span>
+                    <span className="font-medium text-sm sm:text-base">{tcat(cat.id)}</span>
                     <ArrowRight size={16} className="text-purple-400 shrink-0" aria-hidden />
                   </Link>
                 ))}
@@ -761,7 +743,7 @@ export default function Home() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex items-center justify-between gap-3 min-h-11 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-600/15 hover:bg-purple-600/25 transition-colors touch-manipulation"
                 >
-                  <span className="font-semibold text-sm sm:text-base">Toate produsele</span>
+                  <span className="font-semibold text-sm sm:text-base">{th("allProducts")}</span>
                   <ArrowRight size={16} className="text-purple-300 shrink-0" aria-hidden />
                 </Link>
               </div>
@@ -771,7 +753,7 @@ export default function Home() {
                 onClick={() => setIsModalOpen(false)}
                 className="w-full min-h-11 bg-purple-600 py-3 rounded-lg font-semibold hover:bg-purple-700 touch-manipulation"
               >
-                Închide
+                {tc("close")}
               </button>
             </motion.div>
           </motion.div>
@@ -781,12 +763,11 @@ export default function Home() {
   );
 }
 
-function buildHomepageProducts() {
+function buildHomepageProducts(tcat: (key: string) => string) {
   return FEATURED_PRODUCT_IDS.map((id) => {
     const product = getProductById(id);
     if (!product) return null;
-    const categoryLabel =
-      CATALOG_CATEGORIES.find((c) => c.id === product.category)?.label ?? product.category;
+    const categoryLabel = tcat(product.category);
     return {
       title: product.title,
       category: categoryLabel,
@@ -854,6 +835,9 @@ function ProductCard({
   inStock: boolean;
   index?: number;
 }) {
+  const th = useTranslations("home");
+  const tp = useTranslations("products");
+  const tc = useTranslations("common");
   const { addItem } = useCart();
   const [showGoToCart, setShowGoToCart] = useState(false);
 
@@ -867,7 +851,7 @@ function ProductCard({
   const handleWhatsAppOrder = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const message = `Salut, aș dori să comand produsul: ${title} (${category}) — Preț: ${price}.`;
+    const message = th("productWhatsappMessage", { title, category, price });
     window.open(buildWhatsAppUrl(whatsappNumber, message), "_blank");
   };
 
@@ -904,12 +888,12 @@ function ProductCard({
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
           {bestseller && (
             <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-600/90 to-orange-500/85 border border-amber-500/40 text-white shadow-lg">
-              Bestseller
+              {tp("bestseller")}
             </span>
           )}
           {isBundle && bundleSavings !== null && bundleSavings > 0 && (
             <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-600/85 border border-emerald-500/40 text-white shadow-lg">
-              Economisești {bundleSavings.toFixed(0)} lei
+              {th("saveAmount", { amount: bundleSavings.toFixed(0) })}
             </span>
           )}
         </div>
@@ -934,8 +918,8 @@ function ProductCard({
           <button
             type="button"
             onClick={handleQuickAdd}
-            title={inStock ? "Adaugă rapid în coș" : "Stoc epuizat"}
-            aria-label={inStock ? `Adaugă rapid ${title} în coș` : `${title} — stoc epuizat`}
+            title={inStock ? th("quickAddTitle") : tc("outOfStock")}
+            aria-label={inStock ? th("addToCartAria", { title }) : th("outOfStockAria", { title })}
             disabled={!inStock}
             className={`relative z-10 min-h-11 inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-full transition-colors duration-300 shadow-lg touch-manipulation text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
               inStock
@@ -945,7 +929,7 @@ function ProductCard({
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
             <ShoppingBag size={14} aria-hidden />
-            {inStock ? "Adaugă rapid" : "Stoc epuizat"}
+            {inStock ? th("quickAdd") : tc("outOfStock")}
           </button>
           {showGoToCart && (
             <Link
@@ -953,14 +937,14 @@ function ProductCard({
               onClick={(e) => e.stopPropagation()}
               className="relative z-10 min-h-11 flex items-center justify-center px-3 bg-white/10 border border-white/20 text-white text-[10px] font-semibold uppercase tracking-wider rounded-full hover:bg-white/15 transition-colors touch-manipulation whitespace-nowrap"
             >
-              Mergi la coș
+              {th("goToCart")}
             </Link>
           )}
           <button
             type="button"
             onClick={handleWhatsAppOrder}
-            title="Comandă pe WhatsApp"
-            aria-label={`Comandă ${title} pe WhatsApp`}
+            title={th("orderWhatsappTitle")}
+            aria-label={th("orderWhatsappAria", { title })}
             className="relative z-10 min-w-11 min-h-11 flex items-center justify-center p-3 bg-[#25D366] rounded-full hover:bg-[#20bd5a] transition-colors duration-300 text-white shadow-lg shadow-green-500/20 touch-manipulation"
           >
             <FaWhatsapp size={16} />

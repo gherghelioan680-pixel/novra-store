@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Zap, ShieldCheck, Cpu, Layers, ArrowLeft, Check, ShoppingBag } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -22,6 +23,9 @@ import { getWhatsAppNumber } from "@/lib/site-settings";
 import { buildWhatsAppUrl as buildWhatsAppLink } from "@/lib/store";
 
 export default function Accesorii() {
+  const t = useTranslations("accesorii");
+  const tc = useTranslations("common");
+  const tw = useTranslations("whatsapp");
   const { addItem } = useCart();
   const accessoryProducts = getProductsByCategory("accesorii");
   const [colorSelections, setColorSelections] = useState(DEFAULT_BUNDLE_SELECTIONS);
@@ -45,7 +49,12 @@ export default function Accesorii() {
     const variantLabel = getBundleVariantLabel(adapterIdx, cableIdx);
     const finalPrice = product.basePrice.toFixed(2);
 
-    const message = `Salut echipa NOVRA! Aș dori să comand din gama Cablu + Adaptor:\n\n- Produs: ${product.title}\n- Tip: ${product.subtitle}\n- Configurație: ${variantLabel}\n- Preț: ${finalPrice} RON`;
+    const message = t("whatsappOrderMessage", {
+      title: product.title,
+      subtitle: product.subtitle,
+      variantLabel,
+      price: finalPrice,
+    });
 
     const url = buildWhatsAppLink(getWhatsAppNumber(), message);
     if (url) window.open(url, "_blank");
@@ -71,19 +80,19 @@ export default function Accesorii() {
       <main className="pb-page px-4 sm:px-6 md:px-12 max-w-7xl mx-auto">
         {/* Link Înapoi */}
         <Link href="/#produse" className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group">
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Înapoi la catalog
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t("backToCatalog")}
         </Link>
 
         {/* Hero Categorie */}
         <div className="relative border-b border-white/10 pb-16 mb-20 overflow-hidden">
           <div className="absolute top-10 right-10 w-72 h-72 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
           <div className="max-w-3xl">
-            <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">Ecosistemul Hardware</span>
+            <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">{t("categoryLabel")}</span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter mb-6">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">Cablu + Adaptor</span> de Înaltă Găsire
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">{t("titleHighlight")}</span> {t("titleSuffix")}
             </h1>
             <p className="text-gray-400 text-lg font-light leading-relaxed">
-              Completează-ți arsenalul tehnologic. Încărcătoare compacte de rețea și adaptoare auto proiectate din materiale de top, menite să livreze energie curată, eficientă și sigură cablurilor tale NOVRA.
+              {t("description")}
             </p>
           </div>
         </div>
@@ -137,19 +146,19 @@ export default function Accesorii() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-novra-card/40 border border-white/8 p-4 rounded-2xl mb-6 text-xs">
                       <div className="flex items-center gap-2.5 text-gray-300">
                         <Zap size={16} className="text-purple-500 shrink-0" />
-                        <span><strong>Performanță:</strong> {product.specs.power}</span>
+                        <span><strong>{t("specPerformance")}</strong> {product.specs.power}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-gray-300">
                         <Layers size={16} className="text-purple-500 shrink-0" />
-                        <span><strong>Protocoale:</strong> {product.specs.speed}</span>
+                        <span><strong>{t("specProtocols")}</strong> {product.specs.speed}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-gray-300">
                         <Cpu size={16} className="text-purple-500 shrink-0" />
-                        <span><strong>Tehnologie:</strong> {product.specs.chip}</span>
+                        <span><strong>{t("specTechnology")}</strong> {product.specs.chip}</span>
                       </div>
                       <div className="flex items-center gap-2.5 text-gray-300">
                         <ShieldCheck size={16} className="text-purple-500 shrink-0" />
-                        <span><strong>Material:</strong> {product.specs.material}</span>
+                        <span><strong>{t("specMaterial")}</strong> {product.specs.material}</span>
                       </div>
                     </div>
 
@@ -157,7 +166,7 @@ export default function Accesorii() {
                     <div className="space-y-5 mb-8">
                       {(["adapter", "cable"] as const).map((colorType) => {
                         const activeIdx = colorType === "adapter" ? selection.adapterIdx : selection.cableIdx;
-                        const label = colorType === "adapter" ? "Culoare adaptor" : "Culoare cablu";
+                        const label = colorType === "adapter" ? t("adapterColor") : t("cableColor");
 
                         return (
                           <div key={colorType}>
@@ -202,7 +211,7 @@ export default function Accesorii() {
                         );
                       })}
                       <p className="text-[10px] text-gray-500 font-light">
-                        Combinație selectată:{" "}
+                        {t("selectedCombination")}{" "}
                         <span className="text-purple-400 font-medium">
                           {getBundleVariantLabel(selection.adapterIdx, selection.cableIdx)}
                         </span>
@@ -213,8 +222,8 @@ export default function Accesorii() {
                   {/* Preț și Trimitere Comandă */}
                   <div className="border-t border-white/10 pt-6">
                     <div className="mb-4">
-                      <span className="text-[10px] uppercase tracking-widest text-gray-500 block font-medium">Preț final</span>
-                      <span className="text-2xl font-bold text-white tracking-tight">{currentPrice} RON</span>
+                      <span className="text-[10px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
+                      <span className="text-2xl font-bold text-white tracking-tight">{currentPrice} {tc("ron")}</span>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2.5">
@@ -224,7 +233,7 @@ export default function Accesorii() {
                         className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3.5 rounded-xl text-sm transition-all duration-300 shadow-xl cursor-pointer min-h-11 touch-manipulation"
                       >
                         <ShoppingBag size={16} />
-                        {addedProductId === product.id ? "Adăugat în coș!" : "Adaugă în coș"}
+                        {addedProductId === product.id ? t("addedToCart") : tc("addToCart")}
                       </button>
                       <button
                         type="button"
@@ -232,7 +241,7 @@ export default function Accesorii() {
                         className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5C] text-white font-semibold px-6 py-3.5 rounded-xl text-sm transition-all duration-300 shadow-xl cursor-pointer min-h-11 touch-manipulation"
                       >
                         <FaWhatsapp size={16} />
-                        WhatsApp
+                        {tw("label")}
                       </button>
                     </div>
                   </div>

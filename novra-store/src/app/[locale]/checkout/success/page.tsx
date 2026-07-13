@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CopyButton from "@/components/CopyButton";
@@ -15,6 +17,8 @@ import GuestAccountPrompt from "@/components/checkout/GuestAccountPrompt";
 function CheckoutSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("checkoutSuccess");
+  const tc = useTranslations("common");
   const { clearCart } = useCart();
   const sessionId = searchParams.get("session_id");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -58,29 +62,25 @@ function CheckoutSuccessContent() {
         {status === "loading" && (
           <>
             <Loader2 size={48} className="mx-auto text-purple-400 mb-6 animate-spin" />
-            <h1 className="text-2xl font-bold mb-2">Se verifică plata...</h1>
-            <p className="text-gray-400 text-sm">Te rugăm să aștepți câteva secunde.</p>
+            <h1 className="text-2xl font-bold mb-2">{t("verifyingPayment")}</h1>
+            <p className="text-gray-400 text-sm">{t("pleaseWait")}</p>
           </>
         )}
 
         {status === "success" && (
           <>
             <CheckCircle size={56} className="mx-auto text-green-500 mb-6" />
-            <h1 className="text-4xl font-bold tracking-tighter mb-4">Plată reușită!</h1>
-            <p className="text-gray-300 mb-4 leading-relaxed px-2">
-              Mulțumim! Plata cu cardul a fost procesată cu succes. Vei primi un email de confirmare cu detaliile comenzii.
-            </p>
+            <h1 className="text-4xl font-bold tracking-tighter mb-4">{t("paymentSuccess")}</h1>
+            <p className="text-gray-300 mb-4 leading-relaxed px-2">{t("cardSuccessMessage")}</p>
             {order?.purchaseCode && (
               <div className="mb-8 inline-flex flex-col items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-600/10 px-6 py-4">
-                <p className="text-xs uppercase tracking-widest text-gray-400">Cod comandă</p>
+                <p className="text-xs uppercase tracking-widest text-gray-400">{t("purchaseCode")}</p>
                 <p className="font-mono text-lg font-semibold text-purple-300">{order.purchaseCode}</p>
-                <CopyButton text={order.purchaseCode} label="Copiază cod" />
+                <CopyButton text={order.purchaseCode} label={t("copyCode")} />
               </div>
             )}
             {!order?.purchaseCode && (
-              <p className="text-gray-400 text-sm mb-8">
-                Plata a fost procesată. Dacă nu primești emailul de confirmare în câteva minute, contactează-ne.
-              </p>
+              <p className="text-gray-400 text-sm mb-8">{t("noPurchaseCode")}</p>
             )}
             {order && isGuestOrder(order) && !getCurrentUser() && (
               <GuestAccountPrompt order={order} />
@@ -90,30 +90,28 @@ function CheckoutSuccessContent() {
               onClick={() => router.push("/contul-meu")}
               className="min-h-11 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-10 py-4 rounded-xl text-sm transition-all touch-manipulation mr-3"
             >
-              Comenzile mele
+              {t("myOrders")}
             </button>
             <button
               type="button"
               onClick={() => router.push("/produse")}
               className="min-h-11 border border-white/10 hover:bg-white/5 text-white font-semibold px-10 py-4 rounded-xl text-sm transition-all touch-manipulation"
             >
-              Continuă cumpărăturile
+              {tc("continueShopping")}
             </button>
           </>
         )}
 
         {status === "error" && (
           <>
-            <h1 className="text-2xl font-bold mb-4 text-red-300">Plata nu a putut fi confirmată</h1>
-            <p className="text-gray-400 mb-6 text-sm">
-              Dacă ai fost taxat, contactează-ne pe WhatsApp cu dovada plății.
-            </p>
+            <h1 className="text-2xl font-bold mb-4 text-red-300">{t("paymentNotConfirmed")}</h1>
+            <p className="text-gray-400 mb-6 text-sm">{t("chargedContact")}</p>
             <button
               type="button"
               onClick={() => router.push("/checkout")}
               className="min-h-11 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-8 py-3 rounded-xl text-sm"
             >
-              Înapoi la checkout
+              {t("backToCheckout")}
             </button>
           </>
         )}

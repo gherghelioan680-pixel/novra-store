@@ -404,6 +404,16 @@ export default function AdminSetariPage() {
               <span className="text-sm text-gray-300">Afișează formular newsletter</span>
             </label>
 
+            <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 text-xs text-gray-400 leading-relaxed space-y-2">
+              <p className="font-semibold text-purple-200">Flux reducere 10% prima comandă (Coming Soon)</p>
+              <ol className="list-decimal list-inside space-y-1 text-gray-400">
+                <li>Vizitatorul introduce emailul pe pagina Coming Soon (sau homepage).</li>
+                <li>Se salvează în Redis/newsletter și se generează cod <code className="text-purple-300">NOVRA10-XXXX</code> cu procentul din „Coduri reducere newsletter”.</li>
+                <li>Dacă <code className="text-purple-300">RESEND_API_KEY</code> este configurat, codul se trimite automat pe email.</li>
+                <li>La prima comandă, clientul aplică codul la checkout — validare single-use per email.</li>
+              </ol>
+            </div>
+
             <button
               type="button"
               onClick={() =>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, X } from "lucide-react";
 import { useIsClient } from "@/hooks/useIsClient";
 import { hasCookieConsentDecision } from "@/lib/cookie-consent";
@@ -15,6 +16,8 @@ import {
 const DISMISS_KEY = "novra-push-dismissed";
 
 export default function PushNotificationPrompt() {
+  const t = useTranslations("push");
+  const tc = useTranslations("common");
   const mounted = useIsClient();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -100,7 +103,7 @@ export default function PushNotificationPrompt() {
           type="button"
           onClick={dismiss}
           className="absolute right-2 top-2 rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
-          aria-label="Închide"
+          aria-label={tc("close")}
         >
           <X size={14} />
         </button>
@@ -110,9 +113,9 @@ export default function PushNotificationPrompt() {
             <Bell size={18} className="text-purple-400" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">Primește oferte NOVRA</p>
+            <p className="text-sm font-semibold text-white">{t("title")}</p>
             <p className="mt-1 text-xs text-gray-400 leading-relaxed">
-              Fii primul care află despre reduceri, lansări și campanii exclusive.
+              {t("description")}
             </p>
           </div>
         </div>
@@ -124,14 +127,14 @@ export default function PushNotificationPrompt() {
             disabled={loading}
             className="flex-1 min-h-10 rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60"
           >
-            {loading ? "Se activează..." : "Activează"}
+            {loading ? t("activating") : t("enable")}
           </button>
           <button
             type="button"
             onClick={dismiss}
             className="min-h-10 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-400 hover:text-white"
           >
-            Nu acum
+            {t("dismiss")}
           </button>
         </div>
       </div>

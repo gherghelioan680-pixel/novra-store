@@ -1,13 +1,15 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function MarketingTicker() {
+  const t = useTranslations("marketingTicker");
   const { marketingTickerMessages } = useSiteSettings();
   const messages =
     marketingTickerMessages.length > 0
       ? marketingTickerMessages
-      : ["Livrare 24-48h în toată România"];
+      : [t("fallback")];
   const items = [...messages, ...messages];
 
   return (

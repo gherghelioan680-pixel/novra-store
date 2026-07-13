@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { MapPin } from "lucide-react";
 import { updateShippingAddress, type ShippingAddress, type User } from "@/lib/auth";
 
@@ -66,6 +67,8 @@ type ShippingAddressViewProps = {
 };
 
 export default function ShippingAddressView({ user, onSave, onCancel }: ShippingAddressViewProps) {
+  const t = useTranslations("accountShipping");
+  const tc = useTranslations("common");
   const saved = user.shippingAddress;
 
   const [form, setForm] = useState({
@@ -113,10 +116,8 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-white">Adresa de livrare</h2>
-      <p className="mt-1 text-sm text-gray-400">
-        Adaugă sau actualizează adresa ta pentru livrări rapide.
-      </p>
+      <h2 className="text-xl font-semibold text-white">{t("title")}</h2>
+      <p className="mt-1 text-sm text-gray-400">{t("subtitle")}</p>
 
       {saved && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-purple-500/20 bg-purple-500/5 p-4">
@@ -134,43 +135,43 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <div>
-          <label className="mb-2 block text-sm text-gray-400">Nume complet</label>
+          <label className="mb-2 block text-sm text-gray-400">{t("fullName")}</label>
           <input
             value={form.fullName}
             onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
             className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-            placeholder="Ion Popescu"
+            placeholder={t("fullNamePlaceholder")}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-400">Adresă</label>
+          <label className="mb-2 block text-sm text-gray-400">{t("address")}</label>
           <input
             value={form.addressLine}
             onChange={(e) => setForm((f) => ({ ...f, addressLine: e.target.value }))}
             className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-            placeholder="Strada, număr, bloc, apartament"
+            placeholder={t("addressPlaceholder")}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Oraș</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("city")}</label>
             <input
               value={form.city}
               onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="București"
+              placeholder={t("cityPlaceholder")}
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Județ</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("county")}</label>
             <select
               value={form.county}
               onChange={(e) => setForm((f) => ({ ...f, county: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
             >
-              <option value="">Selectează județul</option>
+              <option value="">{t("selectCounty")}</option>
               {ROMANIAN_COUNTIES.map((county) => (
                 <option key={county} value={county}>
                   {county}
@@ -182,34 +183,34 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Cod poștal</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("postalCode")}</label>
             <input
               value={form.postalCode}
               onChange={(e) => setForm((f) => ({ ...f, postalCode: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="010101"
+              placeholder={t("postalCodePlaceholder")}
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Telefon</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("phone")}</label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="+40 7XX XXX XXX"
+              placeholder={t("phonePlaceholder")}
             />
           </div>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-400">Țară</label>
+          <label className="mb-2 block text-sm text-gray-400">{t("country")}</label>
           <select
             value={form.country}
             disabled
             className="w-full rounded-xl border border-white/10 bg-novra-bg/40 px-4 py-3 text-sm text-gray-500 outline-none"
           >
-            <option value="Romania">România</option>
+            <option value="Romania">{t("romania")}</option>
           </select>
         </div>
 
@@ -225,13 +226,13 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
             onClick={handleCancel}
             className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
           >
-            Anulează
+            {tc("cancel")}
           </button>
           <button
             type="submit"
             className="rounded-xl bg-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
           >
-            Salvează
+            {tc("save")}
           </button>
         </div>
       </form>

@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -20,55 +22,39 @@ import { fadeUp } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/store";
 
-const warrantyHighlights = [
-  { icon: ShieldCheck, label: "24 luni", sub: "Garanție completă" },
-  { icon: RotateCcw, label: "14 zile", sub: "Drept de retur" },
-  { icon: Clock, label: "48h", sub: "Procesare retur" },
-  { icon: CheckCircle2, label: "100%", sub: "Ramburs integral" },
-];
-
-const returnSteps = [
-  {
-    step: "01",
-    title: "Contactează-ne",
-    description: "Scrie-ne pe WhatsApp sau email pentru a iniția cererea de retur. Îți confirmăm procedura în aceeași zi.",
-  },
-  {
-    step: "02",
-    title: "Pregătește coletul",
-    description: "Ambalează produsul în starea originală, cu accesoriile și ambalajul intact. Urmează instrucțiunile primite.",
-  },
-  {
-    step: "03",
-    title: "Expediere retur",
-    description: "Predă coletul curierului conform indicațiilor. Îți comunicăm adresa de retur și detaliile logistice.",
-  },
-  {
-    step: "04",
-    title: "Rambursare",
-    description: "După verificarea produsului, returnăm suma integrală în contul tău bancar în maximum 14 zile lucrătoare.",
-  },
-];
-
-const warrantyCovers = [
-  "Defecte de fabricație sau materiale",
-  "Funcționare necorespunzătoare în condiții normale de utilizare",
-  "Probleme la conectori sau la împletitura cablului",
-  "Înlocuire sau reparare gratuită în perioada garanției",
-];
-
-const warrantyExcludes = [
-  "Deteriorări cauzate de utilizare necorespunzătoare",
-  "Uzură normală sau deteriorări mecanice accidentale",
-  "Modificări sau reparații efectuate de terți neautorizați",
-  "Deteriorări cauzate de lichide, foc sau forță majoră",
-];
-
 export default function GarantieSiRetur() {
+  const t = useTranslations("warranty");
   const { whatsappNumber } = useSiteSettings();
-  const whatsappHref = buildWhatsAppUrl(
-    whatsappNumber,
-    "Salut! Am o solicitare legată de garanție/retur."
+  const whatsappHref = buildWhatsAppUrl(whatsappNumber, t("whatsappMessage"));
+
+  const warrantyHighlights = useMemo(
+    () => [
+      { icon: ShieldCheck, label: t("highlight1"), sub: t("highlight1Sub") },
+      { icon: RotateCcw, label: t("highlight2"), sub: t("highlight2Sub") },
+      { icon: Clock, label: t("highlight3"), sub: t("highlight3Sub") },
+      { icon: CheckCircle2, label: t("highlight4"), sub: t("highlight4Sub") },
+    ],
+    [t]
+  );
+
+  const returnSteps = useMemo(
+    () => [
+      { step: "01", title: t("returnStep1Title"), description: t("returnStep1Desc") },
+      { step: "02", title: t("returnStep2Title"), description: t("returnStep2Desc") },
+      { step: "03", title: t("returnStep3Title"), description: t("returnStep3Desc") },
+      { step: "04", title: t("returnStep4Title"), description: t("returnStep4Desc") },
+    ],
+    [t]
+  );
+
+  const warrantyCovers = useMemo(
+    () => [t("cover1"), t("cover2"), t("cover3"), t("cover4")],
+    [t]
+  );
+
+  const warrantyExcludes = useMemo(
+    () => [t("exclude1"), t("exclude2"), t("exclude3"), t("exclude4")],
+    [t]
   );
 
   return (
@@ -76,28 +62,23 @@ export default function GarantieSiRetur() {
       <Navbar />
 
       <main className="px-4 sm:px-6 md:px-12 max-w-5xl mx-auto pb-page">
-        {/* Hero */}
         <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 mb-8">
           <div className="absolute -top-8 right-0 w-48 h-48 bg-purple-500/8 blur-[80px] rounded-full pointer-events-none" />
           <motion.div {...fadeUp}>
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
               <Sparkles size={14} aria-hidden />
-              Angajamentul NOVRA
+              {t("badge")}
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6">
-              Garanție{" "}
+              {t("title")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                & Retur
+                {t("titleHighlight")}
               </span>
             </h1>
-            <p className="text-gray-400 text-base sm:text-lg font-light max-w-2xl leading-relaxed">
-              Standarde clare, proces transparent. Fiecare produs NOVRA vine cu garanție de 24 luni și drept de retur în
-              14 zile — fără complicații.
-            </p>
+            <p className="text-gray-400 text-base sm:text-lg font-light max-w-2xl leading-relaxed">{t("subtitle")}</p>
           </motion.div>
         </section>
 
-        {/* Quick highlights */}
         <motion.div {...fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-16 sm:mb-20">
           {warrantyHighlights.map((item) => (
             <div
@@ -111,15 +92,14 @@ export default function GarantieSiRetur() {
           ))}
         </motion.div>
 
-        {/* Garanție */}
         <motion.section {...fadeUp} className="mb-16 sm:mb-20">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
               <ShieldCheck size={22} className="text-purple-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-white tracking-tight">Garanția calității</h2>
-              <p className="text-gray-500 text-sm">Încredere totală în fiecare produs</p>
+              <h2 className="text-2xl font-semibold text-white tracking-tight">{t("qualityTitle")}</h2>
+              <p className="text-gray-500 text-sm">{t("qualitySubtitle")}</p>
             </div>
           </div>
 
@@ -128,13 +108,9 @@ export default function GarantieSiRetur() {
             <div className="relative flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10">
               <div className="shrink-0">
                 <div className="text-5xl sm:text-6xl font-bold text-white tracking-tight">24</div>
-                <p className="text-purple-400 font-semibold text-sm mt-1 uppercase tracking-widest">Luni garanție</p>
+                <p className="text-purple-400 font-semibold text-sm mt-1 uppercase tracking-widest">{t("months")}</p>
               </div>
-              <p className="text-gray-300 text-base sm:text-lg font-light leading-relaxed">
-                Fiecare produs NOVRA trece printr-un proces riguros de testare înainte de a părăsi depozitul nostru.
-                Suntem atât de încrezători în durabilitatea accesoriilor noastre, încât oferim garanție completă pentru
-                defectele de fabricație.
-              </p>
+              <p className="text-gray-300 text-base sm:text-lg font-light leading-relaxed">{t("qualityDesc")}</p>
             </div>
           </div>
 
@@ -142,7 +118,7 @@ export default function GarantieSiRetur() {
             <div className="p-6 sm:p-7 rounded-2xl border border-white/8 bg-novra-card/40">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle2 size={18} className="text-green-400" aria-hidden />
-                <h3 className="font-bold text-white">Ce acoperă garanția</h3>
+                <h3 className="font-bold text-white">{t("coversTitle")}</h3>
               </div>
               <ul className="space-y-2.5">
                 {warrantyCovers.map((item) => (
@@ -156,7 +132,7 @@ export default function GarantieSiRetur() {
             <div className="p-6 sm:p-7 rounded-2xl border border-white/8 bg-novra-card/40">
               <div className="flex items-center gap-2 mb-4">
                 <AlertCircle size={18} className="text-amber-400" aria-hidden />
-                <h3 className="font-bold text-white">Ce nu acoperă garanția</h3>
+                <h3 className="font-bold text-white">{t("excludesTitle")}</h3>
               </div>
               <ul className="space-y-2.5">
                 {warrantyExcludes.map((item) => (
@@ -170,42 +146,33 @@ export default function GarantieSiRetur() {
           </div>
         </motion.section>
 
-        {/* Retur */}
         <motion.section {...fadeUp} className="mb-16 sm:mb-20">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
               <RotateCcw size={22} className="text-purple-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-white tracking-tight">Politică de retur</h2>
-              <p className="text-gray-500 text-sm">14 zile calendaristice, fără explicații</p>
+              <h2 className="text-2xl font-semibold text-white tracking-tight">{t("returnTitle")}</h2>
+              <p className="text-gray-500 text-sm">{t("returnSubtitle")}</p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
             <div className="group p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40 hover:border-purple-500/25 transition-all">
               <Package size={24} className="text-purple-400 mb-4" aria-hidden />
-              <h3 className="text-white font-bold text-lg mb-2">Condiții de retur</h3>
-              <p className="text-gray-400 leading-relaxed text-sm sm:text-base">
-                Dacă nu ești pe deplin mulțumit, poți returna produsele în termen de{" "}
-                <strong className="text-white font-semibold">14 zile calendaristice</strong> de la primirea coletului.
-                Produsele trebuie să fie în starea originală, cu ambalajul intact.
-              </p>
+              <h3 className="text-white font-bold text-lg mb-2">{t("conditionsTitle")}</h3>
+              <p className="text-gray-400 leading-relaxed text-sm sm:text-base">{t("conditionsDesc")}</p>
             </div>
             <div className="group p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40 hover:border-purple-500/25 transition-all">
               <CheckCircle2 size={24} className="text-purple-400 mb-4" aria-hidden />
-              <h3 className="text-white font-bold text-lg mb-2">Rambursare</h3>
-              <p className="text-gray-400 leading-relaxed text-sm sm:text-base">
-                După recepționarea și verificarea produsului, returnăm suma integrală în contul tău bancar. Costurile de
-                transport pentru retur sunt suportate de client, cu excepția produselor defecte.
-              </p>
+              <h3 className="text-white font-bold text-lg mb-2">{t("refundTitle")}</h3>
+              <p className="text-gray-400 leading-relaxed text-sm sm:text-base">{t("refundDesc")}</p>
             </div>
           </div>
 
-          {/* Return flow */}
           <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-gradient-to-br from-purple-500/8 to-transparent p-6 sm:p-10">
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
-            <h3 className="text-lg font-bold text-white mb-8 tracking-tight">Cum procedezi?</h3>
+            <h3 className="text-lg font-bold text-white mb-8 tracking-tight">{t("howTitle")}</h3>
             <ol className="grid sm:grid-cols-2 gap-6">
               {returnSteps.map((item) => (
                 <li key={item.step} className="flex gap-4 items-start">
@@ -220,15 +187,12 @@ export default function GarantieSiRetur() {
           </div>
         </motion.section>
 
-        {/* CTA */}
         <motion.div
           {...fadeUp}
           className="text-center p-8 sm:p-10 rounded-3xl border border-novra-border bg-novra-card/30"
         >
-          <h3 className="text-xl sm:text-2xl font-bold mb-3">Ai nevoie de asistență?</h3>
-          <p className="text-gray-400 text-sm mb-6 max-w-lg mx-auto">
-            Echipa NOVRA te ghidează pas cu pas prin procesul de garanție sau retur.
-          </p>
+          <h3 className="text-xl sm:text-2xl font-bold mb-3">{t("ctaTitle")}</h3>
+          <p className="text-gray-400 text-sm mb-6 max-w-lg mx-auto">{t("ctaDesc")}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href={whatsappHref}
@@ -250,7 +214,7 @@ export default function GarantieSiRetur() {
               href="/faq"
               className="inline-flex items-center justify-center gap-2 text-purple-400 hover:text-purple-300 px-6 py-3 font-semibold transition text-sm"
             >
-              Vezi FAQ
+              {t("viewFaq")}
               <ArrowRight size={14} aria-hidden />
             </Link>
           </div>

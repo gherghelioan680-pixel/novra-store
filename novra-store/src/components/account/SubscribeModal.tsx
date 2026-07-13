@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { X, Mail, Send } from "lucide-react";
 import { subscribeUserToNewsletter } from "@/lib/auth";
 
@@ -14,13 +15,14 @@ type SubscribeModalProps = {
 };
 
 export default function SubscribeModal({ isOpen, onClose, defaultEmail = "", onSuccess }: SubscribeModalProps) {
+  const t = useTranslations("subscribeModal");
   const [email, setEmail] = useState(defaultEmail);
   const [agreed, setAgreed] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleSubscribe = async () => {
     if (!agreed) {
-      setMessage("Trebuie să accepți Termenii și Politica de confidențialitate.");
+      setMessage(t("mustAgree"));
       return;
     }
 
@@ -58,15 +60,13 @@ export default function SubscribeModal({ isOpen, onClose, defaultEmail = "", onS
               type="button"
               onClick={onClose}
               className="absolute right-4 top-4 rounded-full p-1 text-gray-400 transition hover:bg-white/10 hover:text-white"
-              aria-label="Închide"
+              aria-label={t("closeAria")}
             >
               <X size={20} />
             </button>
 
-            <h3 className="text-xl font-semibold text-white">Subscribe Now!</h3>
-            <p className="mt-3 text-sm leading-relaxed text-gray-400">
-              Enter your email to receive the latest updates and special offers in our newsletter.
-            </p>
+            <h3 className="text-xl font-semibold text-white">{t("title")}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-gray-400">{t("description")}</p>
 
             <div className="mt-5 flex gap-2">
               <div className="relative flex-1">
@@ -75,7 +75,7 @@ export default function SubscribeModal({ isOpen, onClose, defaultEmail = "", onS
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="exemplu@email.com"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full rounded-xl border border-white/10 bg-novra-bg/60 py-3 pl-10 pr-4 text-sm outline-none focus:border-purple-500/50"
                 />
               </div>
@@ -83,7 +83,7 @@ export default function SubscribeModal({ isOpen, onClose, defaultEmail = "", onS
                 type="button"
                 onClick={handleSubscribe}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700"
-                aria-label="Abonează-te"
+                aria-label={t("subscribeAria")}
               >
                 <Send size={18} />
               </button>
@@ -101,13 +101,13 @@ export default function SubscribeModal({ isOpen, onClose, defaultEmail = "", onS
                 {agreed && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
               </button>
               <span>
-                By continuing, you agree to our{" "}
+                {t("agreePrefix")}{" "}
                 <Link href="/termeni-si-conditii" className="text-blue-400 hover:underline" onClick={onClose}>
-                  Terms of Use
+                  {t("termsLink")}
                 </Link>{" "}
-                and{" "}
+                {t("and")}{" "}
                 <Link href="/politica-confidentialitate" className="text-blue-400 hover:underline" onClick={onClose}>
-                  Privacy Policy
+                  {t("privacyLink")}
                 </Link>
                 .
               </span>

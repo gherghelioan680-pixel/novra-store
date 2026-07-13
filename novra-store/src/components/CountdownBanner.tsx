@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useLayoutEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useIsClient } from "@/hooks/useIsClient";
 import { Flame, Clock } from "lucide-react";
 import Link from "next/link";
 import {
   calcTimeLeft,
-  COUNTDOWN_STATIC_ARIA_LABEL,
   COUNTDOWN_TIMER_ID,
   EMPTY_TIME_LEFT,
   formatCountdownCompact,
@@ -62,6 +62,7 @@ function getInitialTimeLeft(): TimeLeft {
 }
 
 export default function CountdownBanner() {
+  const t = useTranslations("countdown");
   const settings = useSiteSettings();
   const mounted = useIsClient();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(getInitialTimeLeft);
@@ -157,24 +158,24 @@ export default function CountdownBanner() {
               aria-atomic="true"
               aria-label={
                 mounted
-                  ? `Timp rămas: ${formatCountdownCompact(timeLeft)}`
-                  : COUNTDOWN_STATIC_ARIA_LABEL
+                  ? t("timeRemaining", { time: formatCountdownCompact(timeLeft) })
+                  : t("staticAriaLabel")
               }
               suppressHydrationWarning
             >
-              <TimeBlock value={timeLeft.days} label="zile" id={TIME_BLOCK_IDS.days} />
+              <TimeBlock value={timeLeft.days} label={t("days")} id={TIME_BLOCK_IDS.days} />
               <span className="text-purple-300 font-bold text-[9px] min-[360px]:text-[10px] sm:text-sm pb-2 sm:pb-3" aria-hidden>
                 :
               </span>
-              <TimeBlock value={timeLeft.hours} label="ore" id={TIME_BLOCK_IDS.hours} />
+              <TimeBlock value={timeLeft.hours} label={t("hours")} id={TIME_BLOCK_IDS.hours} />
               <span className="text-purple-300 font-bold text-[9px] min-[360px]:text-[10px] sm:text-sm pb-2 sm:pb-3" aria-hidden>
                 :
               </span>
-              <TimeBlock value={timeLeft.minutes} label="min" id={TIME_BLOCK_IDS.minutes} />
+              <TimeBlock value={timeLeft.minutes} label={t("minutes")} id={TIME_BLOCK_IDS.minutes} />
               <span className="text-purple-300 font-bold text-[9px] min-[360px]:text-[10px] sm:text-sm pb-2 sm:pb-3" aria-hidden>
                 :
               </span>
-              <TimeBlock value={timeLeft.seconds} label="sec" id={TIME_BLOCK_IDS.seconds} />
+              <TimeBlock value={timeLeft.seconds} label={t("seconds")} id={TIME_BLOCK_IDS.seconds} />
             </div>
           </div>
 

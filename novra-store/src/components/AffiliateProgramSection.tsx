@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -17,48 +18,34 @@ import {
   MIN_AFFILIATE_PAYOUT_AMOUNT,
 } from "@/lib/affiliates-types";
 
-const steps = [
-  {
-    num: "01",
-    title: "Aplici în cont",
-    desc: "Intră în Contul meu → Program Afiliere, confirmă eligibilitatea și trimite cererea.",
-  },
-  {
-    num: "02",
-    title: "Primești linkul",
-    desc: "După aprobare, primești un link unic de forma novra.ro/?ref=CODUL_TAU.",
-  },
-  {
-    num: "03",
-    title: "Promovezi NOVRA",
-    desc: "Distribui link-ul pe rețele sociale, blog sau canalul tău de conținut.",
-  },
-  {
-    num: "04",
-    title: "Câștigi comision",
-    desc: "Pentru fiecare comandă finalizată atribuită link-ului tău, primești comision în cont.",
-  },
-];
-
-const highlights = [
-  {
-    icon: Wallet,
-    title: `${DEFAULT_AFFILIATE_COMMISSION_RATE}% comision`,
-    desc: "Din subtotalul produselor (fără transport) pentru fiecare comandă validată.",
-  },
-  {
-    icon: Cookie,
-    title: `${AFFILIATE_ATTRIBUTION_DAYS} zile tracking`,
-    desc: "Cookie de atribuire după click pe ?ref= — vizitatorul are 30 zile să comande.",
-  },
-  {
-    icon: Banknote,
-    title: `Minim ${MIN_AFFILIATE_PAYOUT_AMOUNT} RON`,
-    desc: "Solicită retragerea din panoul de afiliat; plata se face prin transfer bancar.",
-  },
-];
-
 export default function AffiliateProgramSection() {
+  const t = useTranslations("affiliate");
+
+  const steps = [
+    { num: "01", title: t("step1Title"), desc: t("step1Desc") },
+    { num: "02", title: t("step2Title"), desc: t("step2Desc") },
+    { num: "03", title: t("step3Title"), desc: t("step3Desc") },
+    { num: "04", title: t("step4Title"), desc: t("step4Desc") },
+  ];
+
+  const highlights = [
+    {
+      icon: Wallet,
+      title: t("highlightCommissionTitle", { rate: DEFAULT_AFFILIATE_COMMISSION_RATE }),
+      desc: t("highlightCommissionDesc"),
+    },
+    {
+      icon: Cookie,
+      title: t("highlightTrackingTitle", { days: AFFILIATE_ATTRIBUTION_DAYS }),
+      desc: t("highlightTrackingDesc"),
+    },
+    {
+      icon: Banknote,
+      title: t("highlightMinTitle", { amount: MIN_AFFILIATE_PAYOUT_AMOUNT }),
+      desc: t("highlightMinDesc"),
+    },
+  ];
+
   return (
     <motion.section
       id="program-afiliere"
@@ -78,19 +65,17 @@ export default function AffiliateProgramSection() {
               <div className="max-w-2xl">
                 <span className="inline-flex items-center gap-2 text-purple-400 font-semibold text-xs sm:text-sm mb-3 uppercase tracking-[0.2em]">
                   <Link2 size={14} aria-hidden />
-                  Program Afiliere
+                  {t("badge")}
                 </span>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                  Câștigă{" "}
+                  {t("titleEarn")}{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                    {DEFAULT_AFFILIATE_COMMISSION_RATE}% comision
+                    {t("titleCommission", { rate: DEFAULT_AFFILIATE_COMMISSION_RATE })}
                   </span>{" "}
-                  promovând NOVRA
+                  {t("titlePromote")}
                 </h2>
                 <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-                  Alătură-te programului de afiliere NOVRA Store. Distribuie link-ul tău unic, urmărește
-                  performanța în cont și retrage comisionul când atingi pragul minim de {MIN_AFFILIATE_PAYOUT_AMOUNT}{" "}
-                  RON.
+                  {t("intro", { amount: MIN_AFFILIATE_PAYOUT_AMOUNT })}
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
@@ -99,14 +84,14 @@ export default function AffiliateProgramSection() {
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-500"
                 >
                   <UserPlus size={16} aria-hidden />
-                  Aplică acum
+                  {t("applyNow")}
                   <ArrowRight size={14} aria-hidden />
                 </Link>
                 <Link
                   href="/termeni-program-afiliere"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-gray-300 transition hover:border-purple-500/30 hover:text-white"
                 >
-                  Termeni program
+                  {t("programTerms")}
                 </Link>
               </div>
             </div>
@@ -129,7 +114,7 @@ export default function AffiliateProgramSection() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Cum funcționează</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">{t("howItWorks")}</h3>
                 <ol className="space-y-4">
                   {steps.map((step) => (
                     <li key={step.num} className="flex gap-4">
@@ -147,23 +132,23 @@ export default function AffiliateProgramSection() {
 
               <div className="space-y-5">
                 <div className="rounded-2xl border border-white/8 bg-black/20 p-5">
-                  <h3 className="text-lg font-semibold text-white mb-3">Proces retragere comision</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">{t("payoutTitle")}</h3>
                   <ul className="space-y-2 text-sm text-gray-400">
                     <li className="flex items-start gap-2">
                       <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-                      Comisionul apare în cont după comenzi finalizate atribuite link-ului tău.
+                      {t("payout1")}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-                      Când soldul disponibil atinge minim {MIN_AFFILIATE_PAYOUT_AMOUNT} RON, soliciți retragerea.
+                      {t("payout2", { amount: MIN_AFFILIATE_PAYOUT_AMOUNT })}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-                      Introduci titular cont, IBAN (recomandat) sau card, și suma dorită.
+                      {t("payout3")}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-                      Echipa NOVRA procesează plata manual prin transfer bancar (5–15 zile lucrătoare).
+                      {t("payout4")}
                     </li>
                   </ul>
                 </div>
@@ -172,20 +157,20 @@ export default function AffiliateProgramSection() {
                   <div className="flex items-start gap-3">
                     <Shield size={18} className="text-purple-400 shrink-0 mt-0.5" aria-hidden />
                     <div>
-                      <h3 className="font-semibold text-white text-sm mb-2">Date colectate & GDPR</h3>
+                      <h3 className="font-semibold text-white text-sm mb-2">{t("gdprTitle")}</h3>
                       <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                        Pentru programul de afiliere colectăm: nume, email, cod de referință, statistici
-                        click-uri/comenzi și, la retragere, date bancare (IBAN sau card) pentru transferul
-                        comisionului. Folosim cookie de atribuire <code className="text-purple-300">?ref=</code>{" "}
-                        (30 zile). Prelucrarea respectă GDPR — detalii în{" "}
-                        <Link href="/politica-confidentialitate" className="text-purple-400 hover:underline">
-                          Politica de confidențialitate
-                        </Link>{" "}
-                        și{" "}
-                        <Link href="/termeni-program-afiliere" className="text-purple-400 hover:underline">
-                          Termenii programului
-                        </Link>
-                        .
+                        {t.rich("gdprText", {
+                          privacyLink: (chunks) => (
+                            <Link href="/politica-confidentialitate" className="text-purple-400 hover:underline">
+                              {chunks}
+                            </Link>
+                          ),
+                          termsLink: (chunks) => (
+                            <Link href="/termeni-program-afiliere" className="text-purple-400 hover:underline">
+                              {chunks}
+                            </Link>
+                          ),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -194,9 +179,9 @@ export default function AffiliateProgramSection() {
             </div>
 
             <p className="text-center text-sm text-gray-500">
-              Gata să începi?{" "}
+              {t("readyToStart")}{" "}
               <Link href="/contul-meu" className="text-purple-400 hover:text-purple-300 font-medium">
-                Contul meu → Program Afiliere
+                {t("accountLink")}
               </Link>
             </p>
           </div>

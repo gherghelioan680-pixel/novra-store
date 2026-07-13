@@ -5,6 +5,7 @@ import type { NewsletterSubscriber } from "@/lib/newsletter";
 import { createNewsletterDiscountCode } from "@/lib/discount-codes-server";
 import { formatDiscountSuccessMessage } from "@/lib/discount-codes";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
+import { sendNewsletterWelcomeEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
 
     subscribers.unshift(next);
     await writeJsonFile(FILE, subscribers);
+
+    void sendNewsletterWelcomeEmail(email, discount.code, discountPercent);
 
     return Response.json({
       ok: true,

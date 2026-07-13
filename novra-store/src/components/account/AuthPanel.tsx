@@ -18,11 +18,13 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [messageIsSuccess, setMessageIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage("");
+    setMessageIsSuccess(false);
     setIsSubmitting(true);
 
     try {
@@ -57,6 +59,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
         const result = await registerUser(name, email, password);
         setMessage(result.message);
         if (result.success && result.user) {
+          setMessageIsSuccess(true);
           onAuthSuccess(result.user, result.message);
         }
         return;
@@ -65,6 +68,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
       const result = await loginUser(email, password);
       setMessage(result.message);
       if (result.success && result.user) {
+        setMessageIsSuccess(true);
         onAuthSuccess(result.user, result.message);
       }
     } finally {
@@ -75,6 +79,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
   const switchMode = (next: "login" | "register" | "forgot-password") => {
     setMode(next);
     setMessage("");
+    setMessageIsSuccess(false);
     setEmail("");
     setPassword("");
     setName("");
@@ -160,7 +165,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-base sm:text-sm outline-none transition focus:border-purple-500/50 touch-manipulation"
-                placeholder="exemplu@email.com"
+                  placeholder={t("emailPlaceholder")}
               />
             </div>
 
@@ -239,7 +244,7 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
 
           {message && (
             <p
-              className={`mt-4 text-sm ${message.includes("reușit") || message.includes("succes") ? "text-green-400" : "text-purple-300"}`}
+              className={`mt-4 text-sm ${messageIsSuccess ? "text-green-400" : "text-purple-300"}`}
               role="status"
               aria-live="polite"
             >

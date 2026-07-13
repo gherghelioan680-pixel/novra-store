@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { CheckCircle, X } from "lucide-react";
 import { changePassword, deleteAccount, type User } from "@/lib/auth";
 
@@ -11,6 +12,8 @@ type ManageAccountViewProps = {
 };
 
 export default function ManageAccountView({ user, onPasswordChanged }: ManageAccountViewProps) {
+  const t = useTranslations("accountManage");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,7 +49,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
     setPasswordSuccess("");
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError("Parolele noi nu coincid.");
+      setPasswordError(t("passwordsMismatch"));
       return;
     }
 
@@ -79,18 +82,18 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
 
   return (
     <div>
-      <h2 className="mb-6 text-xl font-semibold text-white">Setări cont</h2>
+      <h2 className="mb-6 text-xl font-semibold text-white">{t("title")}</h2>
 
       <div className="space-y-4">
         <div className="rounded-xl border border-white/10 bg-novra-card/30 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Email</p>
+              <p className="text-sm text-gray-500">{t("email")}</p>
               <p className="mt-1 font-medium text-white">{user.email}</p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
               <CheckCircle size={14} className="text-green-500" />
-              verificat
+              {t("verified")}
             </span>
           </div>
         </div>
@@ -98,7 +101,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
         <div className="rounded-xl border border-white/10 bg-novra-card/30 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Parolă</p>
+              <p className="text-sm text-gray-500">{t("password")}</p>
               <p className="mt-1 font-medium text-white">••••••••</p>
             </div>
             {!showPasswordForm && (
@@ -107,7 +110,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                 onClick={handleOpenPasswordForm}
                 className="text-sm font-medium text-purple-400 transition hover:text-purple-300"
               >
-                Schimbă parola
+                {t("changePassword")}
               </button>
             )}
           </div>
@@ -115,7 +118,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
           {showPasswordForm && (
             <form onSubmit={handlePasswordSubmit} className="mt-5 space-y-4 border-t border-white/10 pt-5">
               <div>
-                <label className="mb-2 block text-sm text-gray-400">Parola curentă</label>
+                <label className="mb-2 block text-sm text-gray-400">{t("currentPassword")}</label>
                 <input
                   type="password"
                   value={passwordForm.currentPassword}
@@ -127,7 +130,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-gray-400">Parola nouă</label>
+                <label className="mb-2 block text-sm text-gray-400">{t("newPassword")}</label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
@@ -137,7 +140,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-gray-400">Confirmă parola nouă</label>
+                <label className="mb-2 block text-sm text-gray-400">{t("confirmPassword")}</label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
@@ -166,13 +169,13 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                   onClick={handleClosePasswordForm}
                   className="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
                 >
-                  Anulează
+                  {tc("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
                 >
-                  Actualizează parola
+                  {t("updatePassword")}
                 </button>
               </div>
             </form>
@@ -189,23 +192,20 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
               }}
               className="text-sm text-gray-500 transition hover:text-red-400"
             >
-              Șterge contul
+              {t("deleteAccount")}
             </button>
           ) : (
             <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-medium text-white">Ești sigur?</p>
-                  <p className="mt-1 text-sm text-gray-400">
-                    Această acțiune este permanentă. Contul tău și toate datele asociate vor fi
-                    șterse.
-                  </p>
+                  <p className="font-medium text-white">{t("areYouSure")}</p>
+                  <p className="mt-1 text-sm text-gray-400">{t("deleteWarning")}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
                   className="shrink-0 rounded-lg p-1 text-gray-500 transition hover:bg-white/5 hover:text-white"
-                  aria-label="Închide"
+                  aria-label={t("closeAria")}
                 >
                   <X size={18} />
                 </button>
@@ -224,7 +224,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                   disabled={isDeleting}
                   className="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
                 >
-                  Anulează
+                  {tc("cancel")}
                 </button>
                 <button
                   type="button"
@@ -232,7 +232,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
                   disabled={isDeleting}
                   className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
                 >
-                  {isDeleting ? "Se șterge..." : "Confirmă ștergerea"}
+                  {isDeleting ? t("deleting") : t("confirmDelete")}
                 </button>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { use, useState, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
@@ -57,6 +58,10 @@ export default function ProductDetailPage({ params }: PageProps) {
 }
 
 function ProductDetailContent({ product }: { product: CatalogProduct }) {
+  const t = useTranslations("productModal");
+  const tp = useTranslations("products");
+  const tc = useTranslations("common");
+  const tw = useTranslations("whatsapp");
   const { addItem } = useCart();
   const [activeOptionIdx, setActiveOptionIdx] = useState(0);
   const [bundleSelections, setBundleSelections] = useState(DEFAULT_BUNDLE_SELECTIONS);
@@ -104,11 +109,16 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
     }
 
     const variantField = isBundleProduct(p.category)
-      ? "Configurație"
+      ? t("variantConfiguration")
       : isAdapterProduct(p.category)
-        ? "Culoare"
-        : "Varianta/Lungime";
-    const message = `Salut echipa NOVRA! Aș dori să comand următorul produs:\n\n- Produs: ${p.title}\n- ${variantField}: ${variantLabel}\n- Preț: ${finalPrice} RON\n\nVă rog să îmi confirmați disponibilitatea stocului!`;
+        ? t("variantColor")
+        : t("variantLength");
+    const message = t("whatsappOrderMessage", {
+      title: p.title,
+      variantField,
+      variantLabel,
+      price: finalPrice,
+    });
 
     return buildWhatsAppLink(getWhatsAppNumber(), message);
   };
@@ -169,7 +179,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
           href={buildProduseUrl({ category: product.category })}
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-4 sm:mb-6 transition-colors group touch-manipulation"
         >
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Înapoi la catalog
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {tp("backToCatalog")}
         </Link>
 
         <article className="bg-novra-surface border border-white/10 rounded-t-2xl sm:rounded-xl p-3 sm:p-5 md:p-6 flex flex-col md:flex-row gap-3 md:gap-6 -mx-4 sm:mx-0">
@@ -217,25 +227,25 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Zap size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Alimentare:</strong> {product.specs.power}
+                  <strong>{t("specPower")}</strong> {product.specs.power}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Layers size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Sincronizare:</strong> {product.specs.speed}
+                  <strong>{t("specSync")}</strong> {product.specs.speed}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <Cpu size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Arhitectură:</strong> {product.specs.chip}
+                  <strong>{t("specArch")}</strong> {product.specs.chip}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300 min-w-0">
                 <ShieldCheck size={14} className="text-purple-500 shrink-0" />
                 <span className="break-words">
-                  <strong>Material:</strong> {product.specs.material}
+                  <strong>{t("specMaterial")}</strong> {product.specs.material}
                 </span>
               </div>
             </div>
@@ -245,7 +255,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-3">
                   {(["adapter", "cable"] as const).map((colorType) => {
                     const activeIdx = colorType === "adapter" ? bundleSelection.adapterIdx : bundleSelection.cableIdx;
-                    const label = colorType === "adapter" ? "Culoare adaptor" : "Culoare cablu";
+                    const label = colorType === "adapter" ? t("adapterColor") : t("cableColor");
 
                     return (
                       <div key={colorType}>
@@ -292,7 +302,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
             ) : (
               <div className="mb-3">
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 block mb-2 font-bold">
-                  {isAdapterProduct(product.category) ? "Alege Culoarea" : "Alege Varianta"}
+                  {isAdapterProduct(product.category) ? t("chooseColor") : t("chooseVariant")}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {product.options.map((option, optionIdx) => {
@@ -353,9 +363,9 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
             {/* Desktop-only inline price + actions */}
             <div className="border-t border-white/10 pt-3 mt-auto hidden md:block">
               <div className="mb-2.5">
-                <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">Preț Final</span>
+                <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
                 <span className="text-xl font-bold text-white tracking-tight">
-                  {getCurrentPrice().toFixed(2)} RON
+                  {getCurrentPrice().toFixed(2)} {tc("ron")}
                 </span>
               </div>
 
@@ -368,7 +378,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   <ShoppingBag size={15} />
-                  {isOutOfStock ? "Stoc epuizat" : "Adaugă în coș"}
+                  {isOutOfStock ? tc("outOfStock") : tc("addToCart")}
                 </button>
                 {whatsAppUrl && (
                   <a
@@ -378,7 +388,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
                     className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors duration-200 shadow-xl touch-manipulation min-h-11 hover:bg-[#20BA5C] active:bg-[#1da851]"
                   >
                     <FaWhatsapp size={16} />
-                    WhatsApp
+                    {tw("label")}
                   </a>
                 )}
               </div>
@@ -390,9 +400,9 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
       {/* Mobile sticky bottom bar — single CTA area */}
       <div className="fixed bottom-0 left-0 right-0 z-[200] bg-novra-surface/98 backdrop-blur-sm border-t border-white/10 px-4 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden">
         <div className="mb-2">
-          <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">Preț Final</span>
+          <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
           <span className="text-xl font-bold text-white tracking-tight">
-            {getCurrentPrice().toFixed(2)} RON
+            {getCurrentPrice().toFixed(2)} {tc("ron")}
           </span>
         </div>
 
@@ -405,7 +415,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
             <ShoppingBag size={15} />
-            {isOutOfStock ? "Stoc epuizat" : "Adaugă în coș"}
+            {isOutOfStock ? tc("outOfStock") : tc("addToCart")}
           </button>
           {whatsAppUrl && (
             <a
@@ -415,7 +425,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
               className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold px-4 py-3 rounded-xl text-xs uppercase tracking-wider transition-colors duration-200 shadow-xl touch-manipulation min-h-11 hover:bg-[#20BA5C] active:bg-[#1da851]"
             >
               <FaWhatsapp size={16} />
-              WhatsApp
+              {tw("label")}
             </a>
           )}
         </div>

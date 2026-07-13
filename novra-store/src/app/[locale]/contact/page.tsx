@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -20,50 +21,51 @@ import { fadeUp } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl, formatWhatsAppDisplay } from "@/lib/store";
 
-const WHATSAPP_MESSAGE = "Salut! Am o întrebare pentru echipa NOVRA.";
-
 export default function Contact() {
+  const t = useTranslations("contact");
   const { whatsappNumber } = useSiteSettings();
   const phoneDisplay = formatWhatsAppDisplay(whatsappNumber);
 
-  const contactChannels = [
-    {
-      icon: FaWhatsapp,
-      label: "Suport rapid",
-      title: "WhatsApp",
-      value: phoneDisplay,
-      description: "Discută direct cu noi. Timp mediu de răspuns: sub 30 de minute.",
-      href: buildWhatsAppUrl(whatsappNumber, WHATSAPP_MESSAGE),
-      external: true,
-      accent: "hover:border-green-500/40",
-      iconBg: "bg-green-500/10 border-green-500/20",
-      iconClass: "text-[#25D366]",
-    },
-    {
-      icon: Mail,
-      label: "Asistență oficială",
-      title: "Email",
-      value: "support@novra.ro",
-      description: "Pentru comenzi, colaborări sau solicitări comerciale.",
-      href: "mailto:support@novra.ro",
-      external: false,
-      accent: "hover:border-purple-500/30",
-      iconBg: "bg-purple-500/10 border-purple-500/20",
-      iconClass: "text-purple-400",
-    },
-  ];
+  const contactChannels = useMemo(
+    () => [
+      {
+        icon: FaWhatsapp,
+        label: t("whatsappLabel"),
+        title: "WhatsApp",
+        value: phoneDisplay,
+        description: t("whatsappDesc"),
+        href: buildWhatsAppUrl(whatsappNumber, t("whatsappMessage")),
+        external: true,
+        accent: "hover:border-green-500/40",
+        iconBg: "bg-green-500/10 border-green-500/20",
+        iconClass: "text-[#25D366]",
+      },
+      {
+        icon: Mail,
+        label: t("emailLabel"),
+        title: t("emailLabel"),
+        value: "support@novra.ro",
+        description: t("emailDesc"),
+        href: "mailto:support@novra.ro",
+        external: false,
+        accent: "hover:border-purple-500/30",
+        iconBg: "bg-purple-500/10 border-purple-500/20",
+        iconClass: "text-purple-400",
+      },
+    ],
+    [t, whatsappNumber, phoneDisplay]
+  );
 
-  const infoCards = [
-    { icon: Clock, title: "Program", value: "L–V 08:00 – 21:00" },
-    { icon: Phone, title: "Telefon", value: phoneDisplay },
-    { icon: MapPin, title: "Livrare", value: "Toată România" },
-  ];
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+  const infoCards = useMemo(
+    () => [
+      { icon: Clock, title: t("program"), value: t("programValue") },
+      { icon: Phone, title: t("phone"), value: phoneDisplay },
+      { icon: MapPin, title: t("delivery"), value: t("deliveryValue") },
+    ],
+    [t, phoneDisplay]
+  );
+
+  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,27 +104,23 @@ export default function Contact() {
       <Navbar />
 
       <main className="px-4 sm:px-6 md:px-12 max-w-5xl mx-auto pb-page">
-        {/* Hero */}
         <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 mb-4">
           <div className="absolute -top-8 right-0 w-48 h-48 bg-purple-500/8 blur-[80px] rounded-full pointer-events-none" />
           <motion.div {...fadeUp}>
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
               <Sparkles size={14} aria-hidden />
-              Relații clienți
+              {t("badge")}
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6">
-              Contactează{" "}
+              {t("title")}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                NOVRA
+                {t("titleHighlight")}
               </span>
             </h1>
-            <p className="text-gray-400 text-base sm:text-lg font-light max-w-2xl leading-relaxed">
-              Suntem aici pentru tine — comenzi, asistență tehnică sau colaborări. Alege canalul preferat.
-            </p>
+            <p className="text-gray-400 text-base sm:text-lg font-light max-w-2xl leading-relaxed">{t("subtitle")}</p>
           </motion.div>
         </section>
 
-        {/* Info cards */}
         <motion.div {...fadeUp} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10">
           {infoCards.map((card) => (
             <div
@@ -140,7 +138,6 @@ export default function Contact() {
           ))}
         </motion.div>
 
-        {/* Contact channels */}
         <motion.div {...fadeUp} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {contactChannels.map((channel) => {
             const Icon = channel.icon;
@@ -173,7 +170,6 @@ export default function Contact() {
           })}
         </motion.div>
 
-        {/* Form */}
         <motion.section
           {...fadeUp}
           className="p-8 sm:p-10 relative overflow-hidden rounded-3xl border border-white/8 bg-gradient-to-br from-purple-500/8 to-transparent"
@@ -182,55 +178,55 @@ export default function Contact() {
 
           <div className="flex items-center gap-3 mb-8 relative z-10">
             <MessageCircle size={24} className="text-purple-400" aria-hidden />
-            <h2 className="text-2xl font-bold tracking-tight text-white">Trimite un mesaj</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t("formTitle")}</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">Nume complet</label>
+                <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">{t("nameLabel")}</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Andrei Popescu"
+                  placeholder={t("namePlaceholder")}
                   className="w-full bg-novra-card/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">Adresă de email</label>
+                <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">{t("emailFieldLabel")}</label>
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Ex: nume@companie.ro"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full bg-novra-card/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">Subiect</label>
+              <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">{t("subjectLabel")}</label>
               <input
                 type="text"
                 required
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                placeholder="Cu ce te putem ajuta?"
+                placeholder={t("subjectPlaceholder")}
                 className="w-full bg-novra-card/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">Mesaj</label>
+              <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">{t("messageLabel")}</label>
               <textarea
                 rows={5}
                 required
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Scrie detaliile solicitării tale aici..."
+                placeholder={t("messagePlaceholder")}
                 className="w-full bg-novra-card/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-novra-muted focus:outline-none focus:border-purple-500/50 transition-colors font-light resize-none"
               />
             </div>
@@ -240,21 +236,19 @@ export default function Contact() {
               disabled={status === "sending"}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 font-semibold transition-all duration-300 shadow-lg shadow-purple-900/30 text-sm sm:text-base"
             >
-              {status === "sending" ? "Se trimite..." : "Trimite mesajul"}
+              {status === "sending" ? t("sending") : t("submit")}
               {status !== "sending" && <ArrowRight size={16} aria-hidden />}
             </button>
 
             {status === "success" && (
               <p className="text-purple-300 font-medium text-sm mt-2 flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-green-400 shrink-0" aria-hidden />
-                Mesajul tău a fost trimis cu succes! Echipa NOVRA te va contacta în cel mai scurt timp.
+                {t("success")}
               </p>
             )}
 
             {status === "error" && (
-              <p className="text-red-400 font-medium text-sm mt-2">
-                A apărut o eroare la trimiterea mesajului. Te rugăm să încerci din nou.
-              </p>
+              <p className="text-red-400 font-medium text-sm mt-2">{t("error")}</p>
             )}
           </form>
         </motion.section>
@@ -264,7 +258,7 @@ export default function Contact() {
             href="/faq"
             className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition text-sm font-medium"
           >
-            Consultă întrebările frecvente
+            {t("viewFaq")}
             <ArrowRight size={14} aria-hidden />
           </Link>
         </div>
