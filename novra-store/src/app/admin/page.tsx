@@ -23,8 +23,10 @@ import {
   BarChart3,
 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
+import MetricCard from "@/components/admin/MetricCard";
 import StatCard from "@/components/admin/StatCard";
 import { requireAdmin, loadAllUsersFromServer } from "@/lib/auth";
+import { getApiHeaders } from "@/lib/api-client";
 import { loadOrders, getOrderStats, ORDER_STATUS_LABELS, type Order } from "@/lib/orders";
 import { getCatalogProducts } from "@/lib/catalog";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -53,6 +55,19 @@ const quickLinks = [
   { href: "/admin/setari", label: "Setări site", desc: "Countdown, WhatsApp, livrare", icon: Settings },
 ];
 
+const METRICS_REFRESH_MS = 45_000;
+
+type DashboardMetrics = {
+  revenueToday: number;
+  ordersToday: number;
+  liveVisitors: number;
+  uniqueVisitorsToday: number;
+  conversionRate: number;
+  totalStockUnits: number;
+  productsInStock: number;
+  lowStockCount: number;
+};
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -71,7 +86,21 @@ export default function AdminDashboardPage() {
     referralConverted: 0,
     pushSubscribers: 0,
   });
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const admin = requireAdmin();
+
+  const loadMetrics = async () => {
+    try {
+      const response = await fetch("/api/store/dashboard-metrics", {
+        headers: getApiHeaders(),
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      setMetrics((await response.json()) as DashboardMetrics);
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     const refresh = async () => {
@@ -107,6 +136,12 @@ export default function AdminDashboardPage() {
     return createStoreRefreshEffect(refresh, { scopes: ["orders", "users", "products", "campaigns", "blog", "referrals", "push"] });
   }, []);
 
+  useEffect(() => {
+    void loadMetrics();
+    const timerId = window.setInterval(() => void loadMetrics(), METRICS_REFRESH_MS);
+    return () => window.clearInterval(timerId);
+  }, []);
+
   if (!admin) return null;
 
   return (
@@ -116,6 +151,58 @@ export default function AdminDashboardPage() {
         title="Dashboard"
         subtitle="Prezentare generală a magazinului NOVRA"
       />
+
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <MetricCard
+          emoji="💰"
+          label="Venit azi"
+          value={metrics ? `${metrics.revenueToday.toFixed(2)} RON` : "—"}
+          hint="Comenzi neanulate din ziua curentă"
+          accent="text-green-400"
+        />
+        <MetricCard
+          emoji="🛒"
+          label="Comenzi azi"
+          value={metrics?.ordersToday ?? "—"}
+          hint="Toate comenzile plasate azi"
+        />
+        <MetricCard
+          emoji="👥"
+          label="Vizitatori live"
+          value={metrics?.liveVisitors ?? "—"}
+          hint={
+            metrics
+              ? `${metrics.uniqueVisitorsToday} unici azi`
+              : "Sesiuni active (ultimele 5 min)"
+          }
+          accent="text-blue-400"
+          pulse
+        />
+        <MetricCard
+          emoji="📈"
+          label="Conversie"
+          value={metrics ? `${metrics.conversionRate.toFixed(1)}%` : "—"}
+          hint="Comenzi azi ÷ vizitatori unici azi"
+          accent="text-amber-300"
+        />
+        <MetricCard
+          emoji="📦"
+          label="Produse în stoc"
+          value={metrics?.totalStockUnits ?? "—"}
+          hint={
+            metrics
+              ? `${metrics.productsInStock} produse cu stoc disponibil`
+              : "Unități totale în catalog"
+          }
+        />
+        <MetricCard
+          emoji="⚠️"
+          label="Stoc critic"
+          value={metrics?.lowStockCount ?? "—"}
+          hint="Produse sub 10 unități"
+          accent={metrics && metrics.lowStockCount > 0 ? "text-orange-400" : "text-gray-300"}
+        />
+      </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total comenzi" value={stats.totalOrders} icon={ShoppingBag} />

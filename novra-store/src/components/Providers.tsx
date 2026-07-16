@@ -13,6 +13,7 @@ const AffiliateRefTracker = dynamic(() => import("@/components/AffiliateRefTrack
 const CampaignTracker = dynamic(() => import("@/components/CampaignTracker"), { ssr: false });
 const InviteRefTracker = dynamic(() => import("@/components/InviteRefTracker"), { ssr: false });
 const PushNotificationPrompt = dynamic(() => import("@/components/PushNotificationPrompt"), { ssr: false });
+const VisitorTracker = dynamic(() => import("@/components/VisitorTracker"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +29,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <Suspense fallback={null}>
           <InviteRefTracker />
         </Suspense>
+        <VisitorTracker />
         <DevToolsBlocker />
         {children}
         <CountdownFallbackScript />

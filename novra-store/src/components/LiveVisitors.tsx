@@ -5,16 +5,11 @@ import { useTranslations } from "next-intl";
 import { useIsClient } from "@/hooks/useIsClient";
 import { motion, AnimatePresence } from "framer-motion";
 
-function randomInRange(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+const POLL_MIN_MS = 30_000;
+const POLL_MAX_MS = 60_000;
 
-function fluctuate(current: number, min = 12, max = 47): number {
-  const delta = randomInRange(-3, 3);
-  const next = current + delta;
-  if (next < min) return min + randomInRange(0, 2);
-  if (next > max) return max - randomInRange(0, 2);
-  return next;
+function randomPollDelay(): number {
+  return Math.floor(Math.random() * (POLL_MAX_MS - POLL_MIN_MS + 1)) + POLL_MIN_MS;
 }
 
 export default function LiveVisitors() {
@@ -23,31 +18,41 @@ export default function LiveVisitors() {
   const [count, setCount] = useState<number | null>(null);
   const [pulse, setPulse] = useState(false);
 
-  const updateCount = useCallback(() => {
-    setCount((prev) => (prev === null ? randomInRange(12, 47) : fluctuate(prev)));
-    setPulse(true);
-    setTimeout(() => setPulse(false), 600);
+  const fetchCount = useCallback(async () => {
+    try {
+      const response = await fetch("/api/store/visitors/live", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = (await response.json()) as { count?: number };
+      const nextCount = data.count;
+      if (typeof nextCount === "number") {
+        setCount((prev) => {
+          if (prev !== null && prev !== nextCount) {
+            setPulse(true);
+            window.setTimeout(() => setPulse(false), 600);
+          }
+          return nextCount;
+        });
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
 
-    const initialTimer = window.setTimeout(updateCount, 0);
+    void fetchCount();
 
+    let timerId: ReturnType<typeof setTimeout>;
     const scheduleNext = () => {
-      const delay = randomInRange(30000, 60000);
-      return setTimeout(() => {
-        updateCount();
-        timerId = scheduleNext();
-      }, delay);
+      timerId = setTimeout(() => {
+        void fetchCount().finally(scheduleNext);
+      }, randomPollDelay());
     };
+    scheduleNext();
 
-    let timerId = scheduleNext();
-    return () => {
-      window.clearTimeout(initialTimer);
-      clearTimeout(timerId);
-    };
-  }, [mounted, updateCount]);
+    return () => clearTimeout(timerId);
+  }, [mounted, fetchCount]);
 
   if (!mounted || count === null) return null;
 
