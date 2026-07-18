@@ -10,17 +10,30 @@ export type NewsletterSubscriber = {
   discountCode?: string;
 };
 
+export type NewsletterCampaignStatus =
+  | "draft"
+  | "scheduled"
+  | "sending"
+  | "sent"
+  | "failed";
+
 export type NewsletterCampaign = {
   id: string;
   title: string;
   subject: string;
   body: string;
-  status: "draft" | "sent";
+  previewText?: string;
+  templateId?: string;
+  recipients?: string[];
+  sendToAll?: boolean;
+  scheduledAt?: string;
+  status: NewsletterCampaignStatus;
   createdAt: string;
   updatedAt: string;
   sentAt?: string;
   sentCount?: number;
   failedCount?: number;
+  errorMessage?: string;
 };
 
 export type UpdateNewsletterSubscriberInput = {
@@ -323,13 +336,32 @@ export async function loadNewsletterCampaigns(): Promise<NewsletterCampaign[]> {
 }
 
 export async function saveNewsletterCampaign(
-  campaign: Partial<NewsletterCampaign> & { title: string; subject: string; body: string }
+  campaign: Partial<NewsletterCampaign> & {
+    title: string;
+    subject: string;
+    body: string;
+    previewText?: string;
+    templateId?: string;
+    recipients?: string[];
+    sendToAll?: boolean;
+    scheduledAt?: string;
+    saveAsDraft?: boolean;
+  }
 ): Promise<{ ok: true; campaign: NewsletterCampaign } | { ok: false; message: string }> {
   try {
     const response = await fetch("/api/store/newsletter/campaigns", {
       method: "POST",
       headers: getApiHeaders(),
-      body: JSON.stringify({ action: campaign.id ? "update" : "create", ...campaign }),
+      body: JSON.stringify({
+        action: campaign.id ? "update" : "create",
+        ...campaign,
+        scheduledAt: campaign.scheduledAt
+          ? new Date(campaign.scheduledAt).toISOString()
+          : campaign.saveAsDraft
+            ? null
+            : undefined,
+        saveAsDraft: campaign.saveAsDraft,
+      }),
     });
     const data = (await response.json()) as {
       ok?: boolean;
@@ -360,6 +392,31 @@ export async function deleteNewsletterCampaign(
       return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut șterge campania." };
     }
     return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function scheduleNewsletterCampaign(
+  id: string,
+  scheduledAt: string
+): Promise<{ ok: true; campaign: NewsletterCampaign } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/newsletter/campaigns", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "schedule", id, scheduledAt }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      campaign?: NewsletterCampaign;
+      message?: string;
+      error?: string;
+    };
+    if (!response.ok || !data.ok || !data.campaign) {
+      return { ok: false, message: data.message ?? data.error ?? "Nu s-a putut programa campania." };
+    }
+    return { ok: true, campaign: data.campaign };
   } catch {
     return { ok: false, message: "Eroare de rețea." };
   }

@@ -11,6 +11,8 @@ export type EmailLogEntry = {
   type: string;
   status: EmailLogStatus;
   sentAt: string;
+  messageId?: string;
+  error?: string;
 };
 
 export type EmailLogStats = {
@@ -19,6 +21,23 @@ export type EmailLogStats = {
   deliveryRate: number;
   lastSent: EmailLogEntry | null;
   totalSent: number;
+  totalFailed: number;
+  delivered: number;
+};
+
+export type EmailLogFilters = {
+  type?: string;
+  status?: EmailLogStatus;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+};
+
+export type EmailChartDay = {
+  date: string;
+  sent: number;
+  failed: number;
 };
 
 const FILE = "email-logs.json";
@@ -34,17 +53,20 @@ function startOfMonthIso(date: Date): string {
 
 export async function appendEmailLog(
   entry: Omit<EmailLogEntry, "id"> & { id?: string }
-): Promise<void> {
+): Promise<EmailLogEntry> {
+  const newEntry: EmailLogEntry = {
+    id: entry.id ?? crypto.randomUUID(),
+    to: entry.to,
+    subject: entry.subject,
+    type: entry.type,
+    status: entry.status,
+    sentAt: entry.sentAt,
+    messageId: entry.messageId,
+    error: entry.error,
+  };
+
   try {
     const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
-    const newEntry: EmailLogEntry = {
-      id: entry.id ?? crypto.randomUUID(),
-      to: entry.to,
-      subject: entry.subject,
-      type: entry.type,
-      status: entry.status,
-      sentAt: entry.sentAt,
-    };
     logs.unshift(newEntry);
     if (logs.length > MAX_LOGS) {
       logs.length = MAX_LOGS;
@@ -53,11 +75,33 @@ export async function appendEmailLog(
   } catch (error) {
     console.warn("[email-log] Failed to append log entry:", error);
   }
+
+  return newEntry;
+}
+
+function matchesFilters(entry: EmailLogEntry, filters: EmailLogFilters): boolean {
+  if (filters.type && filters.type !== "all" && entry.type !== filters.type) return false;
+  if (filters.status && entry.status !== filters.status) return false;
+  if (filters.dateFrom && entry.sentAt < filters.dateFrom) return false;
+  if (filters.dateTo && entry.sentAt > filters.dateTo) return false;
+  if (filters.search) {
+    const q = filters.search.trim().toLowerCase();
+    if (!q) return true;
+    const haystack = `${entry.to} ${entry.subject} ${entry.type} ${entry.messageId ?? ""}`.toLowerCase();
+    if (!haystack.includes(q)) return false;
+  }
+  return true;
 }
 
 export async function getEmailLogs(limit = 50): Promise<EmailLogEntry[]> {
   const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
   return logs.slice(0, Math.max(1, limit));
+}
+
+export async function getEmailLogsFiltered(filters: EmailLogFilters = {}): Promise<EmailLogEntry[]> {
+  const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
+  const limit = filters.limit ?? 100;
+  return logs.filter((entry) => matchesFilters(entry, filters)).slice(0, Math.max(1, limit));
 }
 
 export async function getEmailLogStats(): Promise<EmailLogStats> {
@@ -76,5 +120,29 @@ export async function getEmailLogStats(): Promise<EmailLogStats> {
     deliveryRate: attempted > 0 ? Math.round((sentLogs.length / attempted) * 100) : 0,
     lastSent: sentLogs[0] ?? null,
     totalSent: sentLogs.length,
+    totalFailed: failedLogs.length,
+    delivered: sentLogs.length,
   };
+}
+
+export async function getEmailChartData(days = 30): Promise<EmailChartDay[]> {
+  const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
+  const now = new Date();
+  const result: EmailChartDay[] = [];
+
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const dayStart = startOfDayIso(day);
+    const nextDay = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+    const dayEnd = nextDay.toISOString();
+
+    const dayLogs = logs.filter((entry) => entry.sentAt >= dayStart && entry.sentAt < dayEnd);
+    result.push({
+      date: day.toISOString().slice(0, 10),
+      sent: dayLogs.filter((e) => e.status === "sent").length,
+      failed: dayLogs.filter((e) => e.status === "failed").length,
+    });
+  }
+
+  return result;
 }

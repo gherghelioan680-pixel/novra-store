@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
-import { sendEmail } from "@/lib/email";
+import { sendEmailDetailed } from "@/lib/email";
+import { recordSmtpTest } from "@/lib/smtp-test-server";
 import { paragraph, wrapEmailHtml } from "@/lib/email-templates";
 
 export const runtime = "nodejs";
@@ -22,20 +23,26 @@ export async function POST(request: NextRequest) {
       "Conexiune SMTP funcțională."
     );
 
-    const sent = await sendEmail({
+    const result = await sendEmailDetailed({
       to,
       subject: "Test SMTP — NOVRA Email Center",
       html,
       logType: "smtp_test",
     });
 
-    if (!sent) {
+    if (!result.ok) {
+      await recordSmtpTest({
+        ok: false,
+        message: "Trimitere test eșuată.",
+        error: result.error ?? "Eroare necunoscută.",
+      });
       return Response.json({
         ok: false,
-        message: "Emailul nu a putut fi trimis. Verifică EMAILS_ENABLED=true și variabilele SMTP.",
+        message: result.error ?? "Emailul nu a putut fi trimis. Verifică EMAILS_ENABLED=true și variabilele SMTP.",
       });
     }
 
+    await recordSmtpTest({ ok: true, message: `Email de test trimis către ${to}.` });
     return Response.json({ ok: true, message: `Email de test trimis către ${to}.` });
   } catch {
     return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });

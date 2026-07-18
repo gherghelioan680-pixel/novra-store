@@ -37,7 +37,7 @@ import {
   type NewsletterSubscriber,
 } from "@/lib/newsletter";
 import { subscribeToStoreUpdates } from "@/lib/store";
-import type { EmailAutomations } from "@/lib/email-automations";
+import type { EmailAutomations, EmailAutomationKey, EmailAutomationMeta } from "@/lib/email-automations";
 
 type AdminTab = "dashboard" | "subscribers" | "templates" | "campaigns" | "automations" | "smtp";
 
@@ -58,6 +58,14 @@ type EmailLogEntry = {
   type: string;
   status: "sent" | "failed";
   sentAt: string;
+  messageId?: string;
+  error?: string;
+};
+
+type EmailChartDay = {
+  date: string;
+  sent: number;
+  failed: number;
 };
 
 type DashboardStats = {
@@ -68,9 +76,12 @@ type DashboardStats = {
     deliveryRate: number;
     lastSent: EmailLogEntry | null;
     totalSent: number;
+    totalFailed: number;
+    delivered: number;
   };
   lastCampaign: NewsletterCampaign | null;
   recentLogs: EmailLogEntry[];
+  chartData: EmailChartDay[];
 };
 
 type SmtpInfo = {
@@ -81,53 +92,80 @@ type SmtpInfo = {
   configured: boolean;
   emailsEnabled: boolean;
   connectionStatus: "connected" | "error" | "not_configured";
+  lastTest: { ok: boolean; testedAt: string; message: string; error?: string } | null;
+  lastError: string | null;
+  lastEmailSent: { to: string; subject: string; sentAt: string } | null;
+  configCheck: {
+    host: boolean;
+    port: boolean;
+    user: boolean;
+    pass: boolean;
+    from: boolean;
+    emailsEnabled: boolean;
+    allPresent: boolean;
+  };
+};
+
+type EmailTemplateConfig = {
+  id: string;
+  name: string;
+  subject: string;
+  previewText: string;
+  title: string;
+  subtitle: string;
+  content: string;
+  buttonText: string;
+  buttonLink: string;
+  footer: string;
+  colors: { primary: string; background: string; accent: string };
+  logoUrl: string;
 };
 
 type EmailTemplateDef = {
   id: string;
   name: string;
-  editInDev: boolean;
-  sendTestInDev: boolean;
 };
 
 const EMAIL_TEMPLATES: EmailTemplateDef[] = [
-  { id: "welcome", name: "Bun venit", editInDev: true, sendTestInDev: false },
-  { id: "newsletter", name: "Newsletter", editInDev: true, sendTestInDev: false },
-  { id: "order_confirmation", name: "Confirmare comandă", editInDev: true, sendTestInDev: true },
-  { id: "order_shipped", name: "Comandă expediată", editInDev: true, sendTestInDev: true },
-  { id: "password_reset", name: "Resetare parolă", editInDev: true, sendTestInDev: false },
-  { id: "contact", name: "Contact", editInDev: true, sendTestInDev: true },
+  { id: "welcome", name: "Bun venit" },
+  { id: "newsletter", name: "Newsletter" },
+  { id: "order_confirmation", name: "Confirmare comandă" },
+  { id: "order_shipped", name: "Comandă expediată" },
+  { id: "password_reset", name: "Resetare parolă" },
+  { id: "contact", name: "Contact" },
 ];
 
-const AUTOMATION_LABELS: { key: keyof EmailAutomations; label: string; inDev?: boolean }[] = [
+const AUTOMATION_LABELS: { key: EmailAutomationKey; label: string }[] = [
   { key: "welcome", label: "Bun venit" },
   { key: "orderConfirmation", label: "Confirmare comandă" },
   { key: "orderShipped", label: "Comandă expediată" },
   { key: "passwordReset", label: "Resetare parolă" },
   { key: "newsletter", label: "Newsletter" },
-  { key: "reviewRequest", label: "Cerere recenzie", inDev: true },
+  { key: "reviewRequest", label: "Cerere recenzie" },
 ];
 
 type CampaignForm = {
   id?: string;
   title: string;
   subject: string;
+  previewText: string;
   body: string;
+  templateId: string;
+  recipients: string;
+  sendToAll: boolean;
+  scheduledAt: string;
 };
 
 const defaultCampaignForm = (): CampaignForm => ({
   title: "",
   subject: "",
+  previewText: "",
   body: "",
+  templateId: "newsletter",
+  recipients: "",
+  sendToAll: true,
+  scheduledAt: "",
 });
-
-function DevBadge() {
-  return (
-    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300">
-      În dezvoltare
-    </span>
-  );
-}
 
 export default function AdminEmailCenterPage() {
   const admin = requireAdmin();
@@ -154,6 +192,17 @@ export default function AdminEmailCenterPage() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [testEmail, setTestEmail] = useState("");
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
+
+  const [editingTemplate, setEditingTemplate] = useState<EmailTemplateConfig | null>(null);
+  const [editorPreviewDesktop, setEditorPreviewDesktop] = useState("");
+  const [editorPreviewMobile, setEditorPreviewMobile] = useState("");
+
+  const [logSearch, setLogSearch] = useState("");
+  const [logTypeFilter, setLogTypeFilter] = useState("all");
+  const [logStatusFilter, setLogStatusFilter] = useState("all");
+  const [logDateFrom, setLogDateFrom] = useState("");
+  const [logDateTo, setLogDateTo] = useState("");
+  const [logsLoading, setLogsLoading] = useState(false);
 
   const mergeSubscribers = (fromStorage: NewsletterSubscriber[]): SubscriberRow[] => {
     const fromUsers = getStoredUsers()
@@ -204,8 +253,31 @@ export default function AdminEmailCenterPage() {
     }
   };
 
-  const fetchLogs = async () => {
-    const res = await fetch("/api/admin/email/logs?limit=50", { headers: getApiHeaders(), cache: "no-store" });
+  const fetchLogs = async (filters?: {
+    search?: string;
+    type?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => {
+    setLogsLoading(true);
+    const params = new URLSearchParams({ limit: "100" });
+    const search = filters?.search ?? logSearch;
+    const type = filters?.type ?? logTypeFilter;
+    const status = filters?.status ?? logStatusFilter;
+    const dateFrom = filters?.dateFrom ?? logDateFrom;
+    const dateTo = filters?.dateTo ?? logDateTo;
+    if (search.trim()) params.set("search", search.trim());
+    if (type !== "all") params.set("type", type);
+    if (status !== "all") params.set("status", status);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+
+    const res = await fetch(`/api/admin/email/logs?${params.toString()}`, {
+      headers: getApiHeaders(),
+      cache: "no-store",
+    });
+    setLogsLoading(false);
     if (res.ok) {
       const data = (await res.json()) as { logs: EmailLogEntry[] };
       setEmailLogs(data.logs);
@@ -301,6 +373,7 @@ export default function AdminEmailCenterPage() {
       newsletter: "Newsletter",
       order_confirmation: "Confirmare comandă",
       order_shipped: "Comandă expediată",
+      order_cancelled: "Comandă anulată",
       order_status: "Status comandă",
       password_reset: "Resetare parolă",
       smtp_test: "Test SMTP",
@@ -341,14 +414,46 @@ export default function AdminEmailCenterPage() {
     showMessage("Export CSV descărcat.");
   };
 
-  const handleSaveCampaign = async (e: React.FormEvent) => {
+  const campaignStatusLabel = (status: NewsletterCampaign["status"]) => {
+    if (status === "draft") return "Ciornă";
+    if (status === "scheduled") return "Programată";
+    if (status === "sending") return "În desfășurare";
+    if (status === "sent") return "Finalizată";
+    if (status === "failed") return "Eșuată";
+    return status;
+  };
+
+  const campaignStatusClass = (status: NewsletterCampaign["status"]) => {
+    if (status === "sent") return "bg-emerald-500/15 text-emerald-300";
+    if (status === "failed") return "bg-red-500/15 text-red-300";
+    if (status === "scheduled") return "bg-sky-500/15 text-sky-300";
+    if (status === "sending") return "bg-purple-500/15 text-purple-300";
+    return "bg-amber-500/15 text-amber-300";
+  };
+
+  const handleSaveCampaign = async (e: React.FormEvent, saveAsDraft = false) => {
     e.preventDefault();
     if (!campaignForm?.title.trim() || !campaignForm.subject.trim() || !campaignForm.body.trim()) {
       showMessage("Completează titlul, subiectul și conținutul.");
       return;
     }
     setLoading(true);
-    const result = await saveNewsletterCampaign(campaignForm);
+    const recipients = campaignForm.recipients
+      .split(/[\n,;]+/)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
+    const result = await saveNewsletterCampaign({
+      id: campaignForm.id,
+      title: campaignForm.title,
+      subject: campaignForm.subject,
+      previewText: campaignForm.previewText,
+      body: campaignForm.body,
+      templateId: campaignForm.templateId,
+      recipients: campaignForm.sendToAll ? undefined : recipients,
+      sendToAll: campaignForm.sendToAll,
+      scheduledAt: saveAsDraft ? undefined : campaignForm.scheduledAt || undefined,
+      saveAsDraft,
+    });
     setLoading(false);
     if (!result.ok) {
       showMessage(result.message);
@@ -383,13 +488,13 @@ export default function AdminEmailCenterPage() {
     showMessage("Campanie ștearsă.");
   };
 
-  const handleToggleAutomation = async (key: keyof EmailAutomations, value: boolean) => {
+  const handleToggleAutomation = async (key: EmailAutomationKey, value: boolean) => {
     if (!automations) return;
     setLoading(true);
     const res = await fetch("/api/admin/email/automations", {
       method: "POST",
       headers: getApiHeaders(),
-      body: JSON.stringify({ automations: { [key]: value } }),
+      body: JSON.stringify({ automations: { [key]: { enabled: value } } }),
     });
     setLoading(false);
     const data = (await res.json()) as { ok?: boolean; automations?: EmailAutomations; message?: string };
@@ -401,20 +506,116 @@ export default function AdminEmailCenterPage() {
     showMessage("Automatizare actualizată.");
   };
 
+  const handleAutomationDelay = async (key: EmailAutomationKey, delayMinutes: number) => {
+    if (!automations) return;
+    setLoading(true);
+    const res = await fetch("/api/admin/email/automations", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ automations: { [key]: { delayMinutes } } }),
+    });
+    setLoading(false);
+    const data = (await res.json()) as { ok?: boolean; automations?: EmailAutomations; message?: string };
+    if (!res.ok || !data.ok || !data.automations) {
+      showMessage(data.message ?? "Nu s-a putut salva.");
+      return;
+    }
+    setAutomations(data.automations);
+    showMessage("Întârziere actualizată.");
+  };
+
+  const handleSmtpVerify = async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/email/smtp", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "verify" }),
+    });
+    setLoading(false);
+    const data = (await res.json()) as { ok?: boolean; message?: string };
+    showMessage(data.message ?? "Verificare finalizată.");
+    await refresh();
+  };
+
   const handleSmtpTest = async () => {
     if (!smtpTestEmail.trim()) {
       showMessage("Introdu adresa de email pentru test.");
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/admin/email/test", {
+    const res = await fetch("/api/admin/email/smtp", {
       method: "POST",
       headers: getApiHeaders(),
-      body: JSON.stringify({ to: smtpTestEmail.trim() }),
+      body: JSON.stringify({ action: "send_test", to: smtpTestEmail.trim() }),
     });
     setLoading(false);
     const data = (await res.json()) as { ok?: boolean; message?: string };
     showMessage(data.message ?? (data.ok ? "Email trimis." : "Eroare la trimitere."));
+    if (data.ok) await refresh();
+  };
+
+  const refreshTemplatePreview = async (config: EmailTemplateConfig) => {
+    const res = await fetch("/api/admin/email/templates", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "preview_live", template: config.id, config }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { html: string };
+    setEditorPreviewDesktop(data.html);
+    setEditorPreviewMobile(data.html);
+  };
+
+  const handleOpenTemplateEditor = async (templateId: string) => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/email/templates?template=${encodeURIComponent(templateId)}`, {
+      headers: getApiHeaders(),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      showMessage("Nu s-a putut încărca șablonul.");
+      return;
+    }
+    const data = (await res.json()) as { config: EmailTemplateConfig; html: string };
+    setEditingTemplate(data.config);
+    setEditorPreviewDesktop(data.html);
+    setEditorPreviewMobile(data.html);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!editingTemplate) return;
+    setLoading(true);
+    const res = await fetch("/api/admin/email/templates", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "save", template: editingTemplate.id, config: editingTemplate }),
+    });
+    setLoading(false);
+    const data = (await res.json()) as { ok?: boolean; message?: string; config?: EmailTemplateConfig; html?: string };
+    if (!res.ok || !data.ok || !data.config) {
+      showMessage(data.message ?? "Nu s-a putut salva.");
+      return;
+    }
+    setEditingTemplate(data.config);
+    if (data.html) {
+      setEditorPreviewDesktop(data.html);
+      setEditorPreviewMobile(data.html);
+    }
+    showMessage("Șablon salvat.");
+  };
+
+  const handleEditorSendTest = async () => {
+    if (!editingTemplate) return;
+    const to = testEmail.trim() || admin.email;
+    setLoading(true);
+    const res = await fetch("/api/admin/email/templates", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "send_test", template: editingTemplate.id, to }),
+    });
+    setLoading(false);
+    const data = (await res.json()) as { ok?: boolean; message?: string };
+    showMessage(data.message ?? "Eroare.");
     if (data.ok) await refresh();
   };
 
@@ -432,11 +633,7 @@ export default function AdminEmailCenterPage() {
     setPreviewHtml(data.html);
   };
 
-  const handleTemplateSendTest = async (templateId: string, inDev: boolean) => {
-    if (inDev) {
-      showMessage("Trimiterea de test pentru acest șablon este în dezvoltare.");
-      return;
-    }
+  const handleTemplateSendTest = async (templateId: string) => {
     const to = testEmail.trim() || admin.email;
     setLoading(true);
     const res = await fetch("/api/admin/email/templates", {
@@ -445,7 +642,7 @@ export default function AdminEmailCenterPage() {
       body: JSON.stringify({ action: "send_test", template: templateId, to }),
     });
     setLoading(false);
-    const data = (await res.json()) as { ok?: boolean; message?: string; inDevelopment?: boolean };
+    const data = (await res.json()) as { ok?: boolean; message?: string };
     showMessage(data.message ?? "Eroare.");
     if (data.ok) await refresh();
   };
@@ -466,6 +663,8 @@ export default function AdminEmailCenterPage() {
   ];
 
   const displayLogs = emailLogs.length ? emailLogs : (dashboard?.recentLogs ?? []);
+  const chartData = dashboard?.chartData ?? [];
+  const chartMax = Math.max(1, ...chartData.map((day) => day.sent + day.failed));
 
   return (
     <div>
@@ -505,10 +704,12 @@ export default function AdminEmailCenterPage() {
       {activeTab === "dashboard" && (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <MetricCard emoji="👥" label="Total abonați" value={dashboard?.subscriberCount ?? subscribers.length} />
-            <MetricCard emoji="📨" label="Emailuri trimise azi" value={dashboard?.stats.sentToday ?? 0} accent="text-emerald-300" />
+            <MetricCard emoji="📨" label="Total emailuri trimise" value={dashboard?.stats.totalSent ?? 0} />
+            <MetricCard emoji="📬" label="Emailuri trimise azi" value={dashboard?.stats.sentToday ?? 0} accent="text-emerald-300" />
             <MetricCard emoji="📅" label="Emailuri trimise luna aceasta" value={dashboard?.stats.sentThisMonth ?? 0} accent="text-sky-300" />
-            <MetricCard emoji="✅" label="Rata de livrare" value={`${dashboard?.stats.deliveryRate ?? 0}%`} accent="text-amber-300" />
+            <MetricCard emoji="✅" label="Livrate" value={dashboard?.stats.delivered ?? dashboard?.stats.totalSent ?? 0} accent="text-emerald-300" />
+            <MetricCard emoji="❌" label="Eșuate" value={dashboard?.stats.totalFailed ?? 0} accent="text-red-300" />
+            <MetricCard emoji="📊" label="Rata de livrare" value={`${dashboard?.stats.deliveryRate ?? 0}%`} accent="text-amber-300" />
             <MetricCard
               emoji="🕐"
               label="Ultimul email trimis"
@@ -520,20 +721,121 @@ export default function AdminEmailCenterPage() {
               label="Ultima campanie"
               value={dashboard?.lastCampaign?.title ?? "—"}
               hint={
-                dashboard?.lastCampaign?.status === "sent" && dashboard.lastCampaign.sentAt
-                  ? `Trimisă ${formatShortDate(dashboard.lastCampaign.sentAt)}`
-                  : dashboard?.lastCampaign?.status === "draft"
-                    ? "Ciornă"
-                    : undefined
+                dashboard?.lastCampaign
+                  ? `${campaignStatusLabel(dashboard.lastCampaign.status)}${
+                      dashboard.lastCampaign.sentAt
+                        ? ` · ${formatShortDate(dashboard.lastCampaign.sentAt)}`
+                        : ""
+                    }`
+                  : undefined
               }
             />
+            <MetricCard emoji="👥" label="Total abonați" value={dashboard?.subscriberCount ?? subscribers.length} />
+          </div>
+
+          {chartData.length > 0 && (
+            <div className="mb-6 rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
+              <h3 className="mb-4 text-sm font-semibold text-white">Emailuri trimise — ultimele 30 zile</h3>
+              <div className="flex h-40 items-end gap-1 overflow-x-auto pb-2">
+                {chartData.map((day) => {
+                  const total = day.sent + day.failed;
+                  const height = Math.max(4, Math.round((total / chartMax) * 100));
+                  const sentHeight = total > 0 ? Math.round((day.sent / total) * height) : 0;
+                  const failedHeight = height - sentHeight;
+                  return (
+                    <div key={day.date} className="flex min-w-[10px] flex-1 flex-col items-center justify-end gap-1">
+                      <div className="flex w-full flex-col justify-end" style={{ height: `${height}%` }}>
+                        {failedHeight > 0 && (
+                          <div
+                            className="w-full rounded-t bg-red-500/60"
+                            style={{ height: `${failedHeight}%` }}
+                            title={`${day.failed} eșuate`}
+                          />
+                        )}
+                        {sentHeight > 0 && (
+                          <div
+                            className="w-full rounded-t bg-purple-500"
+                            style={{ height: `${sentHeight}%` }}
+                            title={`${day.sent} trimise`}
+                          />
+                        )}
+                      </div>
+                      <span className="text-[9px] text-gray-600">{day.date.slice(8)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end">
+            <div className="relative flex-1 max-w-md">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="search"
+                placeholder="Caută destinatar, subiect, message ID..."
+                value={logSearch}
+                onChange={(e) => setLogSearch(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-purple-500/50"
+              />
+            </div>
+            <select
+              value={logTypeFilter}
+              onChange={(e) => setLogTypeFilter(e.target.value)}
+              className="rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm outline-none focus:border-purple-500/50"
+            >
+              <option value="all">Toate tipurile</option>
+              {Object.entries({
+                welcome: "Bun venit",
+                newsletter: "Newsletter",
+                order_confirmation: "Confirmare comandă",
+                order_shipped: "Comandă expediată",
+                order_cancelled: "Comandă anulată",
+                password_reset: "Resetare parolă",
+                smtp_test: "Test SMTP",
+                general: "General",
+              }).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={logStatusFilter}
+              onChange={(e) => setLogStatusFilter(e.target.value)}
+              className="rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm outline-none focus:border-purple-500/50"
+            >
+              <option value="all">Toate statusurile</option>
+              <option value="sent">Trimis</option>
+              <option value="failed">Eșuat</option>
+            </select>
+            <input
+              type="date"
+              value={logDateFrom}
+              onChange={(e) => setLogDateFrom(e.target.value)}
+              className="rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm outline-none focus:border-purple-500/50"
+            />
+            <input
+              type="date"
+              value={logDateTo}
+              onChange={(e) => setLogDateTo(e.target.value)}
+              className="rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm outline-none focus:border-purple-500/50"
+            />
+            <button
+              type="button"
+              disabled={logsLoading}
+              onClick={() => void fetchLogs()}
+              className="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              Filtrează
+            </button>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
             <div className="border-b border-white/10 px-4 py-3 sm:px-6">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
                 <Mail size={16} className="text-purple-400" />
-                Ultimele emailuri
+                Istoric emailuri
               </h3>
             </div>
             {displayLogs.length === 0 ? (
@@ -542,25 +844,25 @@ export default function AdminEmailCenterPage() {
                 <p className="text-sm text-gray-500">Niciun email înregistrat încă.</p>
               </div>
             ) : (
-              <table className="w-full min-w-[800px] text-left text-sm">
+              <table className="w-full min-w-[1000px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500">
-                    <th className="px-4 py-4 sm:px-6">Email</th>
-                    <th className="px-4 py-4">Tip</th>
-                    <th className="px-4 py-4">Data</th>
+                    <th className="px-4 py-4 sm:px-6">Data</th>
+                    <th className="px-4 py-4">Email destinatar</th>
+                    <th className="px-4 py-4">Tip email</th>
+                    <th className="px-4 py-4">Subject</th>
                     <th className="px-4 py-4">Status</th>
+                    <th className="px-4 py-4">Message ID</th>
                     <th className="px-4 py-4 sm:px-6">Acțiuni</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {displayLogs.map((log) => (
                     <tr key={log.id} className="text-gray-300">
-                      <td className="px-4 py-4 sm:px-6">
-                        <div className="font-medium text-white truncate max-w-[220px]">{log.to}</div>
-                        <div className="text-xs text-gray-500 truncate max-w-[220px]">{log.subject}</div>
-                      </td>
+                      <td className="px-4 py-4 sm:px-6 text-xs text-gray-500">{formatDate(log.sentAt)}</td>
+                      <td className="px-4 py-4 font-medium text-white truncate max-w-[180px]">{log.to}</td>
                       <td className="px-4 py-4 text-xs text-purple-300">{typeLabel(log.type)}</td>
-                      <td className="px-4 py-4 text-xs text-gray-500">{formatDate(log.sentAt)}</td>
+                      <td className="px-4 py-4 text-xs text-gray-400 truncate max-w-[200px]">{log.subject}</td>
                       <td className="px-4 py-4">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${
@@ -568,12 +870,22 @@ export default function AdminEmailCenterPage() {
                               ? "bg-emerald-500/15 text-emerald-300"
                               : "bg-red-500/15 text-red-300"
                           }`}
+                          title={log.error}
                         >
                           {log.status === "sent" ? "Trimis" : "Eșuat"}
                         </span>
                       </td>
+                      <td className="px-4 py-4 font-mono text-[10px] text-gray-500 truncate max-w-[140px]">
+                        {log.messageId ?? "—"}
+                      </td>
                       <td className="px-4 py-4 sm:px-6">
-                        <span className="text-xs text-gray-500">—</span>
+                        {log.error ? (
+                          <span className="text-xs text-red-300" title={log.error}>
+                            Eroare
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-500">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -700,12 +1012,11 @@ export default function AdminEmailCenterPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <h4 className="font-semibold text-white">{template.name}</h4>
-                    {template.editInDev && <DevBadge />}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => showMessage("Editarea șabloanelor este în dezvoltare.")}
+                      onClick={() => void handleOpenTemplateEditor(template.id)}
                       className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-xs text-gray-300 hover:bg-white/5"
                     >
                       <Pencil size={12} />
@@ -730,22 +1041,139 @@ export default function AdminEmailCenterPage() {
                     <button
                       type="button"
                       disabled={loading}
-                      onClick={() => void handleTemplateSendTest(template.id, template.sendTestInDev)}
+                      onClick={() => void handleTemplateSendTest(template.id)}
                       className="inline-flex items-center gap-1 rounded-lg bg-purple-600 px-3 py-2 text-xs text-white hover:bg-purple-700 disabled:opacity-50"
                     >
                       <Send size={12} />
                       Trimite email de test
-                      {template.sendTestInDev && (
-                        <span className="ml-1 rounded bg-amber-500/20 px-1 text-[9px] uppercase text-amber-200">
-                          dev
-                        </span>
-                      )}
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {editingTemplate && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditingTemplate(null)} />
+              <div className="relative z-10 flex max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-novra-bg-alt shadow-2xl">
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6">
+                  <h3 className="text-lg font-semibold text-white">Editor șablon — {editingTemplate.name}</h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditingTemplate(null)}
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-gray-400"
+                  >
+                    Închide
+                  </button>
+                </div>
+                <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-2 lg:p-6">
+                  <div className="space-y-3">
+                    {[
+                      ["subject", "Subject"],
+                      ["previewText", "Preview Text"],
+                      ["title", "Titlu"],
+                      ["subtitle", "Subtitlu"],
+                      ["content", "Conținut"],
+                      ["buttonText", "Buton principal — text"],
+                      ["buttonLink", "Buton principal — link"],
+                      ["footer", "Footer"],
+                      ["logoUrl", "Logo URL"],
+                    ].map(([field, label]) => (
+                      <div key={field}>
+                        <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">{label}</label>
+                        {field === "content" ? (
+                          <textarea
+                            rows={5}
+                            value={editingTemplate.content}
+                            onChange={(e) => {
+                              const next = { ...editingTemplate, content: e.target.value };
+                              setEditingTemplate(next);
+                              void refreshTemplatePreview(next);
+                            }}
+                            className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={String(editingTemplate[field as keyof EmailTemplateConfig] ?? "")}
+                            onChange={(e) => {
+                              const next = { ...editingTemplate, [field]: e.target.value } as EmailTemplateConfig;
+                              setEditingTemplate(next);
+                              void refreshTemplatePreview(next);
+                            }}
+                            className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                          />
+                        )}
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-3 gap-2">
+                      {(["primary", "background", "accent"] as const).map((colorKey) => (
+                        <div key={colorKey}>
+                          <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">
+                            Culoare {colorKey}
+                          </label>
+                          <input
+                            type="text"
+                            value={editingTemplate.colors[colorKey]}
+                            onChange={(e) => {
+                              const next = {
+                                ...editingTemplate,
+                                colors: { ...editingTemplate.colors, [colorKey]: e.target.value },
+                              };
+                              setEditingTemplate(next);
+                              void refreshTemplatePreview(next);
+                            }}
+                            className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-3 py-2 text-sm outline-none focus:border-purple-500/50"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => void handleSaveTemplate()}
+                        className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        <Save size={16} />
+                        Salvează
+                      </button>
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => void handleEditorSendTest()}
+                        className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 px-4 py-2.5 text-sm text-purple-200 disabled:opacity-50"
+                      >
+                        <Send size={16} />
+                        Trimite Email Test
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-500">
+                        <Monitor size={14} />
+                        Preview Desktop
+                      </p>
+                      <div className="overflow-hidden rounded-xl border border-white/10 bg-white">
+                        <iframe title="Preview Desktop" srcDoc={editorPreviewDesktop} className="h-[320px] w-full border-0" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-500">
+                        <Smartphone size={14} />
+                        Preview Mobile
+                      </p>
+                      <div className="mx-auto max-w-[375px] overflow-hidden rounded-xl border border-white/10 bg-white">
+                        <iframe title="Preview Mobile" srcDoc={editorPreviewMobile} className="h-[420px] w-full border-0" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {previewHtml && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -784,11 +1212,6 @@ export default function AdminEmailCenterPage() {
               Campaniile folosesc aceleași date ca modulul Newsletter.
             </p>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-                <Calendar size={14} />
-                Programare
-                <DevBadge />
-              </span>
               <button
                 type="button"
                 onClick={() => setCampaignForm(defaultCampaignForm())}
@@ -802,7 +1225,7 @@ export default function AdminEmailCenterPage() {
 
           {campaignForm && (
             <form
-              onSubmit={handleSaveCampaign}
+              onSubmit={(e) => void handleSaveCampaign(e, !campaignForm.scheduledAt)}
               className="mb-6 rounded-2xl border border-purple-500/20 bg-novra-card/40 p-5 sm:p-6"
             >
               <h3 className="mb-4 text-lg font-semibold text-white">
@@ -830,6 +1253,59 @@ export default function AdminEmailCenterPage() {
                   />
                 </div>
                 <div>
+                  <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Preview Text</label>
+                  <input
+                    type="text"
+                    value={campaignForm.previewText}
+                    onChange={(e) => setCampaignForm((p) => (p ? { ...p, previewText: e.target.value } : p))}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Template</label>
+                  <select
+                    value={campaignForm.templateId}
+                    onChange={(e) => setCampaignForm((p) => (p ? { ...p, templateId: e.target.value } : p))}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  >
+                    {EMAIL_TEMPLATES.map((tpl) => (
+                      <option key={tpl.id} value={tpl.id}>
+                        {tpl.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Destinatari (emailuri, câte unul pe linie)</label>
+                  <textarea
+                    rows={3}
+                    disabled={campaignForm.sendToAll}
+                    value={campaignForm.recipients}
+                    onChange={(e) => setCampaignForm((p) => (p ? { ...p, recipients: e.target.value } : p))}
+                    placeholder="client@example.com"
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50 disabled:opacity-50"
+                  />
+                  <label className="mt-2 inline-flex items-center gap-2 text-sm text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={campaignForm.sendToAll}
+                      onChange={(e) => setCampaignForm((p) => (p ? { ...p, sendToAll: e.target.checked } : p))}
+                    />
+                    Trimite tuturor abonaților
+                  </label>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                    Programare dată și oră
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={campaignForm.scheduledAt}
+                    onChange={(e) => setCampaignForm((p) => (p ? { ...p, scheduledAt: e.target.value } : p))}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
+                <div>
                   <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Conținut</label>
                   <textarea
                     required
@@ -840,11 +1316,20 @@ export default function AdminEmailCenterPage() {
                   />
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="submit"
                   disabled={loading}
                   className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  <Save size={16} />
+                  {campaignForm.scheduledAt ? "Programează" : "Salvează Draft"}
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={(e) => void handleSaveCampaign(e, true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-300"
                 >
                   <Save size={16} />
                   Salvează ciornă
@@ -877,15 +1362,15 @@ export default function AdminEmailCenterPage() {
                       <h4 className="font-semibold text-white">{campaign.title}</h4>
                       <p className="mt-1 text-sm text-gray-400">Subiect: {campaign.subject}</p>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span
-                          className={`rounded-full px-2 py-0.5 ${
-                            campaign.status === "sent"
-                              ? "bg-emerald-500/15 text-emerald-300"
-                              : "bg-amber-500/15 text-amber-300"
-                          }`}
-                        >
-                          {campaign.status === "sent" ? "Trimisă" : "Ciornă"}
+                        <span className={`rounded-full px-2 py-0.5 ${campaignStatusClass(campaign.status)}`}>
+                          {campaignStatusLabel(campaign.status)}
                         </span>
+                        {campaign.scheduledAt && campaign.status === "scheduled" && (
+                          <span className="inline-flex items-center gap-1 text-gray-500">
+                            <Calendar size={12} />
+                            {formatDate(campaign.scheduledAt)}
+                          </span>
+                        )}
                         {campaign.sentAt && (
                           <span className="text-gray-500">
                             {formatShortDate(campaign.sentAt)} · {campaign.sentCount ?? 0} trimise
@@ -894,7 +1379,7 @@ export default function AdminEmailCenterPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {campaign.status === "draft" && (
+                      {(campaign.status === "draft" || campaign.status === "scheduled") && (
                         <>
                           <button
                             type="button"
@@ -903,7 +1388,14 @@ export default function AdminEmailCenterPage() {
                                 id: campaign.id,
                                 title: campaign.title,
                                 subject: campaign.subject,
+                                previewText: campaign.previewText ?? "",
                                 body: campaign.body,
+                                templateId: campaign.templateId ?? "newsletter",
+                                recipients: (campaign.recipients ?? []).join("\n"),
+                                sendToAll: campaign.sendToAll !== false,
+                                scheduledAt: campaign.scheduledAt
+                                  ? campaign.scheduledAt.slice(0, 16)
+                                  : "",
                               })
                             }
                             className="rounded-lg border border-white/10 px-3 py-2 text-xs text-gray-300"
@@ -948,38 +1440,62 @@ export default function AdminEmailCenterPage() {
             Confirmarea comenzii este legată de setarea orderEmailsEnabled. EMAILS_ENABLED=true este necesar global.
           </p>
           <div className="space-y-4">
-            {AUTOMATION_LABELS.map(({ key, label, inDev }) => (
+            {AUTOMATION_LABELS.map(({ key, label }) => {
+              const meta: EmailAutomationMeta = automations[key];
+              return (
               <div
                 key={key}
-                className="flex flex-col gap-3 rounded-xl border border-white/10 bg-novra-bg/30 p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-xl border border-white/10 bg-novra-bg/30 p-4"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-white">{label}</span>
-                  {inDev && <DevBadge />}
-                </div>
-                <label className="inline-flex cursor-pointer items-center gap-3">
-                  <span className="text-xs text-gray-500">{automations[key] ? "ON" : "OFF"}</span>
-                  <input
-                    type="checkbox"
-                    checked={automations[key]}
-                    disabled={loading || inDev}
-                    onChange={(e) => void handleToggleAutomation(key, e.target.checked)}
-                    className="peer sr-only"
-                  />
-                  <span
-                    className={`relative h-7 w-12 rounded-full transition ${
-                      automations[key] ? "bg-purple-600" : "bg-gray-600"
-                    } ${inDev ? "opacity-50" : ""}`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition ${
-                        automations[key] ? "left-[22px]" : "left-0.5"
-                      }`}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <span className="font-medium text-white">{label}</span>
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
+                      <span>Status: {meta.enabled ? "Activ" : "Inactiv"}</span>
+                      <span>
+                        Ultima rulare: {meta.lastRunAt ? formatDate(meta.lastRunAt) : "—"}
+                      </span>
+                      <span>Trimise: {meta.sentCount}</span>
+                    </div>
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-3">
+                    <span className="text-xs text-gray-500">{meta.enabled ? "ON" : "OFF"}</span>
+                    <input
+                      type="checkbox"
+                      checked={meta.enabled}
+                      disabled={loading}
+                      onChange={(e) => void handleToggleAutomation(key, e.target.checked)}
+                      className="peer sr-only"
                     />
-                  </span>
-                </label>
+                    <span
+                      className={`relative h-7 w-12 rounded-full transition ${
+                        meta.enabled ? "bg-purple-600" : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition ${
+                          meta.enabled ? "left-[22px]" : "left-0.5"
+                        }`}
+                      />
+                    </span>
+                  </label>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label className="text-xs text-gray-500">Întârziere (minute)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={meta.delayMinutes}
+                    disabled={loading}
+                    onChange={(e) =>
+                      void handleAutomationDelay(key, Math.max(0, Number(e.target.value) || 0))
+                    }
+                    className="w-full max-w-[140px] rounded-xl border border-white/10 bg-novra-bg/50 px-3 py-2 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       )}
@@ -991,7 +1507,7 @@ export default function AdminEmailCenterPage() {
             Configurare SMTP
           </h3>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-novra-bg/30 p-4">
               <p className="text-[10px] uppercase tracking-widest text-gray-500">Host</p>
               <p className="mt-1 font-mono text-sm text-white">{smtpInfo.host}</p>
@@ -1022,6 +1538,53 @@ export default function AdminEmailCenterPage() {
                 {smtpInfo.configured ? "da" : "nu"}
               </p>
             </div>
+            <div className="rounded-xl border border-white/10 bg-novra-bg/30 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">Ultimul test</p>
+              <p className="mt-1 text-sm text-white">
+                {smtpInfo.lastTest ? formatDate(smtpInfo.lastTest.testedAt) : "—"}
+              </p>
+              <p className={`mt-1 text-xs ${smtpInfo.lastTest?.ok ? "text-emerald-300" : "text-red-300"}`}>
+                {smtpInfo.lastTest?.message ?? "Niciun test încă"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-novra-bg/30 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">Ultima eroare</p>
+              <p className="mt-1 text-sm text-red-300">{smtpInfo.lastError ?? "—"}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-novra-bg/30 p-4 sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">Ultimul email trimis</p>
+              <p className="mt-1 text-sm text-white">
+                {smtpInfo.lastEmailSent
+                  ? `${smtpInfo.lastEmailSent.to} · ${formatDate(smtpInfo.lastEmailSent.sentAt)}`
+                  : "—"}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">{smtpInfo.lastEmailSent?.subject ?? ""}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-novra-bg/30 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">Verificare configurație</p>
+              <ul className="mt-2 space-y-1 text-xs text-gray-400">
+                <li>SMTP_HOST: {smtpInfo.configCheck.host ? "✓" : "✗"}</li>
+                <li>SMTP_USER: {smtpInfo.configCheck.user ? "✓" : "✗"}</li>
+                <li>SMTP_PASS: {smtpInfo.configCheck.pass ? "✓" : "✗"}</li>
+                <li>SMTP_FROM: {smtpInfo.configCheck.from ? "✓" : "✗"}</li>
+                <li>EMAILS_ENABLED: {smtpInfo.configCheck.emailsEnabled ? "✓" : "✗"}</li>
+              </ul>
+              <p className={`mt-2 text-xs ${smtpInfo.configCheck.allPresent ? "text-emerald-300" : "text-amber-300"}`}>
+                {smtpInfo.configCheck.allPresent ? "Configurație completă" : "Configurație incompletă"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => void handleSmtpVerify()}
+              className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 px-5 py-3 text-sm font-semibold text-purple-200 disabled:opacity-50"
+            >
+              <Server size={16} />
+              Testează SMTP
+            </button>
           </div>
 
           <div>

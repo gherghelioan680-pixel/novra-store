@@ -4,7 +4,7 @@ import {
   getEmailAutomations,
   saveEmailAutomations,
 } from "@/lib/email-automations-server";
-import type { EmailAutomationKey, EmailAutomations } from "@/lib/email-automations";
+import type { EmailAutomationKey, EmailAutomationMeta } from "@/lib/email-automations";
 
 export const runtime = "nodejs";
 
@@ -27,17 +27,27 @@ export async function POST(request: NextRequest) {
   if (!isAdminRequest(request)) return unauthorizedResponse();
 
   try {
-    const body = (await request.json()) as { automations?: Partial<EmailAutomations> };
+    const body = (await request.json()) as {
+      automations?: Partial<Record<EmailAutomationKey, Partial<EmailAutomationMeta> | boolean>>;
+    };
     const updates = body?.automations;
 
     if (!updates || typeof updates !== "object") {
       return Response.json({ ok: false, message: "Date invalide." }, { status: 400 });
     }
 
-    const filtered: Partial<EmailAutomations> = {};
+    const filtered: Partial<Record<EmailAutomationKey, Partial<EmailAutomationMeta> | boolean>> = {};
     for (const key of VALID_KEYS) {
-      if (typeof updates[key] === "boolean") {
-        filtered[key] = updates[key];
+      const value = updates[key];
+      if (typeof value === "boolean") {
+        filtered[key] = value;
+      } else if (value && typeof value === "object") {
+        const partial: Partial<EmailAutomationMeta> = {};
+        if (typeof value.enabled === "boolean") partial.enabled = value.enabled;
+        if (typeof value.delayMinutes === "number") partial.delayMinutes = value.delayMinutes;
+        if (Object.keys(partial).length > 0) {
+          filtered[key] = partial;
+        }
       }
     }
 

@@ -11,6 +11,7 @@ import {
 import { formatDiscountSuccessMessage } from "@/lib/discount-codes";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
+import { isAutomationEnabled } from "@/lib/email-automations-server";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 
 export const runtime = "nodejs";
@@ -136,6 +137,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (sendWelcome && discountCode) {
+      const welcomeEnabled = await isAutomationEnabled("welcome");
+      if (!welcomeEnabled) {
+        console.log("[newsletter] Welcome automation disabled — skipping email for:", email);
+      } else {
       console.log("[newsletter] Dispatching welcome email to:", email);
       void sendNewsletterWelcomeEmail(
         email,
@@ -149,6 +154,7 @@ export async function POST(request: NextRequest) {
           console.error("[newsletter] Welcome email failed for:", email);
         }
       });
+      }
     } else {
       console.log("[newsletter] Welcome email skipped:", {
         email,
