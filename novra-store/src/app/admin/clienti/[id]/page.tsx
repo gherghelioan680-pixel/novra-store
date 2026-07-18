@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Coins, Mail, ShoppingBag, User, Ban, ShieldOff, Trash2 } from "lucide-react";
+import { formatOrderDate } from "@/lib/date-utils";
 import AdminHeader from "@/components/admin/AdminHeader";
 import {
   requireAdmin,
@@ -332,7 +333,7 @@ export default function AdminClientDetailPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-mono text-xs text-purple-300">{order.id}</p>
-                      <p className="text-sm text-gray-400">{formatDate(order.createdAt)}</p>
+                      <p className="text-sm text-gray-400">{formatOrderDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-white">{order.total.toFixed(2)} RON</span>

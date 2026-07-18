@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Lock, Mail, ShoppingBag, User, Check, Shield } from "lucide-react";
+import { formatOrderDate } from "@/lib/date-utils";
 import type { User as AuthUser } from "@/lib/auth";
 import { isProfileComplete, getCurrentUser, isAdmin } from "@/lib/auth";
 import {
@@ -31,17 +32,11 @@ const STATUS_KEYS: Record<OrderStatus, "statusPending" | "statusProcessing" | "s
   cancelled: "statusCancelled",
 };
 
-function getDateLocale(locale: string) {
-  if (locale === "ro") return "ro-RO";
-  if (locale === "de") return "de-DE";
-  return "en-US";
-}
 
 export default function OverviewView({ user, onNavigate, onUserUpdate }: OverviewViewProps) {
   const t = useTranslations("accountOverview");
   const to = useTranslations("accountOrders");
   const tc = useTranslations("common");
-  const locale = useLocale();
   const [subscribeOpen, setSubscribeOpen] = useState(false);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const profileComplete = user.profileCreditsGranted ?? user.profileCompleted ?? isProfileComplete(user);
@@ -130,8 +125,6 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
     },
   ];
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(getDateLocale(locale), { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <div className="space-y-8">
@@ -189,7 +182,7 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
                 <li key={order.id} className="flex items-center justify-between gap-4 p-4">
                   <div>
                     <p className="font-mono text-xs text-purple-300">{order.id}</p>
-                    <p className="text-sm text-gray-400">{formatDate(order.createdAt)}</p>
+                    <p className="text-sm text-gray-400">{formatOrderDate(order.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span

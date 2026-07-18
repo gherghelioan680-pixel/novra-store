@@ -193,7 +193,12 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    let order = normalizeOrder(body.order as Partial<Order>);
+    const createdAt = new Date().toISOString();
+    let order = normalizeOrder({
+      ...(body.order as Partial<Order>),
+      createdAt,
+      updatedAt: createdAt,
+    });
 
     const checkoutEmail = (order.userEmail || order.address?.email || "").trim().toLowerCase();
     if (checkoutEmail && (await isEmailBanned(checkoutEmail))) {

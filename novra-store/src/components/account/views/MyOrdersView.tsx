@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ChevronDown, X, Package, MapPin, CreditCard, Truck, ExternalLink } from "lucide-react";
+import { formatOrderDate } from "@/lib/date-utils";
 import CopyButton from "@/components/CopyButton";
 import {
   getOrdersForUserFromApi,
@@ -27,17 +28,11 @@ const STATUS_KEYS: Record<OrderStatus, "statusPending" | "statusProcessing" | "s
   cancelled: "statusCancelled",
 };
 
-function getDateLocale(locale: string) {
-  if (locale === "ro") return "ro-RO";
-  if (locale === "de") return "de-DE";
-  return "en-US";
-}
 
 export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
   const t = useTranslations("accountOrders");
   const tc = useTranslations("common");
   const tCopy = useTranslations("copy");
-  const locale = useLocale();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>("all");
@@ -87,12 +82,6 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
     return order.status === statusFilter;
   });
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(getDateLocale(locale), {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
 
   return (
     <div>
@@ -132,7 +121,7 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
                         <CopyButton text={order.purchaseCode} label={t("copy")} copiedLabel={tCopy("copied")} />
                       </div>
                       <p className="mt-1 font-mono text-[10px] text-gray-500">{order.id}</p>
-                      <p className="mt-1 text-sm text-gray-400">{formatDate(order.createdAt)}</p>
+                      <p className="mt-1 text-sm text-gray-400">{formatOrderDate(order.createdAt)}</p>
                       <p className="mt-1 text-sm text-gray-300">
                         {order.items.length}{" "}
                         {order.items.length === 1 ? tc("product") : tc("products")}
@@ -166,16 +155,6 @@ export default function MyOrdersView({ userEmail }: MyOrdersViewProps) {
 function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const t = useTranslations("accountOrders");
   const tCopy = useTranslations("copy");
-  const locale = useLocale();
-
-  const formatDateTime = (iso: string) =>
-    new Date(iso).toLocaleString(getDateLocale(locale), {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   const timeline: { status: OrderStatus; label: string }[] = [
     { status: "pending", label: t("statusPending") },
@@ -207,11 +186,11 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
             </div>
             <p className="mt-2 font-mono text-xs text-gray-500">{order.id}</p>
             <p className="mt-1 text-sm text-gray-400">
-              {t("placed")} {formatDateTime(order.createdAt)}
+              {t("placed")} {formatOrderDate(order.createdAt)}
             </p>
             {order.updatedAt !== order.createdAt && (
               <p className="text-xs text-gray-500">
-                {t("updated")} {formatDateTime(order.updatedAt)}
+                {t("updated")} {formatOrderDate(order.updatedAt)}
               </p>
             )}
           </div>

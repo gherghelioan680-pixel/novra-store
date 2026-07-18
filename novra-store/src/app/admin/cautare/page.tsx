@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { formatOrderDate } from "@/lib/date-utils";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSearch from "@/components/admin/AdminSearch";
 import CopyButton from "@/components/CopyButton";
@@ -51,14 +52,6 @@ export default function AdminCautarePage() {
 
   if (!admin) return null;
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString("ro-RO", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   return (
     <div>
@@ -104,7 +97,7 @@ export default function AdminCautarePage() {
                   >
                     {order.userEmail}
                   </Link>
-                  <p className="text-xs text-gray-500 mt-1">{formatDate(order.createdAt)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{formatOrderDate(order.createdAt)}</p>
                 </div>
                 <div className="flex flex-col items-start gap-2 sm:items-end">
                   <p className="text-xl font-bold text-purple-400">{order.total.toFixed(2)} RON</p>

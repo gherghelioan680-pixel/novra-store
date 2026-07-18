@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Mail, MailCheck, ExternalLink } from "lucide-react";
+import { formatOrderDate } from "@/lib/date-utils";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CopyButton from "@/components/CopyButton";
 import { requireAdmin } from "@/lib/auth";
@@ -117,14 +118,6 @@ export default function AdminComenziPage() {
     await refreshOrders();
   };
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString("ro-RO", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   return (
     <div>
@@ -224,7 +217,7 @@ export default function AdminComenziPage() {
                   <p className="text-sm text-gray-400">
                     {order.userEmail} · {order.address.phone}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">{formatDate(order.createdAt)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{formatOrderDate(order.createdAt)}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-start gap-2 sm:items-end">

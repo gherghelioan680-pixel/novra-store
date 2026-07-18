@@ -10,6 +10,7 @@ import {
   wrapEmailHtml,
 } from "@/lib/email-templates";
 import { buildSampleOrder } from "@/lib/email-sample-data";
+import { formatOrderDate } from "@/lib/date-utils";
 import { ORDER_STATUS_LABELS } from "@/lib/orders";
 
 export type EmailTemplateId =
@@ -590,8 +591,8 @@ export function resolveTemplatePreviewText(
 /** Sample variables for admin preview / test sends. */
 export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<string, string> {
   const site = getSiteOrigin();
-  const now = new Date().toLocaleDateString("ro-RO");
   const sampleOrder = buildSampleOrder();
+  const sampleOrderDate = formatOrderDate(sampleOrder.createdAt);
   const base: Record<string, string> = {
     name: sampleOrder.address.name,
     email: sampleOrder.userEmail,
@@ -602,9 +603,9 @@ export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<
     orderNumber: sampleOrder.purchaseCode,
     purchaseCode: sampleOrder.purchaseCode,
     orderCode: sampleOrder.purchaseCode,
-    orderDate: now,
-    shippingDate: now,
-    deliveryDate: now,
+    orderDate: sampleOrderDate,
+    shippingDate: sampleOrderDate,
+    deliveryDate: sampleOrderDate,
     trackingNumber: "FC1234567890",
     courier: "Fan Courier",
     total: sampleOrder.total.toFixed(2),
@@ -613,19 +614,19 @@ export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<
     returnReason: "Produs defect — cablu cu conector slăbit",
     refundAmount: sampleOrder.total.toFixed(2),
     refundMethod: "Card bancar",
-    refundDate: now,
+    refundDate: sampleOrderDate,
     giftCardCode: "NOVRA-GIFT-250",
     giftCardAmount: "250",
     creditAmount: "50",
     creditBalance: "150",
-    expiryDate: now,
+    expiryDate: sampleOrderDate,
     reviewUrl: `${site}/recenzii`,
     subject: "Întrebare despre compatibilitate cablu USB-C",
     message: "Bună ziua, aș dori să știu dacă cablul USB-C 100W este compatibil cu MacBook Pro M3.",
     ticketNumber: "TKT-190726-A1B2",
-    date: now,
+    date: sampleOrderDate,
     reason: "Produs defect — cablu cu conector slăbit",
-    registerDate: now,
+    registerDate: sampleOrderDate,
     expiresIn: "60 minute",
     customerName: sampleOrder.address.name,
     customerEmail: sampleOrder.userEmail,

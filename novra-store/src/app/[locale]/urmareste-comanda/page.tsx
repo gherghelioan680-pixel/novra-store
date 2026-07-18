@@ -12,6 +12,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
+import { formatOrderDate } from "@/lib/date-utils";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useTranslations } from "next-intl";
@@ -152,9 +153,7 @@ function TrackOrderContent() {
                   </div>
                   <div className="rounded-xl border border-white/8 bg-novra-bg/30 p-3">
                     <p className="text-xs text-gray-500">Plasată la</p>
-                    <p className="mt-1 text-white">
-                      {new Date(order.createdAt).toLocaleString("ro-RO")}
-                    </p>
+                    <p className="mt-1 text-white">{formatOrderDate(order.createdAt)}</p>
                   </div>
                 </div>
               </section>
@@ -208,9 +207,7 @@ function TrackOrderContent() {
                         </span>
                         <div>
                           <p className="font-medium text-white">{entry.label}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(entry.at).toLocaleString("ro-RO")}
-                          </p>
+                          <p className="text-xs text-gray-500">{formatOrderDate(entry.at)}</p>
                         </div>
                       </li>
                     );
