@@ -43,7 +43,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
     resetPasswordForm();
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
     setPasswordSuccess("");
@@ -53,7 +53,7 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
       return;
     }
 
-    const result = changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+    const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
 
     if (result.success && result.user) {
       setPasswordSuccess(result.message);

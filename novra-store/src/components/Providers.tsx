@@ -14,6 +14,7 @@ const CampaignTracker = dynamic(() => import("@/components/CampaignTracker"), { 
 const InviteRefTracker = dynamic(() => import("@/components/InviteRefTracker"), { ssr: false });
 const PushNotificationPrompt = dynamic(() => import("@/components/PushNotificationPrompt"), { ssr: false });
 const VisitorTracker = dynamic(() => import("@/components/VisitorTracker"), { ssr: false });
+const GoogleAnalytics = dynamic(() => import("@/components/GoogleAnalytics"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -34,6 +35,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         {children}
         <CountdownFallbackScript />
         <CookieConsent />
+        <GoogleAnalytics />
         <PushNotificationPrompt />
       </CartProvider>
     </SiteSettingsProvider>

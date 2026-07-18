@@ -34,6 +34,8 @@
     "terms": "Termeni și condiții",
     "cookies": "Politica cookie-uri",
     "affiliateTerms": "Termeni program afiliere",
+    "anpc": "ANPC — Protecția consumatorilor",
+    "odr": "SOL/ODR — Platforma UE",
     "copyright": "© 2026 NOVRA. Toate drepturile rezervate."
   },
   "common": {
@@ -238,6 +240,11 @@
     "phone": "Telefon",
     "shippingAddress": "Adresă livrare",
     "city": "Oraș",
+    "county": "Județ",
+    "postalCode": "Cod poștal",
+    "selectCounty": "Selectează județul",
+    "postalCodePlaceholder": "010101",
+    "addressRequired": "Completează județul și codul poștal.",
     "notes": "Note comandă (opțional)",
     "paymentMethod": "Metodă de plată",
     "card": "Card bancar",
@@ -343,6 +350,21 @@
     "tracking": "AWB / Tracking",
     "openTracking": "Deschide tracking"
   },
+  "returns": {
+    "title": "Returnări și rambursări",
+    "subtitle": "Poți solicita retur în termen de 14 zile calendaristice de la primirea coletului.",
+    "newRequest": "Cerere nouă de retur",
+    "orderCode": "Cod comandă",
+    "orderCodePlaceholder": "Ex: NV-180726-ABC123",
+    "reason": "Motiv retur",
+    "description": "Descriere",
+    "descriptionPlaceholder": "Descrie pe scurt situația (produs defect, neconform etc.)",
+    "submit": "Trimite cererea",
+    "submitSuccess": "Cererea de retur a fost înregistrată. Te contactăm în curând.",
+    "history": "Istoric cereri",
+    "empty": "Nu ai cereri de retur înregistrate.",
+    "adminNote": "Notă admin"
+  },
   "account": {
     "overview": "Prezentare generală",
     "orders": "Comenzi",
@@ -376,6 +398,7 @@
     "hasAccount": "Ai deja cont?",
     "createAccount": "Creează cont",
     "resetSent": "Un link de resetare a parolei a fost trimis la {email}. Verifică-ți inbox-ul și junk folder.",
+    "resetUnavailable": "Resetarea parolei prin email nu este disponibilă momentan. Contactează suportul la support@novra.ro.",
     "emailNotFound": "Nu am găsit niciun cont cu acest email.",
     "profileBadge": "+100 NovraCredits",
     "welcomeBack": "Bine ai revenit",

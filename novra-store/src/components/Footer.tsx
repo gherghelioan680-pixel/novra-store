@@ -10,8 +10,14 @@ import { buildWhatsAppUrl, formatWhatsAppDisplay } from "@/lib/store";
 
 export default function Footer() {
   const t = useTranslations("footer");
-  const { whatsappNumber } = useSiteSettings();
+  const { whatsappNumber, facebookUrl, instagramUrl, tiktokUrl } = useSiteSettings();
   const phoneDisplay = formatWhatsAppDisplay(whatsappNumber);
+
+  const socialLinks = [
+    { href: facebookUrl, label: "Facebook", Icon: FaFacebook },
+    { href: instagramUrl, label: "Instagram", Icon: FaInstagram },
+    { href: tiktokUrl, label: "TikTok", Icon: FaTiktok },
+  ].filter((item) => item.href?.trim());
 
   return (
     <footer className="bg-novra-bg-alt border-t border-novra-border/60 pt-16 pb-4 max-md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] px-4 sm:px-8 lg:px-12">
@@ -31,33 +37,18 @@ export default function Footer() {
           <p className="text-sm text-gray-400 mb-6 max-w-xs leading-relaxed">{t("tagline")}</p>
 
           <div className="flex gap-4 text-gray-400">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-lg border border-white/8 hover:border-purple-500/40 hover:text-purple-500 transition"
-              aria-label="Facebook"
-            >
-              <FaFacebook size={18} />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-lg border border-white/8 hover:border-purple-500/40 hover:text-purple-500 transition"
-              aria-label="Instagram"
-            >
-              <FaInstagram size={18} />
-            </a>
-            <a
-              href="https://tiktok.com"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-lg border border-white/8 hover:border-purple-500/40 hover:text-purple-500 transition"
-              aria-label="TikTok"
-            >
-              <FaTiktok size={18} />
-            </a>
+            {socialLinks.map(({ href, label, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 rounded-lg border border-white/8 hover:border-purple-500/40 hover:text-purple-500 transition"
+                aria-label={label}
+              >
+                <Icon size={18} />
+              </a>
+            ))}
           </div>
         </div>
 
@@ -193,6 +184,26 @@ export default function Footer() {
               <Link href="/termeni-program-afiliere" className="hover:text-purple-400 transition">
                 {t("affiliateTerms")}
               </Link>
+            </li>
+            <li>
+              <a
+                href="https://anpc.ro/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-purple-400 transition"
+              >
+                {t("anpc")}
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://ec.europa.eu/consumers/odr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-purple-400 transition"
+              >
+                {t("odr")}
+              </a>
             </li>
           </ul>
         </div>

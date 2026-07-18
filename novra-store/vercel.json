@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/abandoned-carts",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/push-notifications",
+      "schedule": "0 * * * *"
     }
   ]
 }

@@ -17,6 +17,8 @@ export type OrderAddress = {
   phone: string;
   address: string;
   city: string;
+  county?: string;
+  postalCode?: string;
   notes: string;
 };
 
@@ -169,6 +171,8 @@ export function normalizeOrder(raw: Partial<Order>): Order {
       phone: address?.phone ?? "",
       address: address?.address ?? "",
       city: address?.city ?? "",
+      county: address?.county ?? "",
+      postalCode: address?.postalCode ?? "",
       notes: address?.notes ?? "",
     },
     purchaseCode,

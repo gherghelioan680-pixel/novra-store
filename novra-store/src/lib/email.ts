@@ -498,3 +498,41 @@ export async function sendNewsletterBroadcastEmail(
   console.log("[email] Newsletter broadcast complete:", { sent, failed, total: emails.length });
   return { sent, failed };
 }
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not configured — skipping password reset for", email);
+    return false;
+  }
+
+  const body = `
+    <p style="margin:0 0 16px;color:#e5e7eb;font-size:15px;line-height:1.6;">
+      Ai solicitat resetarea parolei contului NOVRA. Apasă butonul de mai jos pentru a alege o parolă nouă.
+      Linkul expiră în 60 de minute.
+    </p>
+    <p style="margin:0 0 20px;text-align:center;">
+      <a href="${escapeHtml(resetUrl)}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">Resetează parola</a>
+    </p>
+    <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.6;">
+      Dacă nu ai solicitat resetarea, ignoră acest email.
+    </p>
+  `;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: "Resetare parolă NOVRA",
+      html: baseEmailHtml("Resetare parolă", body),
+    });
+    if (error) {
+      console.error("[email] Password reset failed:", email, error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[email] Password reset error:", email, err);
+    return false;
+  }
+}

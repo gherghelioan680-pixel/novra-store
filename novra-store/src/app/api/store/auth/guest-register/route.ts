@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { normalizeOrder, type Order } from "@/lib/orders";
 import type { User } from "@/lib/auth";
+import { hashPassword } from "@/lib/password-server";
 
 export const runtime = "nodejs";
 
@@ -41,8 +42,8 @@ function buildUserFromOrder(order: Order, password: string): StoredUser {
       fullName: name,
       addressLine: order.address.address,
       city: order.address.city,
-      county: "",
-      postalCode: "",
+      county: order.address.county ?? "",
+      postalCode: order.address.postalCode ?? "",
       phone: order.address.phone,
       country: "Romania",
     },
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newUser = buildUserFromOrder(order, password);
+    newUser.password = await hashPassword(password);
     users.push(newUser);
 
     orders[orderIndex] = {

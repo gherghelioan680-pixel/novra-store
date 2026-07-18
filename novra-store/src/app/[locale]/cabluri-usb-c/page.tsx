@@ -9,6 +9,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { buildWhatsAppUrl } from "@/lib/store";
 
 // Date detaliate pentru gama de cabluri USB-C
 const usbProducts = [
@@ -80,6 +82,7 @@ const isLockedVariant = (productId: string, optionIndex: number) =>
 
 export default function CabluriUsbC() {
   const { addItem } = useCart();
+  const { whatsappNumber } = useSiteSettings();
   // Păstrăm starea pentru lungimea selectată la fiecare produs
   const [selectedLengths, setSelectedLengths] = useState<{ [key: string]: number }>({
     "usb-c-100w": 0,
@@ -106,7 +109,7 @@ export default function CabluriUsbC() {
     
     const message = `Salut echipa NOVRA! Aș dori să comand:\n\n- Produs: ${product.title}\n- Tip: ${product.subtitle}\n- Lungime: ${chosenLength.label}\n- Preț: ${finalPrice} RON`;
     
-    window.open(`https://wa.me/407XXXXXXXXX?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(buildWhatsAppUrl(whatsappNumber, message), "_blank");
   };
 
   const handleAddToCart = (product: typeof usbProducts[0]) => {

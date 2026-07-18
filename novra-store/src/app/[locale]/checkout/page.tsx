@@ -26,6 +26,7 @@ import {
   validateDiscountCode,
   type AppliedDiscount,
 } from "@/lib/discount-codes";
+import { ROMANIAN_COUNTIES } from "@/lib/romanian-counties";
 
 function buildInitialFormData() {
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
@@ -35,6 +36,8 @@ function buildInitialFormData() {
     phone: user?.phone ?? user?.shippingAddress?.phone ?? "",
     address: user?.shippingAddress?.addressLine ?? user?.address ?? "",
     city: user?.shippingAddress?.city ?? "",
+    county: user?.shippingAddress?.county ?? "",
+    postalCode: user?.shippingAddress?.postalCode ?? "",
     notes: "",
   };
 }
@@ -246,6 +249,8 @@ function CheckoutPageContent() {
       `Telefon: ${formData.phone}`,
       `Adresă: ${formData.address}`,
       `Oraș: ${formData.city}`,
+      `Județ: ${formData.county}`,
+      `Cod poștal: ${formData.postalCode}`,
       formData.notes ? `Observații: ${formData.notes}` : "",
     ]
       .filter(Boolean)
@@ -334,6 +339,12 @@ function CheckoutPageContent() {
     e.preventDefault();
     setStatus("sending");
     setStripeError("");
+
+    if (!formData.county.trim() || !formData.postalCode.trim()) {
+      setStripeError(t("addressRequired"));
+      setStatus("error");
+      return;
+    }
 
     await loadProductOverrides();
     const stockCheck = validateCartStock(items);
@@ -486,6 +497,8 @@ function CheckoutPageContent() {
                   phone: user.phone ?? user.shippingAddress?.phone ?? "",
                   address: user.shippingAddress?.addressLine ?? user.address ?? "",
                   city: user.shippingAddress?.city ?? "",
+                  county: user.shippingAddress?.county ?? "",
+                  postalCode: user.shippingAddress?.postalCode ?? "",
                   notes: "",
                 });
               }}
@@ -567,6 +580,43 @@ function CheckoutPageContent() {
                 autoComplete="address-level2"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full min-h-11 bg-novra-surface/70 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="checkout-county" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
+                {t("county")} *
+              </label>
+              <select
+                id="checkout-county"
+                required
+                value={formData.county}
+                onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+                className="w-full min-h-11 bg-novra-surface/70 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
+              >
+                <option value="">{t("selectCounty")}</option>
+                {ROMANIAN_COUNTIES.map((county) => (
+                  <option key={county} value={county}>
+                    {county}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="checkout-postal" className="text-xs uppercase tracking-widest text-gray-500 block mb-2">
+                {t("postalCode")} *
+              </label>
+              <input
+                id="checkout-postal"
+                required
+                type="text"
+                autoComplete="postal-code"
+                inputMode="numeric"
+                value={formData.postalCode}
+                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                placeholder={t("postalCodePlaceholder")}
                 className="w-full min-h-11 bg-novra-surface/70 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
               />
             </div>

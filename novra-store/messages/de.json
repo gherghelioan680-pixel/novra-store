@@ -34,6 +34,8 @@
     "terms": "AGB",
     "cookies": "Cookie-Richtlinie",
     "affiliateTerms": "Affiliate-Programm AGB",
+    "anpc": "ANPC — Verbraucherschutz (RO)",
+    "odr": "EU-OS-Plattform",
     "copyright": "© 2026 NOVRA. Alle Rechte vorbehalten."
   },
   "common": {
@@ -238,6 +240,11 @@
     "phone": "Telefon",
     "shippingAddress": "Lieferadresse",
     "city": "Stadt",
+    "county": "Kreis",
+    "postalCode": "Postleitzahl",
+    "selectCounty": "Kreis auswählen",
+    "postalCodePlaceholder": "010101",
+    "addressRequired": "Bitte Kreis und Postleitzahl ausfüllen.",
     "notes": "Bestellnotizen (optional)",
     "paymentMethod": "Zahlungsmethode",
     "card": "Bankkarte",
@@ -343,6 +350,21 @@
     "tracking": "AWB / Tracking",
     "openTracking": "Tracking öffnen"
   },
+  "returns": {
+    "title": "Rücksendungen und Erstattungen",
+    "subtitle": "Sie können innerhalb von 14 Kalendertagen nach Erhalt eine Rücksendung anfordern.",
+    "newRequest": "Neue Rücksendeanfrage",
+    "orderCode": "Bestellcode",
+    "orderCodePlaceholder": "z. B. NV-180726-ABC123",
+    "reason": "Rücksendegrund",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Beschreiben Sie kurz das Problem (defekt, nicht wie beschrieben usw.)",
+    "submit": "Anfrage senden",
+    "submitSuccess": "Ihre Rücksendeanfrage wurde eingereicht. Wir melden uns in Kürze.",
+    "history": "Anfragenverlauf",
+    "empty": "Sie haben noch keine Rücksendeanfragen.",
+    "adminNote": "Admin-Hinweis"
+  },
   "account": {
     "overview": "Übersicht",
     "orders": "Bestellungen",
@@ -376,6 +398,7 @@
     "hasAccount": "Bereits ein Konto?",
     "createAccount": "Konto erstellen",
     "resetSent": "Ein Link zum Zurücksetzen des Passworts wurde an {email} gesendet. Prüfen Sie Ihren Posteingang und Spam-Ordner.",
+    "resetUnavailable": "Passwort-Zurücksetzen per E-Mail ist derzeit nicht verfügbar. Kontaktieren Sie support@novra.ro.",
     "emailNotFound": "Kein Konto mit dieser E-Mail gefunden.",
     "profileBadge": "+100 NovraCredits",
     "welcomeBack": "Willkommen zurück",

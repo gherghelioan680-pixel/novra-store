@@ -32,6 +32,7 @@ const navItems = [
   { href: "/admin/statistici", label: "Statistici", icon: BarChart3 },
   { href: "/admin/produse", label: "Produse", icon: Package },
   { href: "/admin/comenzi", label: "Comenzi", icon: ShoppingBag },
+  { href: "/admin/returnari", label: "Returnări", icon: Package },
   { href: "/admin/cautare", label: "Căutare", icon: Search },
   { href: "/admin/clienti", label: "Clienți", icon: Users },
   { href: "/admin/utilizatori", label: "Utilizatori", icon: UserX },

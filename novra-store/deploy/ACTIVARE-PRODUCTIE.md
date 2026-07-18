@@ -25,10 +25,12 @@ Deschideți **Vercel → Project → Settings → Environment Variables**. Adău
 | Nume variabilă | Descriere |
 |----------------|-----------|
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` — recomandat în producție. Endpoint: `https://novra.ro/api/store/stripe/webhook`, eveniment: `checkout.session.completed`. Confirmă plăți chiar dacă clientul nu revine pe pagina de success. |
-| `CRON_SECRET` | Secret pentru `/api/cron/abandoned-carts` (Vercel Cron). |
-| `ABANDONED_CART_HOURS` | Ore până la primul email coș abandonat (implicit: `2`). |
-| `NEXT_PUBLIC_ADMIN_EMAIL` | Email login admin (implicit: `admin@novra.ro`). |
-| `NEXT_PUBLIC_ADMIN_PASSWORD` | Parolă login admin (schimbați în producție!). |
+| `CRON_SECRET` | Secret pentru `/api/cron/abandoned-carts` și `/api/cron/push-notifications` (Vercel Cron). |
+| `ADMIN_EMAIL` | Email login admin (server-only, **nu** `NEXT_PUBLIC_*`). Implicit: `admin@novra.ro`. |
+| `ADMIN_PASSWORD` | Parolă login admin (server-only). **Schimbați în producție!** |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | ID măsurare Google Analytics 4 (`G-...`). Scriptul se încarcă **doar** după consimțământ cookie analytics. |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Chei Web Push pentru notificări PWA. Generare: `npx web-push generate-vapid-keys` |
+| `VAPID_SUBJECT` | Contact mailto pentru Web Push (ex. `mailto:contact@novra.ro`). |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Alternative la `KV_*` dacă conectați Upstash direct. |
 
 ### Copy-paste rapid (nume variabile)
@@ -41,6 +43,12 @@ RESEND_API_KEY=
 RESEND_FROM_EMAIL=NOVRA <onboarding@resend.dev>
 KV_REST_API_URL=
 KV_REST_API_TOKEN=
+ADMIN_EMAIL=admin@novra.ro
+ADMIN_PASSWORD=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 ```
 
 ---
@@ -68,7 +76,7 @@ După **orice** modificare de Environment Variables:
 
 ## 4. Toggle-uri Admin (după redeploy)
 
-Autentificare: `https://novra.ro/admin/login` (vezi [VERCEL-DNS.md](./VERCEL-DNS.md) pentru credențiale implicite).
+Autentificare: `https://novra.ro/admin/login` — folosiți `ADMIN_EMAIL` și `ADMIN_PASSWORD` setate în Vercel (variabile **server-only**, nu publice).
 
 În **Admin → Setări**:
 

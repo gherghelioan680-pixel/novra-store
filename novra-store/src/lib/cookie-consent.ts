@@ -121,6 +121,12 @@ export function saveCookieConsent(choice: CookieConsentChoice): void {
   } catch {
     /* ignore */
   }
+
+  try {
+    window.dispatchEvent(new CustomEvent("novra-cookie-consent-updated"));
+  } catch {
+    /* ignore */
+  }
 }
 
 export function applyConsentPreset(preset: CookieConsentPreset, custom?: { analytics: boolean; affiliate: boolean }): CookieConsentChoice {

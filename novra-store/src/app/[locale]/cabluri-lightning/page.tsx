@@ -9,6 +9,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { buildWhatsAppUrl } from "@/lib/store";
 
 const ADAPTER_COLOR_STYLES: Record<string, { text: string; border: string; bg: string; selectedBg: string }> = {
   Violet: { text: "text-violet-400", border: "border-violet-400/60", bg: "bg-violet-500/10", selectedBg: "bg-violet-500/20" },
@@ -70,6 +72,7 @@ const lightningProducts = [
 
 export default function CabluriLightning() {
   const { addItem } = useCart();
+  const { whatsappNumber } = useSiteSettings();
   const [selectedColors, setSelectedColors] = useState<{ [key: string]: number }>({
     "usb-c-lightning-pd": 0,
     "usb-a-lightning-classic": 0,
@@ -88,7 +91,7 @@ export default function CabluriLightning() {
 
     const message = `Salut echipa NOVRA! Aș dori să comand din gama Adaptoare:\n\n- Produs: ${product.title}\n- Tip: ${product.subtitle}\n- Culoare: ${chosenColor.label}\n- Preț: ${finalPrice} RON`;
 
-    window.open(`https://wa.me/407XXXXXXXXX?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(buildWhatsAppUrl(whatsappNumber, message), "_blank");
   };
 
   const handleAddToCart = (product: typeof lightningProducts[0]) => {

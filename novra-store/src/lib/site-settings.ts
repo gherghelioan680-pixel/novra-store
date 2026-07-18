@@ -48,6 +48,10 @@ export type SiteSettings = {
   newsletterAutoGenerateCodes: boolean;
   /** Șablon mesaj bun-venit ({code}, {percent}) */
   newsletterWelcomeMessage: string;
+  /** URL-uri rețele sociale (lăsați gol pentru a ascunde iconița) */
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
 };
 
 export const DEFAULT_NEWSLETTER_WELCOME_MESSAGE =
@@ -111,6 +115,9 @@ const DEFAULT_SETTINGS: SiteSettings = {
   newsletterDiscountPercent: 10,
   newsletterAutoGenerateCodes: true,
   newsletterWelcomeMessage: DEFAULT_NEWSLETTER_WELCOME_MESSAGE,
+  facebookUrl: "",
+  instagramUrl: "",
+  tiktokUrl: "",
 };
 
 function mergeComingSoon(partial?: Partial<ComingSoonSettings>): ComingSoonSettings {

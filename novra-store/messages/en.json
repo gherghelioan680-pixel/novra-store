@@ -34,6 +34,8 @@
     "terms": "Terms & conditions",
     "cookies": "Cookie policy",
     "affiliateTerms": "Affiliate program terms",
+    "anpc": "ANPC — Consumer protection (RO)",
+    "odr": "EU ODR platform",
     "copyright": "© 2026 NOVRA. All rights reserved."
   },
   "common": {
@@ -238,6 +240,11 @@
     "phone": "Phone",
     "shippingAddress": "Shipping address",
     "city": "City",
+    "county": "County",
+    "postalCode": "Postal code",
+    "selectCounty": "Select county",
+    "postalCodePlaceholder": "010101",
+    "addressRequired": "Please fill in county and postal code.",
     "notes": "Order notes (optional)",
     "paymentMethod": "Payment method",
     "card": "Bank card",
@@ -343,6 +350,21 @@
     "tracking": "AWB / Tracking",
     "openTracking": "Open tracking"
   },
+  "returns": {
+    "title": "Returns and refunds",
+    "subtitle": "You can request a return within 14 calendar days of receiving your parcel.",
+    "newRequest": "New return request",
+    "orderCode": "Order code",
+    "orderCodePlaceholder": "E.g. NV-180726-ABC123",
+    "reason": "Return reason",
+    "description": "Description",
+    "descriptionPlaceholder": "Briefly describe the issue (defective, not as described, etc.)",
+    "submit": "Submit request",
+    "submitSuccess": "Your return request has been submitted. We will contact you soon.",
+    "history": "Request history",
+    "empty": "You have no return requests yet.",
+    "adminNote": "Admin note"
+  },
   "account": {
     "overview": "Overview",
     "orders": "Orders",
@@ -376,6 +398,7 @@
     "hasAccount": "Already have an account?",
     "createAccount": "Create account",
     "resetSent": "A password reset link was sent to {email}. Check your inbox and junk folder.",
+    "resetUnavailable": "Password reset by email is not available yet. Contact support at support@novra.ro.",
     "emailNotFound": "No account found with this email.",
     "profileBadge": "+100 NovraCredits",
     "welcomeBack": "Welcome back",

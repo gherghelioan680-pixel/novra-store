@@ -169,13 +169,13 @@ export default function AdminSetariPage() {
     return settings.comingSoon.countdownDate;
   })();
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       showMessage("Parolele noi nu coincid.");
       return;
     }
 
-    const result = changePassword(currentPassword, newPassword);
+    const result = await changePassword(currentPassword, newPassword);
     if (!result.success) {
       showMessage(result.message);
       return;

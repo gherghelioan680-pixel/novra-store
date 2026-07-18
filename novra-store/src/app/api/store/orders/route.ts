@@ -24,7 +24,7 @@ export const runtime = "nodejs";
 
 const ORDERS_FILE = "orders.json";
 const USERS_FILE = "users.json";
-const MAX_ORDERS = 100;
+const MAX_ORDERS = 10000;
 
 type ServerUser = {
   id: string;

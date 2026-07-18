@@ -3,6 +3,7 @@ import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import type { User } from "@/lib/auth";
 import { adminAdjustCredits } from "@/lib/credits-server";
+import { hashPassword, isPasswordHashed } from "@/lib/password-server";
 
 export const runtime = "nodejs";
 
@@ -61,9 +62,20 @@ export async function POST(request: NextRequest) {
     const index = findUserIndex(users, user.email);
 
     if (index === -1) {
+      if (user.password && !isPasswordHashed(user.password)) {
+        user.password = await hashPassword(user.password);
+      }
       users.push(user);
     } else {
-      users[index] = { ...users[index], ...user, password: user.password || users[index].password };
+      const nextPassword = user.password || users[index].password;
+      users[index] = {
+        ...users[index],
+        ...user,
+        password:
+          nextPassword && !isPasswordHashed(nextPassword)
+            ? await hashPassword(nextPassword)
+            : nextPassword,
+      };
     }
 
     await writeJsonFile(FILE, users);

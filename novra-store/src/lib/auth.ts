@@ -67,11 +67,6 @@ const USERS_KEY = "novra-users";
 const CURRENT_USER_KEY = "novra-current-user";
 const SESSION_KEY = "novra-session";
 
-const DEFAULT_ADMIN_EMAIL =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ADMIN_EMAIL) || "admin@novra.ro";
-const DEFAULT_ADMIN_PASSWORD =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ADMIN_PASSWORD) || "NovraAdmin2026!";
-
 const SIGNUP_CREDITS = 50;
 const PROFILE_COMPLETE_CREDITS = 100;
 
@@ -175,48 +170,7 @@ export function getSession(): SessionData | null {
 }
 
 export function ensureAdminUser(): void {
-  if (!isBrowser() || !canUseLocalStorage()) return;
-
-  const users = getStoredUsers();
-  const adminEmail = DEFAULT_ADMIN_EMAIL.toLowerCase();
-  const existing = users.find((user) => user.email.toLowerCase() === adminEmail);
-
-  if (existing) {
-    if (existing.role !== "admin") {
-      existing.role = "admin";
-      saveUsers(users);
-    }
-    return;
-  }
-
-  const adminUser: User = {
-    id: "admin-novra",
-    name: "Admin NOVRA",
-    firstName: "Admin",
-    lastName: "NOVRA",
-    email: adminEmail,
-    password: DEFAULT_ADMIN_PASSWORD,
-    role: "admin",
-    phone: "",
-    address: "",
-    country: "Romania",
-    paymentMethod: "",
-    favoriteItems: [],
-    orders: [],
-    addresses: [],
-    paymentMethods: [],
-    novraCredits: 0,
-    signupBonusClaimed: true,
-    profileCompleted: true,
-    subscribedToNewsletter: false,
-    loyalty: { points: 0, discount: "0%" },
-    preferences: { offers: false, orders: true, recommendations: false },
-    createdAt: new Date().toISOString(),
-  };
-
-  users.push(adminUser);
-  saveUsers(users);
-  void syncUserToServer(adminUser);
+  /* Admin accounts are provisioned server-side via ADMIN_EMAIL / ADMIN_PASSWORD env vars. */
 }
 
 export function requireAdmin(): User | null {
@@ -474,27 +428,10 @@ export async function loginAdmin(email: string, password: string) {
     };
 
     if (!response.ok || !data.success || !data.user) {
-      const users = getStoredUsers();
-      const localUser = users.find(
-        (item) =>
-          item.email.toLowerCase() === trimmedEmail &&
-          item.password === trimmedPassword &&
-          getUserRole(item) === "admin"
-      );
-
-      if (!localUser) {
-        return {
-          success: false,
-          message: data.message ?? "Acces refuzat. Doar administratorii pot intra aici.",
-        };
-      }
-
-      const savedSession = setCurrentUser(localUser);
-      if (!savedSession.ok) {
-        return { success: false, message: savedSession.message };
-      }
-
-      return { success: true, message: "Autentificare admin reușită!", user: localUser };
+      return {
+        success: false,
+        message: data.message ?? "Acces refuzat. Doar administratorii pot intra aici.",
+      };
     }
 
     const user = mergeServerUserWithPassword(data.user, trimmedPassword);
@@ -514,24 +451,7 @@ export async function loginAdmin(email: string, password: string) {
       user,
     };
   } catch {
-    const users = getStoredUsers();
-    const localUser = users.find(
-      (item) =>
-        item.email.toLowerCase() === trimmedEmail &&
-        item.password === trimmedPassword &&
-        getUserRole(item) === "admin"
-    );
-
-    if (!localUser) {
-      return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
-    }
-
-    const savedSession = setCurrentUser(localUser);
-    if (!savedSession.ok) {
-      return { success: false, message: savedSession.message };
-    }
-
-    return { success: true, message: "Autentificare admin reușită!", user: localUser };
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
   }
 }
 
@@ -712,7 +632,7 @@ export function updateShippingAddress(data: Omit<ShippingAddress, "country"> & {
   return updateCurrentUserProfile({ shippingAddress });
 }
 
-export function changePassword(currentPassword: string, newPassword: string) {
+export async function changePassword(currentPassword: string, newPassword: string) {
   if (!isBrowser()) {
     return { success: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
   }
@@ -733,36 +653,37 @@ export function changePassword(currentPassword: string, newPassword: string) {
     return { success: false, message: "Nu există un utilizator conectat." };
   }
 
-  if (currentUser.password !== trimmedCurrent) {
-    return { success: false, message: "Parola curentă este incorectă." };
+  try {
+    const response = await fetch("/api/store/auth", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "change-password",
+        currentPassword: trimmedCurrent,
+        newPassword: trimmedNew,
+      }),
+    });
+
+    const data = (await response.json()) as { success?: boolean; message?: string };
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        message: data.message ?? "Nu s-a putut schimba parola.",
+      };
+    }
+
+    const users = getStoredUsers();
+    const userIndex = users.findIndex((user) => user.id === currentUser.id);
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], password: trimmedNew };
+      saveUsers(users);
+      setCurrentUser({ ...users[userIndex], password: trimmedNew });
+    }
+
+    return { success: true, message: data.message ?? "Parola a fost schimbată cu succes.", user: currentUser };
+  } catch {
+    return { success: false, message: "Eroare de rețea. Verifică conexiunea și încearcă din nou." };
   }
-
-  if (trimmedCurrent === trimmedNew) {
-    return { success: false, message: "Parola nouă trebuie să fie diferită de cea curentă." };
-  }
-
-  const users = getStoredUsers();
-  const userIndex = users.findIndex((user) => user.id === currentUser.id);
-
-  if (userIndex === -1) {
-    return { success: false, message: "Utilizatorul nu a fost găsit." };
-  }
-
-  const updatedUser = { ...users[userIndex], password: trimmedNew };
-  users[userIndex] = updatedUser;
-  const savedUsers = saveUsers(users);
-  if (!savedUsers.ok) {
-    return { success: false, message: savedUsers.message };
-  }
-
-  const savedSession = setCurrentUser(updatedUser);
-  if (!savedSession.ok) {
-    return { success: false, message: savedSession.message };
-  }
-
-  void syncUserToServer(updatedUser);
-
-  return { success: true, message: "Parola a fost schimbată cu succes.", user: updatedUser };
 }
 
 export function deleteAccount() {

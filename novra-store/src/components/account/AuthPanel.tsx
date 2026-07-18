@@ -33,25 +33,20 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
           const response = await fetch("/api/store/auth", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "check-email", email }),
+            body: JSON.stringify({ action: "forgot-password", email }),
           });
-          const data = (await response.json()) as { exists?: boolean };
+          const data = (await response.json()) as { success?: boolean; message?: string };
 
-          if (!data.exists) {
-            setMessage(t("emailNotFound"));
+          if (!response.ok || !data.success) {
+            setMessage(data.message ?? t("emailNotFound"));
             return;
           }
+
+          setMessageIsSuccess(true);
+          setMessage(data.message ?? t("resetSent", { email }));
         } catch {
           setMessage(tc("networkError"));
-          return;
         }
-
-        setMessage(t("resetSent", { email }));
-        setTimeout(() => {
-          setMode("login");
-          setEmail("");
-          setMessage("");
-        }, 3000);
         return;
       }
 
