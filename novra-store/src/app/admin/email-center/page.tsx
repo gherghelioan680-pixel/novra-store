@@ -232,6 +232,7 @@ export default function AdminEmailCenterPage() {
   const [logDateFrom, setLogDateFrom] = useState("");
   const [logDateTo, setLogDateTo] = useState("");
   const [logsLoading, setLogsLoading] = useState(false);
+  const [logsInitialized, setLogsInitialized] = useState(false);
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [logEditForm, setLogEditForm] = useState({ to: "", subject: "", type: "", status: "sent" as "sent" | "failed" });
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
@@ -315,6 +316,7 @@ export default function AdminEmailCenterPage() {
     if (res.ok) {
       const data = (await res.json()) as { logs: EmailLogEntry[] };
       setEmailLogs(data.logs);
+      setLogsInitialized(true);
       setSelectedLogIds((current) =>
         current.filter((id) => data.logs.some((log) => log.id === id))
       );
@@ -752,7 +754,30 @@ export default function AdminEmailCenterPage() {
     { id: "smtp", label: "SMTP", icon: Server },
   ];
 
-  const displayLogs = emailLogs.length ? emailLogs : (dashboard?.recentLogs ?? []);
+  const displayLogs = logsInitialized ? emailLogs : (dashboard?.recentLogs ?? []);
+
+  const clearLogsFromDashboard = () => {
+    setEmailLogs([]);
+    setSelectedLogIds([]);
+    setDashboard((current) =>
+      current
+        ? {
+            ...current,
+            stats: {
+              sentToday: 0,
+              sentThisMonth: 0,
+              deliveryRate: 0,
+              lastSent: null,
+              totalSent: 0,
+              totalFailed: 0,
+              delivered: 0,
+            },
+            recentLogs: [],
+            chartData: current.chartData.map((day) => ({ ...day, sent: 0, failed: 0 })),
+          }
+        : current
+    );
+  };
   const chartData = dashboard?.chartData ?? [];
   const chartMax = Math.max(1, ...chartData.map((day) => day.sent + day.failed));
   const allLogsSelected =
@@ -787,14 +812,29 @@ export default function AdminEmailCenterPage() {
     });
     setBulkLogsWorking(false);
 
-    const data = (await res.json()) as { ok?: boolean; message?: string; deletedCount?: number };
+    const data = (await res.json()) as {
+      ok?: boolean;
+      message?: string;
+      deletedCount?: number;
+      logs?: EmailLogEntry[];
+    };
     if (!res.ok || !data.ok) {
       showMessage(data.message ?? "Ștergere eșuată.");
       return;
     }
 
-    setSelectedLogIds([]);
-    await refresh();
+    if (deleteAll) {
+      clearLogsFromDashboard();
+      setLogsInitialized(true);
+    } else {
+      setEmailLogs(
+        data.logs ?? emailLogs.filter((log) => !selectedLogIds.includes(log.id))
+      );
+      setSelectedLogIds([]);
+      setLogsInitialized(true);
+    }
+
+    await Promise.all([fetchDashboard(), fetchLogs()]);
     showMessage(
       deleteAll
         ? `Istoric șters (${data.deletedCount ?? count} intrări).`

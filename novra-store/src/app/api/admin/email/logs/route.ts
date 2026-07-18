@@ -73,7 +73,7 @@ export async function DELETE(request: NextRequest) {
 
     if (body?.deleteAll === true) {
       const deletedCount = await deleteAllEmailLogs();
-      return Response.json({ ok: true, deletedCount });
+      return Response.json({ ok: true, deletedCount, logs: [] });
     }
 
     const ids = Array.isArray(body?.ids)
@@ -85,7 +85,8 @@ export async function DELETE(request: NextRequest) {
       if (deletedCount === 0) {
         return Response.json({ ok: false, message: "Nicio intrare găsită." }, { status: 404 });
       }
-      return Response.json({ ok: true, deletedCount });
+      const logs = await getEmailLogsFiltered({ limit: 100 });
+      return Response.json({ ok: true, deletedCount, logs });
     }
 
     const id = typeof body?.id === "string" ? body.id.trim() : "";
