@@ -4,13 +4,16 @@ import {
   getEmailTemplate,
   saveEmailTemplate,
   renderEmailTemplateHtml,
+  renderEmailFromTemplate,
+  getSampleTemplateVariables,
   isEmailTemplateId,
   TEMPLATE_NAMES,
   type EmailTemplateConfig,
   type EmailTemplateId,
 } from "@/lib/email-templates-server";
 import {
-  sendEmail,
+  sendTemplatedEmail,
+  buildTemplateVariables,
   sendNewsletterWelcomeEmail,
   sendNewsletterBroadcastEmail,
   sendPasswordResetEmail,
@@ -98,11 +101,13 @@ export async function GET(request: NextRequest) {
   }
 
   const config = await getEmailTemplate(templateId);
+  const sampleVars = getSampleTemplateVariables(templateId);
+  const preview = await renderEmailFromTemplate(templateId, sampleVars);
   return Response.json({
     templateId,
     label: TEMPLATE_NAMES[templateId],
     config,
-    html: renderEmailTemplateHtml(config),
+    html: preview.html,
   });
 }
 
@@ -126,11 +131,13 @@ export async function POST(request: NextRequest) {
 
     if (action === "save") {
       const saved = await saveEmailTemplate(templateId, body.config ?? {});
+      const sampleVars = getSampleTemplateVariables(templateId);
+      const preview = await renderEmailFromTemplate(templateId, sampleVars);
       return Response.json({
         ok: true,
         message: "Șablon salvat.",
         config: saved,
-        html: renderEmailTemplateHtml(saved),
+        html: preview.html,
       });
     }
 
@@ -140,12 +147,16 @@ export async function POST(request: NextRequest) {
         : await getEmailTemplate(templateId);
 
     if (action === "preview" || action === "preview_live") {
+      const sampleVars = getSampleTemplateVariables(templateId);
+      const preview = await renderEmailFromTemplate(templateId, sampleVars, {
+        configOverrides: action === "preview_live" ? body.config : undefined,
+      });
       return Response.json({
         ok: true,
         templateId,
         label: TEMPLATE_NAMES[templateId],
         config,
-        html: renderEmailTemplateHtml(config as EmailTemplateConfig),
+        html: preview.html,
       });
     }
 
@@ -267,13 +278,13 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date().toISOString(),
         });
       } else if (templateId === "contact") {
-        const tpl = await getEmailTemplate("contact");
-        sent = await sendEmail({
-          to,
-          subject: tpl.subject,
-          html: renderEmailTemplateHtml(tpl),
-          logType: "contact",
+        const { vars } = buildTemplateVariables("contact", {
+          name: "Client Demo",
+          email: to,
+          subject: "Test contact",
+          message: "Mesaj de test din Email Center.",
         });
+        sent = await sendTemplatedEmail("contact", to, vars, { logType: "contact" });
       } else if (templateId === "order_cancelled") {
         const sample = buildSampleOrder();
         sample.userEmail = to;
@@ -281,13 +292,8 @@ export async function POST(request: NextRequest) {
         sample.status = "cancelled";
         sent = await sendOrderStatusEmail(sample, "cancelled");
       } else {
-        const tpl = await getEmailTemplate(templateId);
-        sent = await sendEmail({
-          to,
-          subject: tpl.subject,
-          html: renderEmailTemplateHtml(tpl),
-          logType: templateId,
-        });
+        const sampleVars = getSampleTemplateVariables(templateId);
+        sent = await sendTemplatedEmail(templateId, to, sampleVars, { logType: templateId });
       }
 
       if (!sent) {

@@ -72,11 +72,35 @@ export function paragraph(text: string): string {
   return `<p style="margin:0 0 16px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.7;color:#111111;">${text}</p>`;
 }
 
-export function wrapEmailHtml(title: string, body: string, subtitle?: string): string {
+export type WrapEmailOptions = {
+  logoUrl?: string | null;
+  primaryColor?: string;
+  backgroundColor?: string;
+};
+
+function isUsableLogoUrl(value: string | null | undefined): value is string {
+  const trimmed = value?.trim();
+  if (!trimmed) return false;
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/");
+}
+
+export function wrapEmailHtml(
+  title: string,
+  body: string,
+  subtitle?: string,
+  options?: WrapEmailOptions
+): string {
   const safeTitle = escapeHtml(title);
   const safeSubtitle = subtitle ? escapeHtml(subtitle) : "";
-  const logoUrl = escapeHtml(getLogoUrl());
   const siteUrl = escapeHtml(getSiteOrigin());
+  const primaryColor = escapeHtml(options?.primaryColor?.trim() || "#111111");
+  const cardBackground = escapeHtml(options?.backgroundColor?.trim() || "#ffffff");
+  const resolvedLogo = isUsableLogoUrl(options?.logoUrl) ? options.logoUrl.trim() : isUsableLogoUrl(getLogoUrl()) ? getLogoUrl() : null;
+  const logoBlock = resolvedLogo
+    ? `<a href="${siteUrl}" style="text-decoration:none;">
+                <img src="${escapeHtml(resolvedLogo)}" alt="NOVRA" width="120" style="display:block;width:120px;max-width:120px;height:auto;border:0;" />
+              </a>`
+    : `<a href="${siteUrl}" style="text-decoration:none;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.04em;color:${primaryColor};">NOVRA</a>`;
 
   return `<!DOCTYPE html>
 <html lang="ro">
@@ -91,25 +115,23 @@ export function wrapEmailHtml(title: string, body: string, subtitle?: string): s
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f3f4f6;padding:32px 16px;">
     <tr>
       <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(17,17,17,0.06);">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;background:${cardBackground};border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(17,17,17,0.06);">
           <tr>
-            <td align="center" style="padding:28px 28px 12px;background:#ffffff;">
-              <a href="${siteUrl}" style="text-decoration:none;">
-                <img src="${logoUrl}" alt="NOVRA" width="120" style="display:block;width:120px;max-width:120px;height:auto;border:0;" />
-              </a>
+            <td align="center" style="padding:28px 28px 12px;background:${cardBackground};">
+              ${logoBlock}
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 0;background:#ffffff;">
-              <h1 style="margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#111111;">${safeTitle}</h1>
+            <td style="padding:8px 28px 0;background:${cardBackground};">
+              <h1 style="margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:${primaryColor};">${safeTitle}</h1>
               ${safeSubtitle ? `<p style="margin:8px 0 0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#6b7280;">${safeSubtitle}</p>` : ""}
             </td>
           </tr>
           <tr>
-            <td style="padding:24px 28px 8px;background:#ffffff;">${body}</td>
+            <td style="padding:24px 28px 8px;background:${cardBackground};">${body}</td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 28px;background:#ffffff;">
+            <td style="padding:8px 28px 28px;background:${cardBackground};">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e5e7eb;">
                 <tr>
                   <td align="center" style="padding-top:20px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;line-height:1.7;color:#6b7280;">

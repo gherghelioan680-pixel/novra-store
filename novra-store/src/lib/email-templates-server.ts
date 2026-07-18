@@ -140,7 +140,7 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       title: "Confirmare comandă",
       subtitle: "Comanda ta a fost înregistrată cu succes.",
       content:
-        "Mulțumim pentru comanda ta! Am înregistrat-o și te vom contacta pentru livrare.",
+        "Bună, {name}! Mulțumim pentru comanda ta! Am înregistrat-o și te vom contacta pentru livrare. {paymentIntro}",
       buttonText: "Urmărește comanda",
       buttonLink: `${site}/urmareste-comanda?code={purchaseCode}`,
       footer: "© NOVRA — Cabluri & adaptoare premium",
@@ -211,7 +211,7 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       content:
         "Ai solicitat resetarea parolei contului NOVRA. Apasă butonul de mai jos pentru a alege o parolă nouă.",
       buttonText: "Resetează parola",
-      buttonLink: `${site}/resetare-parola?token=example`,
+      buttonLink: "{resetUrl}",
       footer: "© NOVRA — Cabluri & adaptoare premium",
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
@@ -350,7 +350,7 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       content:
         "Bună, {name}! Te rugăm să confirmi adresa de email apăsând butonul de mai jos pentru a-ți securiza contul NOVRA.",
       buttonText: "Verifică emailul",
-      buttonLink: `${site}/contul-meu?verify=example`,
+      buttonLink: "{verificationUrl}",
       footer: "© NOVRA — Cabluri & adaptoare premium",
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
@@ -464,14 +464,25 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Normalize variable map — missing/undefined/null values become empty strings. */
+export function normalizeTemplateVariables(
+  vars: Record<string, string | undefined | null>
+): Record<string, string> {
+  const normalized: Record<string, string> = {};
+  for (const [key, rawValue] of Object.entries(vars)) {
+    normalized[key] = rawValue == null ? "" : String(rawValue);
+  }
+  return normalized;
+}
+
 /** Replace `{key}` / `{{key}}` placeholders in any template field before send or HTML assembly. */
 export function replaceTemplateVariables(
   text: string,
-  vars: Record<string, string | undefined>
+  vars: Record<string, string | undefined | null>
 ): string {
+  const normalized = normalizeTemplateVariables(vars);
   let result = text;
-  for (const [key, rawValue] of Object.entries(vars)) {
-    const value = rawValue ?? "";
+  for (const [key, value] of Object.entries(normalized)) {
     const escapedKey = escapeRegExp(key);
     result = result.replace(new RegExp(`\\{${escapedKey}\\}`, "g"), value);
     result = result.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, "g"), value);
@@ -481,25 +492,41 @@ export function replaceTemplateVariables(
   return result;
 }
 
+function resolveTemplateLogoUrl(logoUrl: string | undefined): string | null {
+  const trimmed = logoUrl?.trim();
+  if (trimmed) return trimmed;
+  const siteLogo = getLogoUrl()?.trim();
+  return siteLogo || null;
+}
+
 export function applyTemplatePlaceholders(text: string, vars: Record<string, string>): string {
   return replaceTemplateVariables(text, vars);
 }
 
+export type RenderEmailTemplateOptions = {
+  appendHtml?: string;
+  configOverrides?: Partial<EmailTemplateConfig>;
+};
+
 export function renderEmailTemplateHtml(
   config: EmailTemplateConfig,
-  vars?: Record<string, string>
+  vars?: Record<string, string | undefined | null>,
+  options?: RenderEmailTemplateOptions
 ): string {
-  const subjectVars = vars ?? {};
+  const mergedConfig = options?.configOverrides
+    ? { ...config, ...options.configOverrides, colors: { ...config.colors, ...options.configOverrides.colors } }
+    : config;
+  const subjectVars = normalizeTemplateVariables(vars ?? {});
   const resolved = {
-    ...config,
-    subject: replaceTemplateVariables(config.subject, subjectVars),
-    title: replaceTemplateVariables(config.title, subjectVars),
-    subtitle: replaceTemplateVariables(config.subtitle, subjectVars),
-    content: replaceTemplateVariables(config.content, subjectVars),
-    buttonText: replaceTemplateVariables(config.buttonText, subjectVars),
-    buttonLink: replaceTemplateVariables(config.buttonLink, subjectVars),
-    previewText: replaceTemplateVariables(config.previewText, subjectVars),
-    footer: replaceTemplateVariables(config.footer, subjectVars),
+    ...mergedConfig,
+    subject: replaceTemplateVariables(mergedConfig.subject, subjectVars),
+    title: replaceTemplateVariables(mergedConfig.title, subjectVars),
+    subtitle: replaceTemplateVariables(mergedConfig.subtitle, subjectVars),
+    content: replaceTemplateVariables(mergedConfig.content, subjectVars),
+    buttonText: replaceTemplateVariables(mergedConfig.buttonText, subjectVars),
+    buttonLink: replaceTemplateVariables(mergedConfig.buttonLink, subjectVars),
+    previewText: replaceTemplateVariables(mergedConfig.previewText, subjectVars),
+    footer: replaceTemplateVariables(mergedConfig.footer, subjectVars),
   };
 
   const contentHtml = resolved.content
@@ -515,14 +542,111 @@ export function renderEmailTemplateHtml(
       : "";
 
   const body = `
-    ${contentHtml || paragraph(escapeHtml(resolved.content))}
+    ${contentHtml || (resolved.content.trim() ? paragraph(escapeHtml(resolved.content)) : "")}
+    ${options?.appendHtml ?? ""}
     ${buttonBlock}
     ${resolved.footer.trim() ? `<p style="margin:24px 0 0;font-family:system-ui,sans-serif;font-size:12px;color:${escapeHtml(resolved.colors.accent)};text-align:center;">${escapeHtml(resolved.footer)}</p>` : ""}
   `;
 
-  return wrapEmailHtml(resolved.title, body, resolved.subtitle || resolved.previewText);
+  return wrapEmailHtml(resolved.title, body, resolved.subtitle || resolved.previewText, {
+    logoUrl: resolveTemplateLogoUrl(mergedConfig.logoUrl),
+    primaryColor: resolved.colors.primary,
+    backgroundColor: resolved.colors.background,
+  });
 }
 
-export function resolveTemplateSubject(config: EmailTemplateConfig, vars?: Record<string, string>): string {
+export function resolveTemplateSubject(
+  config: EmailTemplateConfig,
+  vars?: Record<string, string | undefined | null>
+): string {
   return replaceTemplateVariables(config.subject, vars ?? {});
+}
+
+export function resolveTemplatePreviewText(
+  config: EmailTemplateConfig,
+  vars?: Record<string, string | undefined | null>
+): string {
+  return replaceTemplateVariables(config.previewText, vars ?? {});
+}
+
+/** Sample variables for admin preview / test sends. */
+export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<string, string> {
+  const site = getSiteOrigin();
+  const now = new Date().toLocaleDateString("ro-RO");
+  const base: Record<string, string> = {
+    name: "Client Demo",
+    email: "client@example.com",
+    code: "NOVRA10",
+    percent: "10",
+    verificationUrl: `${site}/contul-meu?verify=test`,
+    resetUrl: `${site}/resetare-parola?token=test`,
+    orderNumber: "NOVRA-DEMO",
+    purchaseCode: "NOVRA-DEMO",
+    orderCode: "NOVRA-DEMO",
+    orderDate: now,
+    shippingDate: now,
+    deliveryDate: now,
+    trackingNumber: "DEMO123456",
+    courier: "Fan Courier",
+    total: "49.99",
+    status: "În procesare",
+    returnNumber: "RET-DEMO",
+    returnReason: "Produs defect",
+    refundAmount: "49.99",
+    refundMethod: "Card bancar",
+    refundDate: now,
+    giftCardCode: "GIFT-DEMO",
+    giftCardAmount: "100",
+    creditAmount: "50",
+    creditBalance: "150",
+    expiryDate: now,
+    reviewUrl: `${site}/recenzii`,
+    subject: "Test contact",
+    message: "Mesaj de test din Email Center.",
+    ticketNumber: "TKT-DEMO",
+    date: now,
+    reason: "Produs defect",
+    registerDate: now,
+    expiresIn: "60 minute",
+    customerName: "Client Demo",
+    customerEmail: "client@example.com",
+    paymentMethod: "Ramburs (numerar la livrare)",
+    credits: "50",
+    amount: "100",
+    balance: "150",
+    description: "Ajustare admin: test Email Center",
+    adminNote: "Notă demo din Email Center.",
+  };
+
+  if (templateId === "gift_card") {
+    base.amount = "100";
+    base.balance = "150";
+    base.giftCardAmount = "100";
+  }
+  if (templateId === "store_credit") {
+    base.amount = "50";
+    base.balance = "150";
+    base.creditAmount = "50";
+    base.creditBalance = "150";
+  }
+
+  return base;
+}
+
+export async function renderEmailFromTemplate(
+  templateId: EmailTemplateId,
+  vars?: Record<string, string | undefined | null>,
+  options?: RenderEmailTemplateOptions
+): Promise<{ html: string; subject: string; previewText: string }> {
+  const template = await getEmailTemplate(templateId);
+  const normalizedVars = normalizeTemplateVariables(vars ?? {});
+  const config = options?.configOverrides
+    ? { ...template, ...options.configOverrides, colors: { ...template.colors, ...options.configOverrides.colors } }
+    : template;
+
+  return {
+    subject: resolveTemplateSubject(config, normalizedVars),
+    previewText: resolveTemplatePreviewText(config, normalizedVars),
+    html: renderEmailTemplateHtml(template, normalizedVars, options),
+  };
 }

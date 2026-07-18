@@ -25,10 +25,9 @@ import {
   type EmailAutomationKey,
 } from "./email-automations-server";
 import {
-  applyTemplatePlaceholders,
   getEmailTemplate,
-  renderEmailTemplateHtml,
-  resolveTemplateSubject,
+  renderEmailFromTemplate,
+  type RenderEmailTemplateOptions,
   type EmailTemplateId,
 } from "./email-templates-server";
 import {
@@ -301,6 +300,260 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
   }
 }
 
+export type SendTemplatedEmailOptions = {
+  logType?: string;
+  automationKey?: EmailAutomationKey;
+  fromRole?: EmailRole;
+  appendHtml?: string;
+  configOverrides?: RenderEmailTemplateOptions["configOverrides"];
+};
+
+/** Central send path — loads template from Email Center DB and renders via renderEmailFromTemplate. */
+export async function sendTemplatedEmail(
+  templateId: EmailTemplateId,
+  to: string | string[],
+  variables: Record<string, string | undefined | null>,
+  options?: SendTemplatedEmailOptions
+): Promise<boolean> {
+  const { html, subject } = await renderEmailFromTemplate(templateId, variables, {
+    appendHtml: options?.appendHtml,
+    configOverrides: options?.configOverrides,
+  });
+
+  return sendEmail({
+    to,
+    subject,
+    html,
+    logType: options?.logType ?? templateId,
+    automationKey: options?.automationKey,
+    templateId,
+    fromRole: options?.fromRole,
+  });
+}
+
+export type TemplateVariableContext =
+  | { order: Order; awb?: string; paymentIntro?: string }
+  | { email: string; name?: string; discountCode?: string; discountPercent?: number }
+  | { email: string; resetUrl: string }
+  | { email: string; name: string; verifyUrl: string }
+  | { email: string; name: string; credits?: number }
+  | { name: string; email: string; subject: string; message: string }
+  | { email: string; amount: number; balance: number; giftCardCode?: string }
+  | { email: string; amount: number; balance: number; description: string }
+  | { returnRequest: ReturnRequest }
+  | { newsletterSubject?: string; newsletterBody?: string; newsletterPreview?: string };
+
+function formatOrderDate(order: Order): string {
+  const raw = order.createdAt?.trim();
+  if (!raw) return "";
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString("ro-RO");
+}
+
+function withVariableAliases(vars: Record<string, string>): Record<string, string> {
+  const next = { ...vars };
+  if (next.purchaseCode && !next.orderNumber) next.orderNumber = next.purchaseCode;
+  if (next.orderNumber && !next.purchaseCode) next.purchaseCode = next.orderNumber;
+  if (next.orderCode && !next.purchaseCode) next.purchaseCode = next.orderCode;
+  if (next.purchaseCode && !next.orderCode) next.orderCode = next.purchaseCode;
+  if (next.orderCode && !next.returnNumber) next.returnNumber = next.orderCode;
+  if (next.amount && !next.giftCardAmount) next.giftCardAmount = next.amount;
+  if (next.amount && !next.creditAmount) next.creditAmount = next.amount;
+  if (next.balance && !next.creditBalance) next.creditBalance = next.balance;
+  if (next.reason && !next.returnReason) next.returnReason = next.reason;
+  return next;
+}
+
+/** Build variable map and optional append blocks per template type. */
+export function buildTemplateVariables(
+  templateId: EmailTemplateId,
+  context: TemplateVariableContext
+): { vars: Record<string, string>; appendHtml?: string; configOverrides?: RenderEmailTemplateOptions["configOverrides"] } {
+  const site = getSiteOrigin();
+  const reviewUrl = `${site}/recenzii`;
+
+  if ("order" in context) {
+    const { order, awb, paymentIntro } = context;
+    const base = withVariableAliases({
+      ...orderTemplateVars(order),
+      name: order.address.name,
+      email: resolveOrderCustomerEmail(order),
+      orderDate: formatOrderDate(order),
+      shippingDate: order.updatedAt ? new Date(order.updatedAt).toLocaleDateString("ro-RO") : "",
+      deliveryDate: order.status === "delivered" ? new Date(order.updatedAt).toLocaleDateString("ro-RO") : "",
+      trackingNumber: awb ?? order.awbTracking?.trim() ?? "",
+      courier: "Fan Courier",
+      reviewUrl,
+      paymentIntro: paymentIntro ?? "",
+      registerDate: formatOrderDate(order),
+    });
+
+    let appendHtml = buildOrderSummaryHtml(order, { includeTrackLink: templateId !== "order_shipped" });
+    if (awb && templateId === "order_shipped") {
+      const trackingUrl = buildFanCourierTrackingUrl(awb);
+      appendHtml = `${highlightBox("Număr AWB", awb)}${paragraph("Poți urmări coletul folosind linkul de mai jos:")}${emailButton(trackingUrl, "Urmărește coletul")}${appendHtml}`;
+    } else if (order.awbTracking?.trim() && templateId === "order_shipped") {
+      appendHtml = buildStatusExtraBlocks(order, "shipped") + appendHtml;
+    }
+
+    if (templateId === "admin_new_order") {
+      const itemsSummary = order.items
+        .map((item) => `${item.title} (${item.variantLabel}) ×${item.quantity}`)
+        .join(", ");
+      appendHtml = `${appendHtml}${infoPanel(`
+        <p style="margin:0 0 8px;"><strong style="color:#111111;">Produse:</strong> ${escapeHtml(itemsSummary)}</p>
+        <p style="margin:0 0 8px;"><strong style="color:#111111;">Telefon:</strong> ${escapeHtml(order.address.phone || "—")}</p>
+        <p style="margin:0;"><strong style="color:#111111;">Adresă:</strong> ${escapeHtml(order.address.address)}, ${escapeHtml(order.address.city)}</p>
+      `)}`;
+    }
+
+    return { vars: base, appendHtml };
+  }
+
+  if ("returnRequest" in context) {
+    const { returnRequest } = context;
+    const adminNote =
+      returnRequest.adminNote?.trim() ||
+      (templateId === "refund"
+        ? "Rambursarea va apărea în contul tău bancar în 3–10 zile lucrătoare."
+        : "Urmează instrucțiunile primite de la echipa NOVRA.");
+    return {
+      vars: withVariableAliases({
+        orderCode: returnRequest.orderCode,
+        orderNumber: returnRequest.orderCode,
+        purchaseCode: returnRequest.orderCode,
+        returnNumber: returnRequest.orderCode,
+        name: returnRequest.userName ?? returnRequest.userEmail,
+        email: returnRequest.userEmail,
+        reason: returnRequest.reason,
+        returnReason: returnRequest.reason,
+        message: returnRequest.description,
+        description: returnRequest.description,
+        adminNote,
+        refundAmount: "",
+        refundMethod: "",
+        refundDate: new Date(returnRequest.updatedAt).toLocaleDateString("ro-RO"),
+        date: new Date(returnRequest.updatedAt).toLocaleDateString("ro-RO"),
+      }),
+    };
+  }
+
+  if ("resetUrl" in context && "email" in context && !("verifyUrl" in context)) {
+    return {
+      vars: withVariableAliases({
+        email: context.email,
+        resetUrl: context.resetUrl,
+        expiresIn: "60 minute",
+      }),
+    };
+  }
+
+  if ("verifyUrl" in context && "name" in context) {
+    return {
+      vars: withVariableAliases({
+        name: context.name,
+        email: context.email,
+        verificationUrl: context.verifyUrl,
+      }),
+    };
+  }
+
+  if ("discountCode" in context || (templateId === "welcome" && "email" in context)) {
+    const ctx = context as { email: string; name?: string; discountCode?: string; discountPercent?: number };
+    return {
+      vars: withVariableAliases({
+        email: ctx.email,
+        name: ctx.name?.trim() || "",
+        code: ctx.discountCode ?? "",
+        percent: ctx.discountPercent != null ? String(ctx.discountPercent) : "",
+      }),
+    };
+  }
+
+  if ("newsletterSubject" in context || templateId === "newsletter") {
+    const ctx = context as {
+      newsletterSubject?: string;
+      newsletterBody?: string;
+      newsletterPreview?: string;
+    };
+    return {
+      vars: withVariableAliases({ email: "newsletter@novra.ro", name: "abonat NOVRA" }),
+      configOverrides: {
+        subject: ctx.newsletterSubject,
+        content: ctx.newsletterBody,
+        previewText: ctx.newsletterPreview,
+      },
+    };
+  }
+
+  if ("subject" in context && "message" in context && "name" in context) {
+    return {
+      vars: withVariableAliases({
+        name: context.name,
+        email: context.email,
+        subject: context.subject,
+        message: context.message,
+        ticketNumber: `TKT-${Date.now().toString(36).toUpperCase()}`,
+        date: new Date().toLocaleDateString("ro-RO"),
+      }),
+    };
+  }
+
+  if ("giftCardCode" in context || (templateId === "gift_card" && "amount" in context)) {
+    const ctx = context as { email: string; amount: number; balance: number; giftCardCode?: string };
+    return {
+      vars: withVariableAliases({
+        email: ctx.email,
+        amount: String(ctx.amount),
+        balance: String(ctx.balance),
+        giftCardAmount: String(ctx.amount),
+        giftCardCode: ctx.giftCardCode ?? "",
+        creditAmount: String(ctx.amount),
+        creditBalance: String(ctx.balance),
+      }),
+    };
+  }
+
+  if ("description" in context && "amount" in context) {
+    const ctx = context as { email: string; amount: number; balance: number; description: string };
+    return {
+      vars: withVariableAliases({
+        email: ctx.email,
+        amount: String(Math.abs(ctx.amount)),
+        balance: String(ctx.balance),
+        creditAmount: String(Math.abs(ctx.amount)),
+        creditBalance: String(ctx.balance),
+        description: ctx.description,
+      }),
+    };
+  }
+
+  if ("credits" in context && "name" in context) {
+    const ctx = context as { email: string; name: string; credits?: number };
+    return {
+      vars: withVariableAliases({
+        name: ctx.name,
+        email: ctx.email,
+        credits: String(ctx.credits ?? 50),
+        registerDate: new Date().toLocaleDateString("ro-RO"),
+        date: new Date().toLocaleDateString("ro-RO"),
+      }),
+    };
+  }
+
+  if ("email" in context && "name" in context && templateId === "subscription_confirmation") {
+    const ctx = context as { email: string; name?: string };
+    return {
+      vars: withVariableAliases({
+        email: ctx.email,
+        name: ctx.name?.trim() || "abonat NOVRA",
+      }),
+    };
+  }
+
+  return { vars: withVariableAliases({}) };
+}
+
 function confirmationIntro(order: Order): string {
   if (order.paymentMethod === "card" && order.paymentStatus === "paid") {
     return "Plata cu cardul a fost confirmată cu succes. Comanda ta este în procesare și te vom ține la curent.";
@@ -403,30 +656,6 @@ function buildOrderSummaryHtml(order: Order, options?: { includeTrackLink?: bool
   `;
 }
 
-async function buildOrderEmailHtml(
-  templateId: EmailTemplateId,
-  order: Order,
-  extraBlocks = ""
-): Promise<{ html: string; subject: string }> {
-  const template = await getEmailTemplate(templateId);
-  const vars = orderTemplateVars(order);
-  const intro = applyTemplatePlaceholders(template.content, vars);
-  const body = `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${escapeHtml(intro)}`)}
-    ${extraBlocks}
-    ${buildOrderSummaryHtml(order, { includeTrackLink: true })}
-  `;
-
-  return {
-    subject: resolveTemplateSubject(template, vars),
-    html: wrapEmailHtml(
-      applyTemplatePlaceholders(template.title, vars),
-      body,
-      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
-    ),
-  };
-}
-
 function logOrderConfirmationAttempt(input: {
   recipient: string;
   subject: string;
@@ -494,28 +723,21 @@ export async function sendOrderConfirmationEmail(
   recipientEmail?: string
 ): Promise<boolean> {
   const recipient = (recipientEmail ?? resolveOrderCustomerEmail(order)).trim().toLowerCase();
-  const template = await getEmailTemplate("order_confirmation");
-  const vars = orderTemplateVars(order);
-  const subject = resolveTemplateSubject(template, vars);
-  const intro = `${applyTemplatePlaceholders(template.content, vars)}<br>${confirmationIntro(order)}`;
-  const body = `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${intro}`)}
-    ${buildOrderSummaryHtml(order, { includeTrackLink: true })}
-  `;
+  const { vars, appendHtml } = buildTemplateVariables("order_confirmation", {
+    order,
+    paymentIntro: confirmationIntro(order),
+  });
   const fromRole = resolveFromRole({
     logType: "order_confirmation",
     templateId: "order_confirmation",
   });
   const smtpFrom = getFromAddress(fromRole) ?? "—";
+  const rendered = await renderEmailFromTemplate("order_confirmation", vars, { appendHtml });
 
   const result = await sendEmailDetailed({
     to: recipient,
-    subject,
-    html: wrapEmailHtml(
-      applyTemplatePlaceholders(template.title, vars),
-      body,
-      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
-    ),
+    subject: rendered.subject,
+    html: rendered.html,
     logType: "order_confirmation",
     automationKey: "orderConfirmation",
     templateId: "order_confirmation",
@@ -524,7 +746,7 @@ export async function sendOrderConfirmationEmail(
 
   logOrderConfirmationAttempt({
     recipient,
-    subject,
+    subject: rendered.subject,
     template: "order_confirmation",
     smtp: smtpFrom,
     success: result.ok,
@@ -577,43 +799,22 @@ export async function trySendOrderStatusEmail(
 export async function sendOrderStatusEmail(order: Order, status: OrderStatus): Promise<boolean> {
   const templateId = STATUS_TEMPLATE_ID[status] ?? "order_processing";
   const automationKey = STATUS_AUTOMATION_KEY[status];
-  const extraBlocks = buildStatusExtraBlocks(order, status);
-  const { html, subject } = await buildOrderEmailHtml(templateId, order, extraBlocks);
+  const { vars, appendHtml } = buildTemplateVariables(templateId, { order });
 
-  return sendEmail({
-    to: order.userEmail,
-    subject,
-    html,
+  return sendTemplatedEmail(templateId, order.userEmail, vars, {
+    appendHtml,
     logType: STATUS_LOG_TYPE[status] ?? "order_status",
     automationKey,
-    templateId,
   });
 }
 
 export async function sendTrackingEmail(order: Order, awb: string): Promise<boolean> {
-  const trackingUrl = buildFanCourierTrackingUrl(awb);
-  const template = await getEmailTemplate("order_shipped");
-  const vars = orderTemplateVars(order);
+  const { vars, appendHtml } = buildTemplateVariables("order_shipped", { order, awb });
 
-  const body = `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${escapeHtml(applyTemplatePlaceholders(template.content, vars))}`)}
-    ${highlightBox("Număr AWB", awb)}
-    ${paragraph("Poți urmări coletul folosind linkul de mai jos:")}
-    ${emailButton(trackingUrl, "Urmărește coletul")}
-    ${trackOrderLinkHtml(order.purchaseCode)}
-  `;
-
-  return sendEmail({
-    to: order.userEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: wrapEmailHtml(
-      applyTemplatePlaceholders(template.title, vars),
-      body,
-      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
-    ),
+  return sendTemplatedEmail("order_shipped", order.userEmail, vars, {
+    appendHtml,
     logType: "order_shipped",
     automationKey: "orderShipped",
-    templateId: "order_shipped",
   });
 }
 
@@ -631,31 +832,14 @@ export async function trySendAdminNewOrderEmail(
 
 export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
   const adminEmail = getOrdersNotificationEmail();
-
-  const template = await getEmailTemplate("admin_new_order");
-  const vars = orderTemplateVars(order);
-  const itemsSummary = order.items
-    .map((item) => `${item.title} (${item.variantLabel}) ×${item.quantity}`)
-    .join(", ");
-
-  const body = `
-    ${renderEmailTemplateHtml(template, vars)}
-    ${infoPanel(`
-      <p style="margin:0 0 8px;"><strong style="color:#111111;">Produse:</strong> ${escapeHtml(itemsSummary)}</p>
-      <p style="margin:0 0 8px;"><strong style="color:#111111;">Telefon:</strong> ${escapeHtml(order.address.phone || "—")}</p>
-      <p style="margin:0;"><strong style="color:#111111;">Adresă:</strong> ${escapeHtml(order.address.address)}, ${escapeHtml(order.address.city)}</p>
-    `)}
-  `;
+  const { vars, appendHtml } = buildTemplateVariables("admin_new_order", { order });
 
   console.log(`[ADMIN] Notificare comandă nouă ${order.purchaseCode} → ${adminEmail}`);
 
-  return sendEmail({
-    to: adminEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: body,
+  return sendTemplatedEmail("admin_new_order", adminEmail, vars, {
+    appendHtml,
     logType: "admin_new_order",
     automationKey: "adminNewOrder",
-    templateId: "admin_new_order",
     fromRole: "noreply",
   });
 }
@@ -674,18 +858,13 @@ export async function trySendAdminOrderCancelledEmail(
 
 export async function sendAdminOrderCancelledEmail(order: Order): Promise<boolean> {
   const adminEmail = getOrdersNotificationEmail();
-  const template = await getEmailTemplate("admin_order_cancelled");
-  const vars = orderTemplateVars(order);
+  const { vars } = buildTemplateVariables("admin_order_cancelled", { order });
 
   console.log(`[ADMIN] Notificare comandă anulată ${order.purchaseCode} → ${adminEmail}`);
 
-  return sendEmail({
-    to: adminEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("admin_order_cancelled", adminEmail, vars, {
     logType: "admin_order_cancelled",
     automationKey: "adminOrderCancelled",
-    templateId: "admin_order_cancelled",
     fromRole: "noreply",
   });
 }
@@ -705,25 +884,20 @@ export async function sendNewsletterWelcomeEmail(
     return false;
   }
 
-  const template = await getEmailTemplate("welcome");
-  const vars: Record<string, string> = {
-    code: discountCode,
-    percent: String(discountPercent),
-    name: name?.trim() || "",
+  const { vars } = buildTemplateVariables("welcome", {
     email,
-  };
+    name,
+    discountCode,
+    discountPercent,
+  });
 
   console.log(
     `[EMAIL] Welcome template vars: code=${vars.code}, percent=${vars.percent}, name=${vars.name || "—"}, email=${vars.email}`
   );
 
-  return sendEmail({
-    to: email,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("welcome", email, vars, {
     logType: "welcome",
     automationKey: "welcome",
-    templateId: "welcome",
     fromRole: "newsletter",
   });
 }
@@ -746,21 +920,13 @@ export async function sendNewsletterBroadcastEmail(
   }
 
   const template = await getEmailTemplate("newsletter");
-  const safeSubject = subject?.trim() || template.subject;
-  const content = bodyText?.trim() || template.content;
-  const paragraphs = content
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p) => paragraph(escapeHtml(p).replace(/\n/g, "<br>")))
-    .join("");
+  const { vars, configOverrides } = buildTemplateVariables("newsletter", {
+    newsletterSubject: subject?.trim() || template.subject,
+    newsletterBody: bodyText?.trim() || template.content,
+    newsletterPreview: previewText?.trim() || template.previewText,
+  });
 
-  const body = `
-    ${paragraphs || paragraph("Salut! Avem noutăți de la NOVRA.")}
-    ${emailButton(template.buttonLink || getSiteOrigin(), template.buttonText || "Vizitează NOVRA")}
-  `;
-
-  const html = wrapEmailHtml(safeSubject, body, previewText?.trim() || template.previewText);
+  const rendered = await renderEmailFromTemplate("newsletter", vars, { configOverrides });
 
   let sent = 0;
   let failed = 0;
@@ -768,8 +934,8 @@ export async function sendNewsletterBroadcastEmail(
   for (const email of emails) {
     const ok = await sendEmail({
       to: email,
-      subject: safeSubject,
-      html,
+      subject: rendered.subject,
+      html: rendered.html,
       logType: "newsletter",
       automationKey: "newsletter",
       templateId: "newsletter",
@@ -788,20 +954,11 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
     return false;
   }
 
-  const template = await getEmailTemplate("password_reset");
-  const config = {
-    ...template,
-    buttonLink: resetUrl,
-  };
-  const html = renderEmailTemplateHtml(config);
+  const { vars } = buildTemplateVariables("password_reset", { email, resetUrl });
 
-  return sendEmail({
-    to: email,
-    subject: template.subject,
-    html,
+  return sendTemplatedEmail("password_reset", email, vars, {
     logType: "password_reset",
     automationKey: "passwordReset",
-    templateId: "password_reset",
   });
 }
 
@@ -811,26 +968,15 @@ export async function sendContactFormEmails(input: {
   subject: string;
   message: string;
 }): Promise<{ confirmationSent: boolean; adminSent: boolean }> {
-  const vars = {
-    name: input.name,
-    email: input.email,
-    subject: input.subject,
-    message: input.message,
-  };
-
   let confirmationSent = false;
   let adminSent = false;
 
   if (await isAutomationEnabled("contactConfirmation")) {
     console.log(`[CUSTOMER] Confirmare contact → ${input.email}`);
-    const template = await getEmailTemplate("contact_confirmation");
-    confirmationSent = await sendEmail({
-      to: input.email,
-      subject: resolveTemplateSubject(template, vars),
-      html: renderEmailTemplateHtml(template, vars),
+    const { vars } = buildTemplateVariables("contact_confirmation", input);
+    confirmationSent = await sendTemplatedEmail("contact_confirmation", input.email, vars, {
       logType: "contact_confirmation",
       automationKey: "contactConfirmation",
-      templateId: "contact_confirmation",
       fromRole: "contact",
     });
   } else {
@@ -840,14 +986,10 @@ export async function sendContactFormEmails(input: {
   if (await isAutomationEnabled("contactAdmin")) {
     const adminEmail = getContactNotificationEmail();
     console.log(`[ADMIN] Notificare contact → ${adminEmail}`);
-    const template = await getEmailTemplate("contact_admin");
-    adminSent = await sendEmail({
-      to: adminEmail,
-      subject: resolveTemplateSubject(template, vars),
-      html: renderEmailTemplateHtml(template, vars),
+    const { vars } = buildTemplateVariables("contact_admin", input);
+    adminSent = await sendTemplatedEmail("contact_admin", adminEmail, vars, {
       logType: "contact_admin",
       automationKey: "contactAdmin",
-      templateId: "contact_admin",
       fromRole: "noreply",
     });
   } else {
@@ -865,12 +1007,7 @@ export async function sendReviewSubmissionEmails(input: {
 }): Promise<{ confirmationSent: boolean; adminSent: boolean }> {
   const subject = "Recenzie NOVRA";
   const message = `Rating: ${input.rating}\n\n${input.message}`;
-  const vars = {
-    name: input.name,
-    email: input.email,
-    subject,
-    message,
-  };
+  const contactInput = { name: input.name, email: input.email, subject, message };
 
   console.log(`[EMAIL] Trimitere recenzie de la ${input.name} (${input.email})`);
 
@@ -878,14 +1015,10 @@ export async function sendReviewSubmissionEmails(input: {
   let adminSent = false;
 
   if (await isAutomationEnabled("contactConfirmation")) {
-    const template = await getEmailTemplate("contact_confirmation");
-    confirmationSent = await sendEmail({
-      to: input.email,
-      subject: resolveTemplateSubject(template, vars),
-      html: renderEmailTemplateHtml(template, vars),
+    const { vars } = buildTemplateVariables("contact_confirmation", contactInput);
+    confirmationSent = await sendTemplatedEmail("contact_confirmation", input.email, vars, {
       logType: "contact_confirmation",
       automationKey: "contactConfirmation",
-      templateId: "contact_confirmation",
       fromRole: "contact",
     });
   }
@@ -893,14 +1026,10 @@ export async function sendReviewSubmissionEmails(input: {
   if (await isAutomationEnabled("contactAdmin")) {
     const supportEmail = getSupportNotificationEmail();
     console.log(`[ADMIN] Notificare recenzie → ${supportEmail}`);
-    const template = await getEmailTemplate("contact_admin");
-    adminSent = await sendEmail({
-      to: supportEmail,
-      subject: resolveTemplateSubject(template, vars),
-      html: renderEmailTemplateHtml(template, vars),
+    const { vars } = buildTemplateVariables("contact_admin", contactInput);
+    adminSent = await sendTemplatedEmail("contact_admin", supportEmail, vars, {
       logType: "contact_admin",
       automationKey: "contactAdmin",
-      templateId: "contact_admin",
       fromRole: "noreply",
     });
   }
@@ -917,16 +1046,11 @@ export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
     return false;
   }
 
-  const template = await getEmailTemplate("review_request");
-  const vars = orderTemplateVars(order);
+  const { vars } = buildTemplateVariables("review_request", { order });
 
-  return sendEmail({
-    to: order.userEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("review_request", order.userEmail, vars, {
     logType: "review_request",
     automationKey: "reviewRequest",
-    templateId: "review_request",
   });
 }
 
@@ -956,19 +1080,11 @@ export async function sendGiftCardEmail(input: {
     return false;
   }
 
-  const template = await getEmailTemplate("gift_card");
-  const vars = {
-    amount: String(input.amount),
-    balance: String(input.balance),
-  };
+  const { vars } = buildTemplateVariables("gift_card", input);
 
-  return sendEmail({
-    to: input.email,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("gift_card", input.email, vars, {
     logType: "gift_card",
     automationKey: "giftCard",
-    templateId: "gift_card",
   });
 }
 
@@ -983,20 +1099,11 @@ export async function sendStoreCreditEmail(input: {
     return false;
   }
 
-  const template = await getEmailTemplate("store_credit");
-  const vars = {
-    amount: String(Math.abs(input.amount)),
-    balance: String(input.balance),
-    description: input.description,
-  };
+  const { vars } = buildTemplateVariables("store_credit", input);
 
-  return sendEmail({
-    to: input.email,
-    subject: template.subject,
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("store_credit", input.email, vars, {
     logType: "store_credit",
     automationKey: "storeCredit",
-    templateId: "store_credit",
   });
 }
 
@@ -1053,16 +1160,11 @@ export async function sendSubscriptionConfirmationEmail(
     return false;
   }
 
-  const template = await getEmailTemplate("subscription_confirmation");
-  const vars = { name: name?.trim() || "abonat NOVRA", email };
+  const { vars } = buildTemplateVariables("subscription_confirmation", { email, name });
 
-  return sendEmail({
-    to: email,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("subscription_confirmation", email, vars, {
     logType: "subscription_confirmation",
     automationKey: "subscriptionConfirmation",
-    templateId: "subscription_confirmation",
     fromRole: "newsletter",
   });
 }
@@ -1077,20 +1179,11 @@ export async function sendAccountConfirmationEmail(input: {
     return false;
   }
 
-  const template = await getEmailTemplate("account_confirmation");
-  const vars = {
-    name: input.name,
-    email: input.email,
-    credits: String(input.credits ?? 50),
-  };
+  const { vars } = buildTemplateVariables("account_confirmation", input);
 
-  return sendEmail({
-    to: input.email,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("account_confirmation", input.email, vars, {
     logType: "account_confirmation",
     automationKey: "accountConfirmation",
-    templateId: "account_confirmation",
     fromRole: "noreply",
   });
 }
@@ -1105,20 +1198,11 @@ export async function sendEmailVerificationEmail(input: {
     return false;
   }
 
-  const template = await getEmailTemplate("email_verification");
-  const config = {
-    ...template,
-    buttonLink: input.verifyUrl,
-  };
-  const vars = { name: input.name, email: input.email };
+  const { vars } = buildTemplateVariables("email_verification", input);
 
-  return sendEmail({
-    to: input.email,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(config, vars),
+  return sendTemplatedEmail("email_verification", input.email, vars, {
     logType: "email_verification",
     automationKey: "emailVerification",
-    templateId: "email_verification",
     fromRole: "noreply",
   });
 }
@@ -1129,25 +1213,14 @@ export async function sendReturnRequestAdminEmail(returnRequest: ReturnRequest):
     return false;
   }
 
-  const template = await getEmailTemplate("return_request_admin");
-  const vars = {
-    orderCode: returnRequest.orderCode,
-    name: returnRequest.userName ?? returnRequest.userEmail,
-    email: returnRequest.userEmail,
-    reason: returnRequest.reason,
-    description: returnRequest.description,
-  };
+  const { vars } = buildTemplateVariables("return_request_admin", { returnRequest });
   const supportEmail = getSupportNotificationEmail();
 
   console.log(`[ADMIN] Cerere retur nouă ${returnRequest.orderCode} → ${supportEmail}`);
 
-  return sendEmail({
-    to: supportEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("return_request_admin", supportEmail, vars, {
     logType: "return_request_admin",
     automationKey: "returnRequestAdmin",
-    templateId: "return_request_admin",
     fromRole: "noreply",
   });
 }
@@ -1158,24 +1231,11 @@ export async function sendReturnApprovedEmail(returnRequest: ReturnRequest): Pro
     return false;
   }
 
-  const template = await getEmailTemplate("return_approved");
-  const adminNote = returnRequest.adminNote?.trim()
-    ? returnRequest.adminNote.trim()
-    : "Urmează instrucțiunile primite de la echipa NOVRA.";
-  const vars = {
-    orderCode: returnRequest.orderCode,
-    name: returnRequest.userName ?? returnRequest.userEmail,
-    email: returnRequest.userEmail,
-    adminNote,
-  };
+  const { vars } = buildTemplateVariables("return_approved", { returnRequest });
 
-  return sendEmail({
-    to: returnRequest.userEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("return_approved", returnRequest.userEmail, vars, {
     logType: "return_approved",
     automationKey: "returnApproved",
-    templateId: "return_approved",
     fromRole: "noreply",
   });
 }
@@ -1186,24 +1246,11 @@ export async function sendRefundEmail(returnRequest: ReturnRequest): Promise<boo
     return false;
   }
 
-  const template = await getEmailTemplate("refund");
-  const adminNote = returnRequest.adminNote?.trim()
-    ? returnRequest.adminNote.trim()
-    : "Rambursarea va apărea în contul tău bancar în 3–10 zile lucrătoare.";
-  const vars = {
-    orderCode: returnRequest.orderCode,
-    name: returnRequest.userName ?? returnRequest.userEmail,
-    email: returnRequest.userEmail,
-    adminNote,
-  };
+  const { vars } = buildTemplateVariables("refund", { returnRequest });
 
-  return sendEmail({
-    to: returnRequest.userEmail,
-    subject: resolveTemplateSubject(template, vars),
-    html: renderEmailTemplateHtml(template, vars),
+  return sendTemplatedEmail("refund", returnRequest.userEmail, vars, {
     logType: "refund",
     automationKey: "refund",
-    templateId: "refund",
     fromRole: "noreply",
   });
 }
