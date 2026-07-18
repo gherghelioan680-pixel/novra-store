@@ -6,7 +6,7 @@ import { LEGAL_LINKS, renderRichText } from "@/lib/render-rich-text";
 
 export type LegalSectionData = {
   title: string;
-  paragraphs: string[];
+  paragraphs?: string[];
   list?: string[];
 };
 
@@ -41,7 +41,7 @@ export default function LegalPageSections({ sections, icons, startIndex = 1 }: L
               </h2>
             </div>
             <div className="text-gray-300 font-light leading-relaxed text-sm sm:text-base sm:pl-14 space-y-3">
-              {section.paragraphs.map((paragraph) => (
+              {section.paragraphs?.map((paragraph) => (
                 <p key={paragraph}>{renderRichText(paragraph, LEGAL_LINKS)}</p>
               ))}
               {section.list && section.list.length > 0 && (
