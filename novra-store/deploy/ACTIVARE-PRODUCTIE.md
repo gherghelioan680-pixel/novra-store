@@ -160,12 +160,50 @@ curl -I https://novra.ro/admin/login
 
 ---
 
-## 8. Test final producție
+## 8. Emailuri Resend — tipuri activate când `RESEND_API_KEY` este setat
+
+Setați **`RESEND_API_KEY`** în Vercel Dashboard → Project → Settings → Environment Variables (Production). **Nu lipiți cheia în Git sau în acest document.**
+
+Cu cheia configurată și **`orderEmailsEnabled: true`** (implicit în Admin → Setări), se trimit automat:
+
+| Tip email | Declanșator | Fișier / rută |
+|-----------|-------------|---------------|
+| **Confirmare comandă** | Ramburs la plasare; card după plată Stripe confirmată | `src/lib/email.ts` → `trySendOrderConfirmationEmail` |
+| **Status comandă — procesare** | Admin schimbă status în „processing” | `trySendOrderStatusEmail` |
+| **Status comandă — expediat** | Status „shipped” (inclusiv AWB) | `trySendOrderStatusEmail` |
+| **Status comandă — livrat** | Status „delivered” | `trySendOrderStatusEmail` |
+| **Status comandă — anulat** | Status „cancelled” | `trySendOrderStatusEmail` |
+| **Tracking AWB** | Admin salvează AWB în Comenzi (dacă nu s-a trimis deja email shipped) | `sendTrackingEmail` |
+| **Newsletter bun-venit + cod reducere** | Abonare homepage, Coming Soon, cont client, API newsletter | `sendNewsletterWelcomeEmail` |
+| **Campanie newsletter (broadcast)** | Admin → Newsletter → Trimite campanie | `sendNewsletterBroadcastEmail` |
+| **Resetare parolă** | Cont client → „Am uitat parola” | `sendPasswordResetEmail` |
+| **Coș abandonat** | Cron orar `/api/cron/abandoned-carts` (2–24 h după snapshot checkout) | `src/lib/abandoned-cart-server.ts` |
+
+**Variabile Resend:**
+
+| Variabilă | Obligatoriu | Valoare recomandată |
+|-----------|-------------|---------------------|
+| `RESEND_API_KEY` | Da | Setat în Vercel dashboard (secret `re_...`) |
+| `RESEND_FROM_EMAIL` | Recomandat | Sandbox: `NOVRA <onboarding@resend.dev>` · Producție: `NOVRA <comenzi@novra.ro>` după verificare domeniu |
+
+**Toggle Admin:** Admin → Setări → **Email comenzi (Resend)** → „Trimite email confirmare la plasarea comenzii” — **lăsați bifat** (implicit activ). Newsletter, resetare parolă și coș abandonat nu depind de acest toggle.
+
+**Coș abandonat în producție:** necesită și `CRON_SECRET` în Vercel (Vercel Cron trimite `Authorization: Bearer …`). Opțional: `ABANDONED_CART_HOURS=2`, `ABANDONED_CART_MAX_HOURS=24`.
+
+**Notă:** Programul de afiliere **nu** trimite emailuri clienților — doar comision în admin.
+
+**Securitate:** Dacă cheia API a fost expusă (chat, commit accidental), rotați-o în [Resend → API Keys](https://resend.com/api-keys) și actualizați Vercel + `.env.local`.
+
+---
+
+## 9. Test final producție
 
 - [ ] `https://novra.ro` — magazin vizibil (Coming Soon **off**)
 - [ ] Checkout ramburs — comandă + email confirmare (dacă Resend activ)
 - [ ] Checkout card — plată Stripe live + email după confirmare
 - [ ] Admin → Comenzi — salvare AWB → email tracking client
+- [ ] Abonare newsletter — email cu cod `NOVRA10-XXXX`
+- [ ] Cont → resetare parolă — email cu link (dacă Resend activ)
 - [ ] `https://www.novra.ro` — același comportament ca apex
 
 ---
