@@ -1063,6 +1063,83 @@ export async function sendNewsletterBroadcastEmail(
   return { sent, failed };
 }
 
+export type TemplateBroadcastRecipient = {
+  email: string;
+  name?: string;
+};
+
+export type TemplateBroadcastOptions = {
+  templateId: EmailTemplateId;
+  recipients: TemplateBroadcastRecipient[];
+  subjectOverride?: string;
+  contentOverride?: string;
+  previewTextOverride?: string;
+};
+
+const BROADCAST_BATCH_SIZE = 50;
+
+/** Send a saved Email Center template to newsletter subscribers with optional overrides. */
+export async function sendTemplateBroadcastEmail(
+  options: TemplateBroadcastOptions
+): Promise<{ sent: number; failed: number }> {
+  const recipients = options.recipients
+    .map((r) => ({
+      email: r.email.trim().toLowerCase(),
+      name: r.name?.trim(),
+    }))
+    .filter((r) => r.email);
+
+  if (recipients.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
+
+  if (!isEmailsEnabled()) {
+    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ — skipping template broadcast");
+    return { sent: 0, failed: recipients.length };
+  }
+
+  const newsletterOn = await isAutomationEnabled("newsletter");
+  if (!newsletterOn) {
+    console.log("[EMAIL] Newsletter automation disabled — skipping template broadcast");
+    return { sent: 0, failed: recipients.length };
+  }
+
+  const configOverrides: RenderEmailTemplateOptions["configOverrides"] = {};
+  if (options.subjectOverride?.trim()) configOverrides.subject = options.subjectOverride.trim();
+  if (options.contentOverride?.trim()) configOverrides.content = options.contentOverride.trim();
+  if (options.previewTextOverride?.trim()) configOverrides.previewText = options.previewTextOverride.trim();
+
+  let sent = 0;
+  let failed = 0;
+
+  for (let i = 0; i < recipients.length; i += 1) {
+    const { email, name } = recipients[i];
+    const subscriberName = name || email.split("@")[0] || "abonat NOVRA";
+    const vars = withVariableAliases({ email, name: subscriberName });
+
+    const rendered = await renderEmailFromTemplate(options.templateId, vars, { configOverrides });
+
+    const ok = await sendEmail({
+      to: email,
+      subject: rendered.subject,
+      html: rendered.html,
+      logType: "template_broadcast",
+      automationKey: "newsletter",
+      templateId: options.templateId,
+      fromRole: "newsletter",
+    });
+
+    if (ok) sent += 1;
+    else failed += 1;
+
+    if ((i + 1) % BROADCAST_BATCH_SIZE === 0 && i + 1 < recipients.length) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  return { sent, failed };
+}
+
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
   const resetOn = await isAutomationEnabled("passwordReset");
   if (!resetOn) {

@@ -196,6 +196,15 @@ const defaultCampaignForm = (): CampaignForm => ({
   scheduledAt: "",
 });
 
+type BroadcastForm = {
+  templateId: string;
+  subject: string;
+  previewText: string;
+  content: string;
+  sendToAll: boolean;
+  selectedEmails: string[];
+};
+
 export default function AdminEmailCenterPage() {
   const admin = requireAdmin();
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
@@ -225,6 +234,8 @@ export default function AdminEmailCenterPage() {
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplateConfig | null>(null);
   const [editorPreviewDesktop, setEditorPreviewDesktop] = useState("");
   const [editorPreviewMobile, setEditorPreviewMobile] = useState("");
+  const [broadcastForm, setBroadcastForm] = useState<BroadcastForm | null>(null);
+  const [broadcastSending, setBroadcastSending] = useState(false);
 
   const [logSearch, setLogSearch] = useState("");
   const [logTypeFilter, setLogTypeFilter] = useState("all");
@@ -435,6 +446,7 @@ export default function AdminEmailCenterPage() {
       account_confirmation: "Confirmare cont",
       email_verification: "Verificare email",
       admin_order_cancelled: "Comandă anulată (admin)",
+      template_broadcast: "Broadcast șablon",
     };
     return map[type] ?? type;
   };
@@ -737,6 +749,116 @@ export default function AdminEmailCenterPage() {
     const data = (await res.json()) as { ok?: boolean; message?: string };
     showMessage(data.message ?? "Eroare.");
     if (data.ok) await refresh();
+  };
+
+  const openBroadcastForm = async (templateId: string) => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/email/templates?template=${encodeURIComponent(templateId)}`, {
+      headers: getApiHeaders(),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      showMessage("Nu s-a putut încărca șablonul.");
+      return;
+    }
+    const data = (await res.json()) as { config: EmailTemplateConfig };
+    setBroadcastForm({
+      templateId,
+      subject: data.config.subject,
+      previewText: data.config.previewText,
+      content: data.config.content,
+      sendToAll: true,
+      selectedEmails: subscribers.map((s) => s.email),
+    });
+  };
+
+  const handleBroadcastTemplateChange = async (templateId: string) => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/email/templates?template=${encodeURIComponent(templateId)}`, {
+      headers: getApiHeaders(),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      showMessage("Nu s-a putut încărca șablonul.");
+      return;
+    }
+    const data = (await res.json()) as { config: EmailTemplateConfig };
+    setBroadcastForm((prev) =>
+      prev
+        ? {
+            ...prev,
+            templateId,
+            subject: data.config.subject,
+            previewText: data.config.previewText,
+            content: data.config.content,
+          }
+        : prev
+    );
+  };
+
+  const toggleBroadcastRecipient = (email: string) => {
+    setBroadcastForm((prev) => {
+      if (!prev || prev.sendToAll) return prev;
+      const selected = prev.selectedEmails.includes(email)
+        ? prev.selectedEmails.filter((e) => e !== email)
+        : [...prev.selectedEmails, email];
+      return { ...prev, selectedEmails: selected };
+    });
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastForm) return;
+    if (!broadcastForm.subject.trim() || !broadcastForm.content.trim()) {
+      showMessage("Subiectul și conținutul sunt obligatorii.");
+      return;
+    }
+
+    const recipientCount = broadcastForm.sendToAll
+      ? subscribers.length
+      : broadcastForm.selectedEmails.length;
+
+    if (recipientCount === 0) {
+      showMessage("Selectează cel puțin un abonat.");
+      return;
+    }
+
+    if (!window.confirm(`Trimiți emailul către ${recipientCount} abonați?`)) return;
+
+    setBroadcastSending(true);
+    const res = await fetch("/api/admin/email/broadcast", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        templateId: broadcastForm.templateId,
+        subject: broadcastForm.subject,
+        previewText: broadcastForm.previewText,
+        content: broadcastForm.content,
+        sendToAll: broadcastForm.sendToAll,
+        recipients: broadcastForm.sendToAll ? undefined : broadcastForm.selectedEmails,
+      }),
+    });
+    setBroadcastSending(false);
+    const data = (await res.json()) as {
+      ok?: boolean;
+      error?: string;
+      sentCount?: number;
+      failedCount?: number;
+    };
+
+    if (!res.ok || !data.ok) {
+      showMessage(data.error ?? "Trimiterea a eșuat.");
+      return;
+    }
+
+    const sent = data.sentCount ?? 0;
+    const failed = data.failedCount ?? 0;
+    showMessage(
+      failed > 0
+        ? `Trimis către ${sent} abonați. ${failed} eșuate.`
+        : `Email trimis cu succes către ${sent} abonați.`
+    );
+    setBroadcastForm(null);
+    await refresh();
   };
 
   const connectionLabel = (status: SmtpInfo["connectionStatus"]) => {
@@ -1281,7 +1403,7 @@ export default function AdminEmailCenterPage() {
 
       {activeTab === "templates" && (
         <>
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex-1 max-w-md">
               <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
                 Email pentru teste
@@ -1294,6 +1416,15 @@ export default function AdminEmailCenterPage() {
                 className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
               />
             </div>
+            <button
+              type="button"
+              disabled={loading || subscribers.length === 0}
+              onClick={() => void openBroadcastForm("newsletter")}
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+            >
+              <Megaphone size={16} />
+              Trimite către abonați
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -1339,6 +1470,15 @@ export default function AdminEmailCenterPage() {
                     >
                       <Send size={12} />
                       Trimite email de test
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || subscribers.length === 0}
+                      onClick={() => void openBroadcastForm(template.id)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs text-purple-200 hover:bg-purple-500/20 disabled:opacity-50"
+                    >
+                      <Megaphone size={12} />
+                      Trimite către abonați
                     </button>
                   </div>
                 </div>
@@ -1491,6 +1631,163 @@ export default function AdminEmailCenterPage() {
                     srcDoc={previewHtml}
                     className={`w-full border-0 ${previewMode === "mobile" ? "h-[640px]" : "h-[520px]"}`}
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {broadcastForm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                onClick={() => !broadcastSending && setBroadcastForm(null)}
+              />
+              <div className="relative z-10 flex max-h-[95vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-novra-bg-alt shadow-2xl">
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+                    <Megaphone size={18} className="text-purple-400" />
+                    Trimite șablon către abonați
+                  </h3>
+                  <button
+                    type="button"
+                    disabled={broadcastSending}
+                    onClick={() => setBroadcastForm(null)}
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-gray-400 disabled:opacity-50"
+                  >
+                    Închide
+                  </button>
+                </div>
+                <div className="space-y-4 overflow-y-auto p-4 sm:p-6">
+                  <div>
+                    <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Șablon</label>
+                    <select
+                      value={broadcastForm.templateId}
+                      disabled={broadcastSending}
+                      onChange={(e) => void handleBroadcastTemplateChange(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                    >
+                      {EMAIL_TEMPLATES.map((tpl) => (
+                        <option key={tpl.id} value={tpl.id}>
+                          {tpl.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Subiect email</label>
+                    <input
+                      type="text"
+                      required
+                      disabled={broadcastSending}
+                      value={broadcastForm.subject}
+                      onChange={(e) => setBroadcastForm((p) => (p ? { ...p, subject: e.target.value } : p))}
+                      className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Preview Text (opțional)</label>
+                    <input
+                      type="text"
+                      disabled={broadcastSending}
+                      value={broadcastForm.previewText}
+                      onChange={(e) => setBroadcastForm((p) => (p ? { ...p, previewText: e.target.value } : p))}
+                      className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Conținut email</label>
+                    <textarea
+                      rows={6}
+                      required
+                      disabled={broadcastSending}
+                      value={broadcastForm.content}
+                      onChange={(e) => setBroadcastForm((p) => (p ? { ...p, content: e.target.value } : p))}
+                      className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Poți folosi variabile: {"{name}"}, {"{email}"}. Conținutul personalizat păstrează stilul șablonului selectat.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-novra-card/30 p-4">
+                    <label className="mb-3 flex items-center gap-2 text-sm text-gray-200">
+                      <input
+                        type="checkbox"
+                        disabled={broadcastSending}
+                        checked={broadcastForm.sendToAll}
+                        onChange={(e) =>
+                          setBroadcastForm((p) =>
+                            p
+                              ? {
+                                  ...p,
+                                  sendToAll: e.target.checked,
+                                  selectedEmails: e.target.checked ? subscribers.map((s) => s.email) : p.selectedEmails,
+                                }
+                              : p
+                          )
+                        }
+                        className="rounded border-white/20 bg-novra-bg"
+                      />
+                      Trimite tuturor abonaților
+                    </label>
+                    {!broadcastForm.sendToAll && (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs uppercase tracking-widest text-gray-500">Destinatari</p>
+                          <button
+                            type="button"
+                            disabled={broadcastSending}
+                            onClick={() =>
+                              setBroadcastForm((p) =>
+                                p ? { ...p, selectedEmails: subscribers.map((s) => s.email) } : p
+                              )
+                            }
+                            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 hover:bg-white/5"
+                          >
+                            Selectează toți
+                          </button>
+                        </div>
+                        <div className="max-h-48 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-novra-bg/40 p-3">
+                          {subscribers.map((sub) => (
+                            <label key={sub.email} className="flex items-center gap-2 text-sm text-gray-300">
+                              <input
+                                type="checkbox"
+                                disabled={broadcastSending}
+                                checked={broadcastForm.selectedEmails.includes(sub.email)}
+                                onChange={() => toggleBroadcastRecipient(sub.email)}
+                                className="rounded border-white/20 bg-novra-bg"
+                              />
+                              <span className="truncate">{sub.name !== "—" ? sub.name : sub.email}</span>
+                              <span className="truncate text-xs text-gray-500">{sub.email}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <p className="mt-3 text-sm text-purple-200">
+                      {broadcastForm.sendToAll
+                        ? `${subscribers.length} abonați selectați`
+                        : `${broadcastForm.selectedEmails.length} abonați selectați`}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button
+                      type="button"
+                      disabled={broadcastSending}
+                      onClick={() => void handleSendBroadcast()}
+                      className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      <Send size={16} />
+                      {broadcastSending ? "Se trimite..." : "Trimite acum"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={broadcastSending}
+                      onClick={() => setBroadcastForm(null)}
+                      className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-400 disabled:opacity-50"
+                    >
+                      Anulează
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
