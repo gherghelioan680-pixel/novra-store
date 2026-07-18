@@ -196,7 +196,7 @@ function AccountDashboardContent() {
         />
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))] max-md:pt-14 sm:max-md:pt-16 md:pb-8 md:pt-0">
-          <div className="mx-auto max-w-4xl px-4 py-6 sm:px-8 sm:py-10">
+          <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
             {showHeader && (
               <AccountHeader
                 user={currentUser}

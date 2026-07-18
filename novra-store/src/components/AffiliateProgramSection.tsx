@@ -53,9 +53,9 @@ export default function AffiliateProgramSection() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
       viewport={{ once: true }}
-      className="py-16 sm:py-24 -mx-4 sm:-mx-6 px-4 sm:px-6"
+      className="py-16 sm:py-24"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="site-container">
         <div className="relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/50 via-novra-card/40 to-novra-bg-alt">
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-600/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-fuchsia-500/8 blur-[60px] rounded-full pointer-events-none" />

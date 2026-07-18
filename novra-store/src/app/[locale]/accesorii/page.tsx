@@ -77,7 +77,7 @@ export default function Accesorii() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-7xl mx-auto">
+      <main className="pb-page site-container">
         {/* Link Înapoi */}
         <Link href="/#produse" className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group">
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t("backToCatalog")}

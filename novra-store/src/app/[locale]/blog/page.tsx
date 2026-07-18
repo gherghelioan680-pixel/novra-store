@@ -41,7 +41,7 @@ export default async function BlogListingPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
-      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-5xl mx-auto">
+      <main className="pb-page site-container-md">
         <div className="pt-8 pb-10 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-600/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-purple-300 mb-4">
             <BookOpen size={14} />

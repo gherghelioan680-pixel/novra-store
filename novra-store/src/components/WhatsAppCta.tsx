@@ -50,8 +50,8 @@ export default function WhatsAppCta() {
   ];
 
   return (
-    <section className="py-14 sm:py-20 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-14 sm:py-20">
+      <div className="site-container">
         <motion.div {...fadeUp} className="text-center mb-10 sm:mb-12">
           <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
             <MessageCircle size={14} aria-hidden />

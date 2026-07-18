@@ -40,7 +40,7 @@ export default function PoliticaConfidentialitate() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <main className="px-4 sm:px-6 md:px-12 max-w-4xl mx-auto pb-page">
+      <main className="site-container-narrow pb-page">
         <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 mb-8">
           <div className="absolute -top-8 right-0 w-48 h-48 bg-purple-500/8 blur-[80px] rounded-full pointer-events-none" />
           <motion.div {...fadeUp}>

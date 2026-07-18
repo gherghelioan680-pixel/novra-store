@@ -24,7 +24,7 @@ export function ProdusePageClient() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <main className="pb-page px-4 sm:px-6 max-w-5xl mx-auto">
+      <main className="pb-page site-container">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-6 transition-colors group touch-manipulation"

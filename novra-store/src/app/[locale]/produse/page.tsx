@@ -21,7 +21,7 @@ export default async function ToateProdusele({ searchParams }: PageProps) {
       fallback={
         <div className="min-h-screen bg-novra-bg text-white">
           <Navbar />
-          <main className="pb-page px-4 sm:px-6 max-w-5xl mx-auto pt-8">
+          <main className="pb-page site-container pt-8">
             <p className="text-gray-500 text-sm">Se încarcă catalogul...</p>
           </main>
           <Footer />

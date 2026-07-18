@@ -37,7 +37,7 @@ export default async function CampaignLandingPage({ params }: PageProps) {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <CampaignLandingTracker slug={campaign.slug} />
       <Navbar />
-      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto pt-8">
+      <main className="pb-page site-container-narrow pt-8">
         <CampaignCountdown campaign={campaign} />
         <p className="mt-8 text-center text-sm text-gray-500">
           {t("discountNote", { percent: campaign.discountPercent })}

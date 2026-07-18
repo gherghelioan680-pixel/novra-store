@@ -63,7 +63,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
               sizes="100vw"
             />
             <div className="absolute inset-0 blog-hero-gradient" />
-            <div className="absolute inset-x-0 bottom-0 px-4 sm:px-6 md:px-12 pb-8 pt-24 max-w-4xl mx-auto">
+            <div className="absolute inset-x-0 bottom-0 site-container-narrow pb-8 pt-24">
               {article.categories.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {article.categories.map((cat) => (
@@ -84,7 +84,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           </div>
         ) : null}
 
-        <div className="px-4 sm:px-6 md:px-12 max-w-3xl mx-auto pt-8">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 pt-8">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition mb-8"

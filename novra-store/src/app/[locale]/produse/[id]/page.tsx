@@ -174,7 +174,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
     <div className="min-h-screen bg-novra-bg text-white">
       <Navbar />
 
-      <main className="px-4 sm:px-6 max-w-3xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-8">
+      <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-8">
         <Link
           href={buildProduseUrl({ category: product.category })}
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-4 sm:mb-6 transition-colors group touch-manipulation"

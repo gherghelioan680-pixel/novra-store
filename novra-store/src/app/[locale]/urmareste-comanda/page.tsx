@@ -96,8 +96,7 @@ function TrackOrderContent() {
   return (
     <div className="min-h-screen bg-novra-bg text-white">
       <Navbar />
-      <main className="pt-[var(--header-height,148px)] px-4 sm:px-8 pb-16">
-        <div className="max-w-3xl mx-auto">
+      <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-page">
           <div className="mb-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{t("title")}</h1>
             <p className="mt-3 text-gray-400 text-sm sm:text-base">{t("subtitle")}</p>
@@ -223,7 +222,6 @@ function TrackOrderContent() {
               </p>
             </div>
           )}
-        </div>
       </main>
       <Footer />
     </div>

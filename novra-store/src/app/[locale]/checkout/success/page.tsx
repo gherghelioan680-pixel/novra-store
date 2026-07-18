@@ -59,7 +59,7 @@ function CheckoutSuccessContent() {
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
-      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-2xl mx-auto text-center">
+      <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 pb-page text-center">
         {status === "loading" && (
           <>
             <Loader2 size={48} className="mx-auto text-purple-400 mb-6 animate-spin" />

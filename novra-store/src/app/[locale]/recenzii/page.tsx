@@ -69,9 +69,9 @@ export default function Recenzii() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 px-4 sm:px-6">
+      <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(139,92,246,0.12),transparent)] pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative">
+        <div className="site-container relative">
           <motion.div {...fadeUp} className="text-center md:text-left max-w-3xl">
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-6">
               <Sparkles size={14} aria-hidden />
@@ -88,7 +88,7 @@ export default function Recenzii() {
         </div>
       </section>
 
-      <main className="px-4 sm:px-6 md:px-12 max-w-6xl mx-auto pb-page">
+      <main className="site-container pb-page">
         <motion.div {...fadeUp} className="grid grid-cols-3 gap-3 sm:gap-4 mb-12 sm:mb-16">
           {stats.map((stat) => (
             <div

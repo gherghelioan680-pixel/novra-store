@@ -20,8 +20,8 @@ export default function Footer() {
   ].filter((item) => item.href?.trim());
 
   return (
-    <footer className="bg-novra-bg-alt border-t border-novra-border/60 pt-8 sm:pt-10 pb-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] px-4 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-6 xl:gap-8 mb-8">
+    <footer className="bg-novra-bg-alt border-t border-novra-border/60 pt-8 sm:pt-10 pb-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+      <div className="site-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-6 xl:gap-8 mb-8">
         <div className="sm:col-span-2 lg:col-span-1 lg:max-w-[240px]">
           <div className="mb-2">
             <Image
@@ -209,7 +209,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto border-t border-novra-border/60 pt-3 pb-1 flex flex-col md:flex-row items-center justify-between gap-2 text-[11px] text-novra-muted">
+      <div className="site-container border-t border-novra-border/60 pt-3 pb-1 flex flex-col md:flex-row items-center justify-between gap-2 text-[11px] text-novra-muted">
         <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
           <Image src="/logo.png" alt="Logo" width={100} height={40} className="w-16 h-auto opacity-60" />
           <p>{t("copyright")}</p>

@@ -217,14 +217,14 @@ export default function Home() {
       <Navbar />
       <LiveVisitors />
 
-      <main className="w-full px-4 sm:px-6">
+      <main className="w-full">
 
-      <div className="max-w-7xl mx-auto pt-6">
+      <div className="site-container pt-6">
         <CampaignHomeBanner />
       </div>
 
       {/* Hero */}
-      <section id="acasa" className="flex flex-col lg:flex-row items-center justify-between py-10 sm:py-16 md:py-24 max-w-7xl mx-auto gap-10 lg:gap-16">
+      <section id="acasa" className="flex flex-col lg:flex-row items-center justify-between py-10 sm:py-16 md:py-24 site-container gap-10 lg:gap-16">
         <motion.div
           initial={false}
           animate={{ opacity: 1, x: 0 }}
@@ -317,7 +317,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-10 sm:py-16 border-y border-novra-border grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto"
+        className="py-10 sm:py-16 border-y border-novra-border grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 site-container"
       >
         <div className="flex flex-col items-center text-center gap-3">
           <Zap className="text-purple-500" size={32} />
@@ -356,7 +356,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-16 sm:py-20 max-w-7xl mx-auto relative"
+        className="py-16 sm:py-20 site-container relative"
       >
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-48 bg-purple-600/8 blur-[100px] rounded-full pointer-events-none" />
 
@@ -398,7 +398,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-8 sm:py-12 max-w-7xl mx-auto"
+        className="py-8 sm:py-12 site-container"
       >
         <div className="relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/60 via-novra-card/50 to-novra-surface p-6 sm:p-10 md:p-12 lg:p-14">
           <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/8 blur-[100px] rounded-full pointer-events-none" />
@@ -478,7 +478,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-16 sm:py-24 border-t border-novra-border max-w-7xl mx-auto"
+        className="py-16 sm:py-24 border-t border-novra-border site-container"
       >
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="order-2 lg:order-1">
@@ -554,9 +554,9 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-16 sm:py-24 bg-novra-bg-alt -mx-4 sm:-mx-6 px-4 sm:px-6 border-y border-novra-border/60"
+        className="py-16 sm:py-24 bg-novra-bg-alt border-y border-novra-border/60"
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="site-container">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12">
             <div>
               <span className="inline-flex items-center gap-2 text-purple-400 font-semibold text-xs sm:text-sm mb-3 uppercase tracking-[0.2em]">
@@ -631,7 +631,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="py-16 sm:py-24 max-w-7xl mx-auto"
+        className="py-16 sm:py-24 site-container"
       >
         <div className="relative overflow-hidden rounded-3xl border border-purple-500/15 bg-novra-card/30">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_50%,rgba(139,92,246,0.08),transparent_60%)]" />

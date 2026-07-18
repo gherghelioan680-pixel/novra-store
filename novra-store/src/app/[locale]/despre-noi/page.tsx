@@ -45,11 +45,11 @@ export default function DespreNoi() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <section className="relative overflow-hidden pt-8 sm:pt-12 pb-16 sm:pb-24 px-4 sm:px-6">
+      <section className="relative overflow-hidden pt-8 sm:pt-12 pb-16 sm:pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(139,92,246,0.12),transparent)] pointer-events-none" />
         <div className="absolute top-20 right-0 w-72 h-72 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto relative">
+        <div className="site-container relative">
           <motion.div {...fadeUp} className="max-w-3xl">
             <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-6">
               <Sparkles size={14} aria-hidden />
@@ -66,8 +66,8 @@ export default function DespreNoi() {
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <section className="pb-16 sm:pb-24">
+        <div className="site-container grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <motion.div {...fadeUp} className="relative h-64 sm:h-80 lg:h-[420px] rounded-3xl overflow-hidden border border-novra-border">
             <ProductImage
               src="/products/cabluri/albastru.png"
@@ -97,8 +97,8 @@ export default function DespreNoi() {
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 py-16 sm:py-24 bg-novra-bg-alt border-y border-novra-border/60">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 sm:py-24 bg-novra-bg-alt border-y border-novra-border/60">
+        <div className="site-container">
           <motion.div {...fadeUp} className="text-center mb-12 sm:mb-16">
             <span className="text-purple-500 font-semibold text-sm uppercase tracking-widest mb-3 block">
               {t("pillarsBadge")}
@@ -127,8 +127,8 @@ export default function DespreNoi() {
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 sm:py-24">
+        <div className="site-container">
           <motion.div
             {...fadeUp}
             className="relative overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/50 via-novra-card/40 to-novra-surface p-8 sm:p-12 md:p-16"
@@ -149,8 +149,8 @@ export default function DespreNoi() {
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 py-16 sm:py-24 border-t border-novra-border/60">
-        <div className="max-w-3xl mx-auto">
+      <section className="py-16 sm:py-24 border-t border-novra-border/60">
+        <div className="site-container max-w-3xl">
           <motion.div {...fadeUp} className="text-center mb-12">
             <span className="text-purple-500 font-semibold text-sm uppercase tracking-widest mb-3 block">
               {t("timelineBadge")}
@@ -177,10 +177,10 @@ export default function DespreNoi() {
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 pb-16">
+      <section className="pb-16">
         <motion.div
           {...fadeUp}
-          className="max-w-7xl mx-auto text-center p-8 sm:p-12 rounded-3xl border border-novra-border bg-novra-card/30"
+          className="site-container text-center p-8 sm:p-12 rounded-3xl border border-novra-border bg-novra-card/30"
         >
           <Heart className="text-purple-500 mx-auto mb-4" size={32} aria-hidden />
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">{t("ctaTitle")}</h2>

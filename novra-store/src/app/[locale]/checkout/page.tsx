@@ -156,7 +156,7 @@ function CheckoutPageContent() {
     return (
       <div className="min-h-screen bg-novra-bg text-white">
         <Navbar />
-        <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto text-center">
+      <main className="pb-page site-container-narrow text-center">
           <p className="text-gray-500 text-sm">{tc("loadingCart")}</p>
         </main>
         <Footer />
@@ -168,7 +168,7 @@ function CheckoutPageContent() {
     return (
       <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
         <Navbar />
-        <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto text-center">
+      <main className="pb-page site-container-narrow text-center">
           <p className="text-gray-300 mb-6">{t("emptyCart")}</p>
           <Link
             href="/produse"
@@ -412,7 +412,7 @@ function CheckoutPageContent() {
     return (
       <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
         <Navbar />
-        <main className="pb-page px-4 sm:px-6 md:px-12 max-w-2xl mx-auto text-center">
+        <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 pb-page text-center">
           <CheckCircle size={56} className="mx-auto text-green-500 mb-6" />
           <h1 className="text-4xl font-bold tracking-tighter mb-4">{t("orderSent")}</h1>
           <p className="text-gray-300 mb-4 leading-relaxed px-2">{t("successConfirmEmail")}</p>
@@ -444,7 +444,7 @@ function CheckoutPageContent() {
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
       <Navbar />
 
-      <main className="pb-page px-4 sm:px-6 md:px-12 max-w-4xl mx-auto">
+      <main className="pb-page site-container-narrow">
         <Link
           href="/cos"
           className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group touch-manipulation min-h-11"

@@ -125,7 +125,7 @@ export default function CountdownBanner() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-1.5 sm:py-2.5 flex flex-col gap-1.5 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-between sm:gap-4 min-w-0">
+      <div className="relative z-10 site-container py-1.5 sm:py-2.5 flex flex-col gap-1.5 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-between sm:gap-4 min-w-0">
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 sm:flex-1">
           <span className="inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[9px] min-[360px]:text-[10px] sm:text-xs font-bold uppercase tracking-wider px-1.5 min-[360px]:px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-lg shadow-orange-500/20 shrink-0 whitespace-nowrap">
             <Flame size={10} className="shrink-0 min-[360px]:hidden" aria-hidden />
