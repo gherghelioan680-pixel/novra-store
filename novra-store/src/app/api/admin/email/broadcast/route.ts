@@ -1,33 +1,16 @@
 import type { NextRequest } from "next/server";
-import { readJsonFile } from "@/lib/server-data";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import { isEmailTemplateId, type EmailTemplateId } from "@/lib/email-templates-server";
 import { sendTemplateBroadcastEmail } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
+import { loadNewsletterSubscriberDirectory } from "@/lib/newsletter-subscribers-server";
 
 export const runtime = "nodejs";
-
-const SUBSCRIBERS_FILE = "newsletter.json";
-
-type StoredSubscriber = {
-  email: string;
-  name?: string;
-};
+export const maxDuration = 300;
 
 function parseRecipientEmails(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map((v) => String(v).trim().toLowerCase()).filter(Boolean))];
-}
-
-async function loadSubscriberDirectory(): Promise<Map<string, string | undefined>> {
-  const subscribers = await readJsonFile<StoredSubscriber[]>(SUBSCRIBERS_FILE, []);
-  const directory = new Map<string, string | undefined>();
-  for (const sub of subscribers) {
-    const email = sub.email.trim().toLowerCase();
-    if (!email) continue;
-    directory.set(email, sub.name?.trim() || undefined);
-  }
-  return directory;
 }
 
 export async function POST(request: NextRequest) {
@@ -61,13 +44,15 @@ export async function POST(request: NextRequest) {
     }
 
     const sendToAll = body?.sendToAll !== false;
-    const directory = await loadSubscriberDirectory();
+    const directory = await loadNewsletterSubscriberDirectory();
 
     let recipientEmails: string[];
     if (sendToAll) {
       recipientEmails = [...directory.keys()];
+      console.log(`[BROADCAST] sendToAll=true — loaded ${recipientEmails.length} subscribers from storage`);
     } else {
       recipientEmails = parseRecipientEmails(body?.recipients);
+      console.log(`[BROADCAST] sendToAll=false — using ${recipientEmails.length} selected recipients`);
     }
 
     if (recipientEmails.length === 0) {
@@ -89,13 +74,17 @@ export async function POST(request: NextRequest) {
       subtitleOverride: subtitle,
       buttonTextOverride: buttonText,
       buttonLinkOverride: buttonLink,
+      bypassAutomationGate: true,
     });
 
     return Response.json({
       ok: true,
+      sent: result.sent,
+      failed: result.failed,
+      total: result.total,
       sentCount: result.sent,
       failedCount: result.failed,
-      totalRecipients: recipientEmails.length,
+      totalRecipients: result.total,
       templateId,
     });
   } catch (error) {

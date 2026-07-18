@@ -1018,21 +1018,38 @@ export async function sendNewsletterWelcomeEmail(
   });
 }
 
+const BROADCAST_BATCH_SIZE = 50;
+
 export async function sendNewsletterBroadcastEmail(
   emails: string[],
   subject?: string,
   bodyText?: string,
-  previewText?: string
-): Promise<{ sent: number; failed: number }> {
-  if (!isEmailsEnabled()) {
-    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ — skipping newsletter broadcast");
-    return { sent: 0, failed: emails.length };
+  previewText?: string,
+  options?: { bypassAutomationGate?: boolean }
+): Promise<{ sent: number; failed: number; total: number }> {
+  const normalized = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  const total = normalized.length;
+
+  if (total === 0) {
+    console.log("[BROADCAST] No recipients — skipping newsletter broadcast");
+    return { sent: 0, failed: 0, total: 0 };
   }
 
-  const newsletterOn = await isAutomationEnabled("newsletter");
-  if (!newsletterOn) {
-    console.log("[EMAIL] Newsletter automation disabled — skipping broadcast");
-    return { sent: 0, failed: emails.length };
+  console.log(
+    `[BROADCAST] Starting newsletter broadcast: total=${total}, bypassAutomation=${Boolean(options?.bypassAutomationGate)}`
+  );
+
+  if (!isEmailsEnabled()) {
+    console.log("[BROADCAST] EMAILS_ENABLED nu este activ — skipping newsletter broadcast");
+    return { sent: 0, failed: total, total };
+  }
+
+  if (!options?.bypassAutomationGate) {
+    const newsletterOn = await isAutomationEnabled("newsletter");
+    if (!newsletterOn) {
+      console.log("[BROADCAST] Newsletter automation disabled — skipping newsletter broadcast");
+      return { sent: 0, failed: total, total };
+    }
   }
 
   const template = await getEmailTemplate("newsletter");
@@ -1047,7 +1064,8 @@ export async function sendNewsletterBroadcastEmail(
   let sent = 0;
   let failed = 0;
 
-  for (const email of emails) {
+  for (let i = 0; i < normalized.length; i += 1) {
+    const email = normalized[i];
     const ok = await sendEmail({
       to: email,
       subject: rendered.subject,
@@ -1058,9 +1076,19 @@ export async function sendNewsletterBroadcastEmail(
     });
     if (ok) sent += 1;
     else failed += 1;
+
+    const processed = i + 1;
+    if (processed % BROADCAST_BATCH_SIZE === 0 || processed === total) {
+      console.log(`[BROADCAST] Batch progress: processed=${processed}/${total}, sent=${sent}, failed=${failed}`);
+    }
+
+    if (processed % BROADCAST_BATCH_SIZE === 0 && processed < total) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
-  return { sent, failed };
+  console.log(`[BROADCAST] Complete: total=${total}, sent=${sent}, failed=${failed}`);
+  return { sent, failed, total };
 }
 
 export type TemplateBroadcastRecipient = {
@@ -1078,14 +1106,14 @@ export type TemplateBroadcastOptions = {
   subtitleOverride?: string;
   buttonTextOverride?: string;
   buttonLinkOverride?: string;
+  /** Admin manual broadcasts bypass the newsletter automation toggle. */
+  bypassAutomationGate?: boolean;
 };
-
-const BROADCAST_BATCH_SIZE = 50;
 
 /** Send a saved Email Center template to newsletter subscribers with optional overrides. */
 export async function sendTemplateBroadcastEmail(
   options: TemplateBroadcastOptions
-): Promise<{ sent: number; failed: number }> {
+): Promise<{ sent: number; failed: number; total: number }> {
   const recipients = options.recipients
     .map((r) => ({
       email: r.email.trim().toLowerCase(),
@@ -1093,19 +1121,28 @@ export async function sendTemplateBroadcastEmail(
     }))
     .filter((r) => r.email);
 
-  if (recipients.length === 0) {
-    return { sent: 0, failed: 0 };
+  const total = recipients.length;
+
+  if (total === 0) {
+    console.log("[BROADCAST] No recipients — skipping template broadcast");
+    return { sent: 0, failed: 0, total: 0 };
   }
+
+  console.log(
+    `[BROADCAST] Starting template broadcast: template=${options.templateId}, total=${total}, bypassAutomation=${Boolean(options.bypassAutomationGate)}`
+  );
 
   if (!isEmailsEnabled()) {
-    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ — skipping template broadcast");
-    return { sent: 0, failed: recipients.length };
+    console.log("[BROADCAST] EMAILS_ENABLED nu este activ — skipping template broadcast");
+    return { sent: 0, failed: total, total };
   }
 
-  const newsletterOn = await isAutomationEnabled("newsletter");
-  if (!newsletterOn) {
-    console.log("[EMAIL] Newsletter automation disabled — skipping template broadcast");
-    return { sent: 0, failed: recipients.length };
+  if (!options.bypassAutomationGate) {
+    const newsletterOn = await isAutomationEnabled("newsletter");
+    if (!newsletterOn) {
+      console.log("[BROADCAST] Newsletter automation disabled — skipping template broadcast");
+      return { sent: 0, failed: total, total };
+    }
   }
 
   const configOverrides: RenderEmailTemplateOptions["configOverrides"] = {};
@@ -1140,12 +1177,18 @@ export async function sendTemplateBroadcastEmail(
     if (ok) sent += 1;
     else failed += 1;
 
-    if ((i + 1) % BROADCAST_BATCH_SIZE === 0 && i + 1 < recipients.length) {
+    const processed = i + 1;
+    if (processed % BROADCAST_BATCH_SIZE === 0 || processed === total) {
+      console.log(`[BROADCAST] Batch progress: processed=${processed}/${total}, sent=${sent}, failed=${failed}`);
+    }
+
+    if (processed % BROADCAST_BATCH_SIZE === 0 && processed < total) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
-  return { sent, failed };
+  console.log(`[BROADCAST] Complete: total=${total}, sent=${sent}, failed=${failed}`);
+  return { sent, failed, total };
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {

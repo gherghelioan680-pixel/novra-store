@@ -6,10 +6,12 @@ import { sendNewsletterBroadcastEmail } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 import { campaignStatusLabel } from "@/lib/email-campaigns-server";
 
+import { loadNewsletterRecipientEmails } from "@/lib/newsletter-subscribers-server";
+
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 const FILE = "newsletter-campaigns.json";
-const SUBSCRIBERS_FILE = "newsletter.json";
 
 function generateId(): string {
   return `camp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -26,8 +28,7 @@ function parseRecipients(value: unknown): string[] | undefined {
 
 async function resolveRecipientEmails(campaign: NewsletterCampaign): Promise<string[]> {
   if (campaign.sendToAll !== false) {
-    const subscribers = await readJsonFile<{ email: string }[]>(SUBSCRIBERS_FILE, []);
-    return [...new Set(subscribers.map((s) => s.email.trim().toLowerCase()).filter(Boolean))];
+    return loadNewsletterRecipientEmails();
   }
   return campaign.recipients ?? [];
 }
@@ -190,7 +191,8 @@ export async function POST(request: NextRequest) {
         emails,
         campaign.subject,
         campaign.body,
-        campaign.previewText
+        campaign.previewText,
+        { bypassAutomationGate: true }
       );
 
       campaigns[index] = {

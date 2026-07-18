@@ -5,8 +5,9 @@ import type { NewsletterCampaign } from "@/lib/newsletter";
 import { sendNewsletterBroadcastEmail } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 
+import { loadNewsletterRecipientEmails } from "@/lib/newsletter-subscribers-server";
+
 const FILE = "newsletter-campaigns.json";
-const SUBSCRIBERS_FILE = "newsletter.json";
 
 async function readCampaigns(): Promise<NewsletterCampaign[]> {
   return readJsonFile<NewsletterCampaign[]>(FILE, []);
@@ -14,8 +15,7 @@ async function readCampaigns(): Promise<NewsletterCampaign[]> {
 
 async function resolveRecipientEmails(campaign: NewsletterCampaign): Promise<string[]> {
   if (campaign.sendToAll !== false) {
-    const subscribers = await readJsonFile<{ email: string }[]>(SUBSCRIBERS_FILE, []);
-    return [...new Set(subscribers.map((s) => s.email.trim().toLowerCase()).filter(Boolean))];
+    return loadNewsletterRecipientEmails();
   }
   return campaign.recipients ?? [];
 }
@@ -81,7 +81,8 @@ export async function processDueCampaigns(): Promise<{
       emails,
       campaign.subject,
       campaign.body,
-      campaign.previewText
+      campaign.previewText,
+      { bypassAutomationGate: true }
     );
 
     totalSent += result.sent;
