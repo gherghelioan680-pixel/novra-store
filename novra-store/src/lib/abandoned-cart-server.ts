@@ -1,6 +1,7 @@
 import "server-only";
 
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
+import { sendAbandonedCartReminderEmail } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 
 const ABANDONED_CARTS_FILE = "abandoned-carts.json";
@@ -25,6 +26,18 @@ export type AbandonedCart = {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function getAbandonedCartDelayMs(): number {
+  const hours = Number(process.env.ABANDONED_CART_HOURS ?? "2");
+  if (!Number.isFinite(hours) || hours <= 0) return 2 * 60 * 60 * 1000;
+  return hours * 60 * 60 * 1000;
+}
+
+function getAbandonedCartMaxDelayMs(): number {
+  const hours = Number(process.env.ABANDONED_CART_MAX_HOURS ?? "24");
+  if (!Number.isFinite(hours) || hours <= 0) return 24 * 60 * 60 * 1000;
+  return hours * 60 * 60 * 1000;
 }
 
 export async function readAbandonedCarts(): Promise<AbandonedCart[]> {
@@ -88,7 +101,38 @@ export async function processAbandonedCartReminders(): Promise<{
 }> {
   const carts = await readAbandonedCarts();
   if (!isEmailsEnabled()) {
+    console.log("[abandoned-cart] EMAILS_ENABLED is not true — skipping reminders");
     return { checked: carts.length, sent: 0 };
   }
-  return { checked: carts.length, sent: 0 };
+
+  const minDelay = getAbandonedCartDelayMs();
+  const maxDelay = getAbandonedCartMaxDelayMs();
+  const now = Date.now();
+  let sent = 0;
+
+  for (let i = 0; i < carts.length; i++) {
+    const cart = carts[i];
+    if (cart.completedAt || cart.reminderSentAt || cart.items.length === 0) continue;
+
+    const updatedAt = new Date(cart.updatedAt).getTime();
+    const age = now - updatedAt;
+    if (age < minDelay || age > maxDelay) continue;
+
+    const ok = await sendAbandonedCartReminderEmail({
+      email: cart.email,
+      items: cart.items,
+      totalPrice: cart.totalPrice,
+    });
+
+    if (ok) {
+      carts[i] = { ...cart, reminderSentAt: new Date().toISOString() };
+      sent += 1;
+    }
+  }
+
+  if (sent > 0) {
+    await writeAbandonedCarts(carts);
+  }
+
+  return { checked: carts.length, sent };
 }

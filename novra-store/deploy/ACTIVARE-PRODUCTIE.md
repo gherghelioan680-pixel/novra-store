@@ -30,7 +30,14 @@ Deschideți **Vercel → Project → Settings → Environment Variables**. Adău
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Chei Web Push pentru notificări PWA. Generare: `npx web-push generate-vapid-keys` |
 | `VAPID_SUBJECT` | Contact mailto pentru Web Push (ex. `mailto:contact@novra.ro`). |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Alternative la `KV_*` dacă conectați Upstash direct. |
-| `EMAILS_ENABLED` | **Dezactivat implicit.** Setați `true` doar dacă integrați ulterior un provider email. Magazinul funcționează complet fără email. |
+| `EMAILS_ENABLED` | Setați `true` pentru a activa emailurile clienților. Necesită variabilele SMTP de mai jos. |
+| `SMTP_HOST` | Server SMTP Hostico (ex. `mail.novra.ro`). |
+| `SMTP_PORT` | `465` (SSL) sau `587` (TLS/STARTTLS). |
+| `SMTP_USER` | Utilizator SMTP (ex. `contact@novra.ro`). |
+| `SMTP_PASS` | Parola contului SMTP. |
+| `SMTP_FROM` | Expeditor afișat (ex. `NOVRA <contact@novra.ro>`). |
+| `ABANDONED_CART_HOURS` | Ore până la primul reminder coș abandonat (implicit `2`). |
+| `ABANDONED_CART_MAX_HOURS` | Fereastră maximă reminder coș abandonat (implicit `24`). |
 
 ### Copy-paste rapid (nume variabile)
 
@@ -46,6 +53,12 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+EMAILS_ENABLED=true
+SMTP_HOST=mail.novra.ro
+SMTP_PORT=465
+SMTP_USER=contact@novra.ro
+SMTP_PASS=
+SMTP_FROM=NOVRA <contact@novra.ro>
 ```
 
 ---
@@ -131,19 +144,34 @@ curl -I https://novra.ro/admin/login
 
 ---
 
-## 7. Emailuri clienți (opțional — dezactivat implicit)
+## 7. Emailuri clienți (SMTP Hostico — opțional)
 
-**Nu este necesară configurare email pentru lansare.** Magazinul funcționează fără DNS email sau provider extern.
+**Nu este necesară configurare email pentru lansare.** Magazinul funcționează fără SMTP. Pentru emailuri automate, configurați contul Hostico și variabilele Vercel de mai sus.
 
-| Funcție | Comportament fără email |
-|---------|-------------------------|
-| **Newsletter** | Cod reducere afișat direct pe pagină după abonare |
-| **Confirmare comandă** | Cod comandă pe pagina de success / checkout |
-| **Resetare parolă** | Mesaj „contactează suportul” (support@novra.ro) |
-| **Tracking AWB** | Vizibil în cont client și la urmărire comandă |
-| **Campanii newsletter** | Dezactivate în admin cât timp emailul este oprit |
+| Funcție | Când se trimite | Condiții |
+|---------|-----------------|----------|
+| **Confirmare comandă** | La plasare (ramburs / card) | `EMAILS_ENABLED=true` + toggle „Email confirmare” în admin |
+| **Status comandă** | processing, shipped, delivered, cancelled | Idem + schimbare status în admin |
+| **Tracking AWB** | La salvare AWB | Idem |
+| **Newsletter bun-venit** | La abonare (dacă e activat explicit) | `EMAILS_ENABLED=true` + cod reducere generat |
+| **Campanii newsletter** | Din admin → Newsletter | `EMAILS_ENABLED=true` |
+| **Resetare parolă** | Din cont client | `EMAILS_ENABLED=true` + SMTP configurat |
+| **Coș abandonat** | Cron `/api/cron/abandoned-carts` | `EMAILS_ENABLED=true` + `CRON_SECRET` |
 
-Pentru a activa emailuri în viitor: setați `EMAILS_ENABLED=true` și integrați un provider în `src/lib/email.ts`.
+### Configurare Hostico pe Vercel
+
+1. Creați cont email în cPanel Hostico (ex. `contact@novra.ro`).
+2. În Vercel → Environment Variables (Production), setați:
+   - `EMAILS_ENABLED` = `true`
+   - `SMTP_HOST` = `mail.novra.ro` (sau hostul din cPanel)
+   - `SMTP_PORT` = `465` (SSL) sau `587` (TLS)
+   - `SMTP_USER` = adresa completă (ex. `contact@novra.ro`)
+   - `SMTP_PASS` = parola contului
+   - `SMTP_FROM` = `NOVRA <contact@novra.ro>`
+3. Redeploy proiectul după salvarea variabilelor.
+4. În admin → Setări, activați **Email confirmare comandă** dacă doriți confirmări automate.
+
+**Formular contact:** pagina `/contact` folosește Web3Forms (extern) — nu necesită SMTP.
 
 **Notă:** Programul de afiliere **nu** trimite emailuri clienților — doar comision în admin.
 

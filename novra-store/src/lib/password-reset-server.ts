@@ -1,6 +1,8 @@
 import "server-only";
 
 import { randomBytes } from "crypto";
+import { isEmailConfigured } from "./email";
+import { isEmailsEnabled } from "./emails-enabled";
 import { readJsonFile, writeJsonFile } from "./server-data";
 
 const FILE = "password-reset-tokens.json";
@@ -47,8 +49,6 @@ export async function consumePasswordResetToken(
   return match.email;
 }
 
-import { isEmailsEnabled } from "./emails-enabled";
-
 export function isPasswordResetConfigured(): boolean {
-  return isEmailsEnabled();
+  return isEmailsEnabled() && isEmailConfigured();
 }
