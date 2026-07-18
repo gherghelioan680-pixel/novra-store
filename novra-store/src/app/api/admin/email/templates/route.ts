@@ -3,8 +3,6 @@ import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import {
   getEmailTemplate,
   saveEmailTemplate,
-  renderEmailTemplateHtml,
-  renderEmailFromTemplate,
   getSampleTemplateVariables,
   isEmailTemplateId,
   TEMPLATE_NAMES,
@@ -14,6 +12,7 @@ import {
 import {
   sendTemplatedEmail,
   buildTemplateVariables,
+  renderSampleTemplatePreview,
   sendNewsletterWelcomeEmail,
   sendNewsletterBroadcastEmail,
   sendPasswordResetEmail,
@@ -32,53 +31,15 @@ import {
   sendReturnApprovedEmail,
   sendRefundEmail,
 } from "@/lib/email";
+import { buildSampleOrder, buildSampleOrderForTemplate } from "@/lib/email-sample-data";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { generateNewsletterDiscountCode } from "@/lib/discount-codes";
 import { getSiteOrigin } from "@/lib/email-templates";
-import type { Order } from "@/lib/orders";
 
 export const runtime = "nodejs";
 
 export { TEMPLATE_NAMES as TEMPLATE_LABELS };
 export type { EmailTemplateId };
-
-function buildSampleOrder(): Order {
-  const now = new Date().toISOString();
-  return {
-    id: "sample-order",
-    purchaseCode: "NOVRA-DEMO",
-    userId: "guest-demo",
-    userEmail: "client@example.com",
-    userName: "Client Demo",
-    isGuest: true,
-    items: [
-      {
-        productId: "demo",
-        title: "Cablu USB-C Premium",
-        variantLabel: "2m",
-        quantity: 1,
-        unitPrice: 49.99,
-      },
-    ],
-    address: {
-      name: "Client Demo",
-      email: "client@example.com",
-      phone: "0700000000",
-      address: "Str. Exemplu 1",
-      city: "București",
-      county: "București",
-      notes: "",
-    },
-    total: 49.99,
-    shipping: 0,
-    status: "processing",
-    paymentMethod: "ramburs",
-    paymentStatus: "pending",
-    createdAt: now,
-    updatedAt: now,
-    confirmationEmailSent: false,
-  };
-}
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) return unauthorizedResponse();
@@ -101,8 +62,7 @@ export async function GET(request: NextRequest) {
   }
 
   const config = await getEmailTemplate(templateId);
-  const sampleVars = getSampleTemplateVariables(templateId);
-  const preview = await renderEmailFromTemplate(templateId, sampleVars);
+  const preview = await renderSampleTemplatePreview(templateId);
   return Response.json({
     templateId,
     label: TEMPLATE_NAMES[templateId],
@@ -131,8 +91,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "save") {
       const saved = await saveEmailTemplate(templateId, body.config ?? {});
-      const sampleVars = getSampleTemplateVariables(templateId);
-      const preview = await renderEmailFromTemplate(templateId, sampleVars);
+      const preview = await renderSampleTemplatePreview(templateId);
       return Response.json({
         ok: true,
         message: "Șablon salvat.",
@@ -147,8 +106,7 @@ export async function POST(request: NextRequest) {
         : await getEmailTemplate(templateId);
 
     if (action === "preview" || action === "preview_live") {
-      const sampleVars = getSampleTemplateVariables(templateId);
-      const preview = await renderEmailFromTemplate(templateId, sampleVars, {
+      const preview = await renderSampleTemplatePreview(templateId, {
         configOverrides: action === "preview_live" ? body.config : undefined,
       });
       return Response.json({
@@ -174,7 +132,7 @@ export async function POST(request: NextRequest) {
           to,
           generateNewsletterDiscountCode(),
           settings.newsletterDiscountPercent ?? 10,
-          "Client Demo"
+          "Andrei Popescu"
         );
       } else if (templateId === "newsletter") {
         const tpl = await getEmailTemplate("newsletter");
@@ -188,34 +146,19 @@ export async function POST(request: NextRequest) {
       } else if (templateId === "password_reset") {
         sent = await sendPasswordResetEmail(to, `${getSiteOrigin()}/resetare-parola?token=test`);
       } else if (templateId === "order_confirmation") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sent = await sendOrderConfirmationEmail(sample);
+        const sample = buildSampleOrder(to);
+        sent = await sendOrderConfirmationEmail(sample, to);
       } else if (templateId === "order_shipped") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sample.status = "shipped";
-        sample.awbTracking = "DEMO123456";
-        sent = await sendTrackingEmail(sample, "DEMO123456");
+        const sample = buildSampleOrderForTemplate("order_shipped", to);
+        sent = await sendTrackingEmail(sample, sample.awbTracking ?? "FC1234567890");
       } else if (templateId === "order_processing") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sample.status = "processing";
+        const sample = buildSampleOrderForTemplate("order_processing", to);
         sent = await sendOrderStatusEmail(sample, "processing");
       } else if (templateId === "order_delivered") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sample.status = "delivered";
+        const sample = buildSampleOrderForTemplate("order_delivered", to);
         sent = await sendOrderStatusEmail(sample, "delivered");
       } else if (templateId === "review_request") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sample.status = "delivered";
+        const sample = buildSampleOrderForTemplate("review_request", to);
         sent = await sendReviewRequestEmail(sample);
       } else if (templateId === "gift_card") {
         sent = await sendGiftCardEmail({ email: to, amount: 100, balance: 150 });
@@ -228,68 +171,64 @@ export async function POST(request: NextRequest) {
         });
       } else if (templateId === "contact_confirmation") {
         const result = await sendContactFormEmails({
-          name: "Client Demo",
+          name: "Andrei Popescu",
           email: to,
-          subject: "Test contact",
-          message: "Mesaj de test din Email Center.",
+          subject: "Întrebare despre compatibilitate cablu USB-C",
+          message: "Bună ziua, aș dori să știu dacă cablul USB-C 100W este compatibil cu MacBook Pro M3.",
         });
         sent = result.confirmationSent;
       } else if (templateId === "admin_new_order") {
-        const sample = buildSampleOrder();
+        const sample = buildSampleOrderForTemplate("admin_new_order", to);
         sent = await sendAdminNewOrderEmail(sample);
       } else if (templateId === "admin_order_cancelled") {
-        const sample = buildSampleOrder();
-        sample.status = "cancelled";
+        const sample = buildSampleOrderForTemplate("admin_order_cancelled", to);
         sent = await sendAdminOrderCancelledEmail(sample);
       } else if (templateId === "subscription_confirmation") {
-        sent = await sendSubscriptionConfirmationEmail(to, "Client Demo");
+        sent = await sendSubscriptionConfirmationEmail(to, "Andrei Popescu");
       } else if (templateId === "account_confirmation") {
-        sent = await sendAccountConfirmationEmail({ email: to, name: "Client Demo", credits: 50 });
+        sent = await sendAccountConfirmationEmail({ email: to, name: "Andrei Popescu", credits: 50 });
       } else if (templateId === "email_verification") {
         sent = await sendEmailVerificationEmail({
           email: to,
-          name: "Client Demo",
+          name: "Andrei Popescu",
           verifyUrl: `${getSiteOrigin()}/contul-meu?verify=test`,
         });
       } else if (templateId === "return_approved") {
         sent = await sendReturnApprovedEmail({
-          id: "ret-demo",
-          orderCode: "NOVRA-DEMO",
+          id: "ret-sample",
+          orderCode: "NV-190726-ABC123",
           userEmail: to,
-          userName: "Client Demo",
-          reason: "Produs defect",
-          description: "Demo retur",
+          userName: "Andrei Popescu",
+          reason: "Produs defect — cablu cu conector slăbit",
+          description: "Conectorul se deconectează la mișcări ușoare.",
           status: "approved",
-          adminNote: "Retur aprobat — trimite coletul la adresa indicată.",
+          adminNote: "Retur aprobat — trimite coletul la adresa indicată în următoarele 14 zile.",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
       } else if (templateId === "refund") {
         sent = await sendRefundEmail({
-          id: "ret-demo",
-          orderCode: "NOVRA-DEMO",
+          id: "ret-sample",
+          orderCode: "NV-190726-ABC123",
           userEmail: to,
-          userName: "Client Demo",
-          reason: "Produs defect",
-          description: "Demo retur",
+          userName: "Andrei Popescu",
+          reason: "Produs defect — cablu cu conector slăbit",
+          description: "Conectorul se deconectează la mișcări ușoare.",
           status: "completed",
-          adminNote: "Rambursarea a fost procesată.",
+          adminNote: "Rambursarea de 219,98 RON a fost procesată.",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
       } else if (templateId === "contact") {
         const { vars } = buildTemplateVariables("contact", {
-          name: "Client Demo",
+          name: "Andrei Popescu",
           email: to,
-          subject: "Test contact",
-          message: "Mesaj de test din Email Center.",
+          subject: "Întrebare despre compatibilitate cablu USB-C",
+          message: "Bună ziua, aș dori să știu dacă cablul USB-C 100W este compatibil cu MacBook Pro M3.",
         });
         sent = await sendTemplatedEmail("contact", to, vars, { logType: "contact" });
       } else if (templateId === "order_cancelled") {
-        const sample = buildSampleOrder();
-        sample.userEmail = to;
-        sample.address.email = to;
-        sample.status = "cancelled";
+        const sample = buildSampleOrderForTemplate("order_cancelled", to);
         sent = await sendOrderStatusEmail(sample, "cancelled");
       } else {
         const sampleVars = getSampleTemplateVariables(templateId);

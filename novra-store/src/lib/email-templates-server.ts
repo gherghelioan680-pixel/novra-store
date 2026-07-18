@@ -9,6 +9,8 @@ import {
   paragraph,
   wrapEmailHtml,
 } from "@/lib/email-templates";
+import { buildSampleOrder } from "@/lib/email-sample-data";
+import { ORDER_STATUS_LABELS } from "@/lib/orders";
 
 export type EmailTemplateId =
   | "welcome"
@@ -573,49 +575,52 @@ export function resolveTemplatePreviewText(
 export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<string, string> {
   const site = getSiteOrigin();
   const now = new Date().toLocaleDateString("ro-RO");
+  const sampleOrder = buildSampleOrder();
   const base: Record<string, string> = {
-    name: "Client Demo",
-    email: "client@example.com",
+    name: sampleOrder.address.name,
+    email: sampleOrder.userEmail,
     code: "NOVRA10",
     percent: "10",
     verificationUrl: `${site}/contul-meu?verify=test`,
     resetUrl: `${site}/resetare-parola?token=test`,
-    orderNumber: "NOVRA-DEMO",
-    purchaseCode: "NOVRA-DEMO",
-    orderCode: "NOVRA-DEMO",
+    orderNumber: sampleOrder.purchaseCode,
+    purchaseCode: sampleOrder.purchaseCode,
+    orderCode: sampleOrder.purchaseCode,
     orderDate: now,
     shippingDate: now,
     deliveryDate: now,
-    trackingNumber: "DEMO123456",
+    trackingNumber: "FC1234567890",
     courier: "Fan Courier",
-    total: "49.99",
-    status: "În procesare",
-    returnNumber: "RET-DEMO",
-    returnReason: "Produs defect",
-    refundAmount: "49.99",
+    total: sampleOrder.total.toFixed(2),
+    status: ORDER_STATUS_LABELS[sampleOrder.status],
+    returnNumber: "NV-190726-ABC123",
+    returnReason: "Produs defect — cablu cu conector slăbit",
+    refundAmount: sampleOrder.total.toFixed(2),
     refundMethod: "Card bancar",
     refundDate: now,
-    giftCardCode: "GIFT-DEMO",
-    giftCardAmount: "100",
+    giftCardCode: "NOVRA-GIFT-250",
+    giftCardAmount: "250",
     creditAmount: "50",
     creditBalance: "150",
     expiryDate: now,
     reviewUrl: `${site}/recenzii`,
-    subject: "Test contact",
-    message: "Mesaj de test din Email Center.",
-    ticketNumber: "TKT-DEMO",
+    subject: "Întrebare despre compatibilitate cablu USB-C",
+    message: "Bună ziua, aș dori să știu dacă cablul USB-C 100W este compatibil cu MacBook Pro M3.",
+    ticketNumber: "TKT-190726-A1B2",
     date: now,
-    reason: "Produs defect",
+    reason: "Produs defect — cablu cu conector slăbit",
     registerDate: now,
     expiresIn: "60 minute",
-    customerName: "Client Demo",
-    customerEmail: "client@example.com",
+    customerName: sampleOrder.address.name,
+    customerEmail: sampleOrder.userEmail,
     paymentMethod: "Ramburs (numerar la livrare)",
+    paymentIntro:
+      "Mulțumim pentru comanda ta! Am înregistrat-o și te vom contacta pentru livrare. Vei plăti numerar la primirea coletului.",
     credits: "50",
-    amount: "100",
+    amount: "250",
     balance: "150",
-    description: "Ajustare admin: test Email Center",
-    adminNote: "Notă demo din Email Center.",
+    description: "Bonus fidelitate — prima comandă",
+    adminNote: "Retur aprobat. Trimite coletul la adresa indicată în următoarele 14 zile.",
   };
 
   if (templateId === "gift_card") {

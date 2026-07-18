@@ -27,6 +27,7 @@ import {
 import {
   getEmailTemplate,
   renderEmailFromTemplate,
+  getSampleTemplateVariables,
   type RenderEmailTemplateOptions,
   type EmailTemplateId,
 } from "./email-templates-server";
@@ -39,6 +40,7 @@ import {
   resolveFromRole,
 } from "./email-config";
 import type { ReturnRequest } from "./returns-types";
+import { buildSampleOrderForTemplate } from "./email-sample-data";
 
 const NOTIFIABLE_STATUSES: OrderStatus[] = ["processing", "shipped", "delivered", "cancelled"];
 
@@ -329,6 +331,37 @@ export async function sendTemplatedEmail(
     templateId,
     fromRole: options?.fromRole,
   });
+}
+
+const ORDER_EMAIL_TEMPLATES: EmailTemplateId[] = [
+  "order_confirmation",
+  "order_processing",
+  "order_shipped",
+  "order_delivered",
+  "order_cancelled",
+  "review_request",
+  "admin_new_order",
+  "admin_order_cancelled",
+];
+
+/** Preview/test rendering — same engine as production sends, with realistic sample data. */
+export async function renderSampleTemplatePreview(
+  templateId: EmailTemplateId,
+  options?: RenderEmailTemplateOptions & { recipientEmail?: string }
+): Promise<{ html: string; subject: string; previewText: string }> {
+  if (ORDER_EMAIL_TEMPLATES.includes(templateId)) {
+    const order = buildSampleOrderForTemplate(templateId, options?.recipientEmail);
+    const awb = templateId === "order_shipped" ? order.awbTracking ?? "FC1234567890" : undefined;
+    const paymentIntro = templateId === "order_confirmation" ? confirmationIntro(order) : undefined;
+    const { vars, appendHtml } = buildTemplateVariables(templateId, { order, awb, paymentIntro });
+    return renderEmailFromTemplate(templateId, vars, {
+      appendHtml,
+      configOverrides: options?.configOverrides,
+    });
+  }
+
+  const sampleVars = getSampleTemplateVariables(templateId);
+  return renderEmailFromTemplate(templateId, sampleVars, options);
 }
 
 export type TemplateVariableContext =
