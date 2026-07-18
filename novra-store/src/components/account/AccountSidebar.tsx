@@ -158,18 +158,18 @@ export default function AccountSidebar({
       <button
         type="button"
         onClick={onMobileToggle}
-        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-novra-card lg:hidden"
+        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-novra-card md:hidden"
         aria-label={t("menuAria")}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-novra-bg-alt lg:block">
+      <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-novra-bg-alt md:block">
         {sidebarContent}
       </aside>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onMobileClose} />
           <aside className="absolute left-0 top-0 h-full w-72 max-w-[85vw] border-r border-white/10 bg-novra-bg-alt shadow-2xl">
             {sidebarContent}
@@ -177,7 +177,7 @@ export default function AccountSidebar({
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-white/10 bg-novra-bg-alt pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-white/10 bg-novra-bg-alt pb-[env(safe-area-inset-bottom,0px)] md:hidden">
         {[
           { id: "overview" as AccountSection, labelKey: "overview", icon: LayoutDashboard },
           { id: "my-orders" as AccountSection, labelKey: "orders", icon: ShoppingBag },
