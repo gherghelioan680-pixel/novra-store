@@ -1103,29 +1103,37 @@ export async function sendReviewSubmissionEmails(input: {
   const message = `Rating: ${input.rating}\n\n${input.message}`;
   const contactInput = { name: input.name, email: input.email, subject, message };
 
-  console.log(`[EMAIL] Trimitere recenzie de la ${input.name} (${input.email})`);
+  console.log(`[REVIEWS] sending notification emails for ${input.name} (${input.email})`);
 
   let confirmationSent = false;
   let adminSent = false;
 
-  if (await isAutomationEnabled("contactConfirmation")) {
-    const { vars } = buildTemplateVariables("contact_confirmation", contactInput);
-    confirmationSent = await sendTemplatedEmail("contact_confirmation", input.email, vars, {
-      logType: "contact_confirmation",
-      automationKey: "contactConfirmation",
-      fromRole: "contact",
-    });
+  try {
+    if (await isAutomationEnabled("contactConfirmation")) {
+      const { vars } = buildTemplateVariables("contact_confirmation", contactInput);
+      confirmationSent = await sendTemplatedEmail("contact_confirmation", input.email, vars, {
+        logType: "contact_confirmation",
+        automationKey: "contactConfirmation",
+        fromRole: "contact",
+      });
+    }
+  } catch (error) {
+    console.error("[REVIEWS] confirmation email failed:", error);
   }
 
-  if (await isAutomationEnabled("contactAdmin")) {
-    const supportEmail = getSupportNotificationEmail();
-    console.log(`[ADMIN] Notificare recenzie → ${supportEmail}`);
-    const { vars } = buildTemplateVariables("contact_admin", contactInput);
-    adminSent = await sendTemplatedEmail("contact_admin", supportEmail, vars, {
-      logType: "contact_admin",
-      automationKey: "contactAdmin",
-      fromRole: "noreply",
-    });
+  try {
+    if (await isAutomationEnabled("contactAdmin")) {
+      const supportEmail = getSupportNotificationEmail();
+      console.log(`[REVIEWS] admin notification → ${supportEmail}`);
+      const { vars } = buildTemplateVariables("contact_admin", contactInput);
+      adminSent = await sendTemplatedEmail("contact_admin", supportEmail, vars, {
+        logType: "contact_admin",
+        automationKey: "contactAdmin",
+        fromRole: "noreply",
+      });
+    }
+  } catch (error) {
+    console.error("[REVIEWS] admin notification email failed:", error);
   }
 
   return { confirmationSent, adminSent };

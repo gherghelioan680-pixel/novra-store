@@ -24,7 +24,15 @@ export async function POST(request: NextRequest) {
     const title = typeof body?.title === "string" ? body.title.trim() : undefined;
     const product = typeof body?.product === "string" ? body.product.trim() : undefined;
 
+    console.log("[REVIEWS] submit request", {
+      hasName: Boolean(name),
+      hasEmail: Boolean(email),
+      hasRating: Boolean(rating),
+      messageLength: message.length,
+    });
+
     if (!name || !email || !rating || !message) {
+      console.warn("[REVIEWS] validation failed: missing fields");
       return Response.json({ ok: false, message: "Completează toate câmpurile." }, { status: 400 });
     }
 
@@ -41,13 +49,24 @@ export async function POST(request: NextRequest) {
       product,
     });
 
+    console.log(`[REVIEWS] Pending review saved id=${review.id} email=${email}`);
+
     let confirmationSent = false;
     let adminSent = false;
 
     if (isEmailsEnabled()) {
-      const result = await sendReviewSubmissionEmails({ name, email, rating, message });
-      confirmationSent = result.confirmationSent;
-      adminSent = result.adminSent;
+      try {
+        const result = await sendReviewSubmissionEmails({ name, email, rating, message });
+        confirmationSent = result.confirmationSent;
+        adminSent = result.adminSent;
+        console.log(
+          `[REVIEWS] Submission emails confirmation=${confirmationSent} admin=${adminSent} id=${review.id}`
+        );
+      } catch (emailError) {
+        console.error("[REVIEWS] Submission emails failed (review saved):", emailError);
+      }
+    } else {
+      console.log(`[REVIEWS] Emails disabled — review saved id=${review.id}`);
     }
 
     return Response.json({
@@ -59,7 +78,7 @@ export async function POST(request: NextRequest) {
       adminSent,
     });
   } catch (error) {
-    console.error("[ERROR] reviews/submit POST:", error);
+    console.error("[REVIEWS] Submit failed:", error);
     return Response.json({ ok: false, message: "Eroare la trimiterea recenziei." }, { status: 500 });
   }
 }

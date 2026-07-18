@@ -38,12 +38,18 @@ export function normalizeReview(raw: Partial<Review> & { id: number }): Review {
 }
 
 export async function readReviews(): Promise<Review[]> {
-  const raw = await readJsonFile<Partial<Review>[]>(FILE, featuredReviews);
-  return raw.map((item, index) =>
+  const raw = await readJsonFile<Partial<Review>[] | unknown>(FILE, featuredReviews);
+  const items = Array.isArray(raw) ? raw : featuredReviews;
+
+  if (!Array.isArray(raw)) {
+    console.warn("[REVIEWS] stored reviews.json is not an array — using defaults");
+  }
+
+  return items.map((item, index) =>
     normalizeReview({
-      ...item,
-      id: typeof item.id === "number" ? item.id : index + 1,
-      status: item.status ?? "approved",
+      ...(typeof item === "object" && item !== null ? (item as Partial<Review>) : {}),
+      id: typeof (item as Partial<Review>)?.id === "number" ? (item as Partial<Review>).id! : index + 1,
+      status: (item as Partial<Review>)?.status ?? "approved",
     })
   );
 }
@@ -78,6 +84,7 @@ export async function createPendingReview(input: {
   });
   reviews.unshift(entry);
   await writeReviews(reviews);
+  console.log("[REVIEWS] createPendingReview ok", { reviewId: entry.id, total: reviews.length });
   return entry;
 }
 
