@@ -171,7 +171,7 @@ curl -I https://novra.ro/admin/login
 3. Redeploy proiectul după salvarea variabilelor.
 4. În admin → Setări, activați **Email confirmare comandă** dacă doriți confirmări automate.
 
-**Formular contact:** pagina `/contact` folosește Web3Forms (extern) — nu necesită SMTP.
+**Formulare contact și recenzii:** paginile `/contact` și `/recenzii` trimit emailuri via SMTP Hostico (Nodemailer) — necesită `EMAILS_ENABLED=true` și variabilele SMTP configurate. Notificările admin merg la `ADMIN_EMAIL`.
 
 **Notă:** Programul de afiliere **nu** trimite emailuri clienților — doar comision în admin.
 
@@ -193,7 +193,7 @@ curl -I https://novra.ro/admin/login
 
 | Serviciu | Cont / notă |
 |----------|-------------|
-| Email business | `contactnovraromania@gmail.com` |
+| Email business | `contact@novra.ro` (SMTP Hostico) |
 | Stripe | [dashboard.stripe.com](https://dashboard.stripe.com) — mod **Live** |
 | Vercel | Domenii: `novra.ro`, `www.novra.ro` |
 | DNS | Hostico |

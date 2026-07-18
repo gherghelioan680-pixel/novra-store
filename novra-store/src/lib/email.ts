@@ -92,18 +92,12 @@ function getFromAddress(): string | null {
   return from || null;
 }
 
-export function getAdminNotificationEmail(): string {
+export function getAdminNotificationEmail(): string | null {
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   if (adminEmail) return adminEmail;
 
-  const from = process.env.SMTP_FROM?.trim() ?? "";
-  const match = from.match(/<([^>]+)>/);
-  if (match?.[1]) return match[1].trim().toLowerCase();
-
-  const smtpUser = process.env.SMTP_USER?.trim().toLowerCase();
-  if (smtpUser) return smtpUser;
-
-  return "support@novra.ro";
+  console.warn("[ADMIN] ADMIN_EMAIL nu este setat — notificările admin nu pot fi trimise.");
+  return null;
 }
 
 function getTransporter(): Transporter | null {
@@ -148,17 +142,15 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
   const recipientLabel = normalizedRecipients.join(", ");
   const templateLabel = input.templateId ?? "custom";
 
-  console.log(`[EMAIL] Tip email: ${logType}`);
-  console.log(`[EMAIL] Destinatar: ${recipientLabel}`);
-  console.log(`[EMAIL] Template folosit: ${templateLabel}`);
+  console.log(`[EMAIL] Tip: ${logType} | Destinatar: ${recipientLabel} | Template: ${templateLabel}`);
 
   if (normalizedRecipients.length === 0) {
-    console.warn("[EMAIL ERROR] Niciun destinatar.");
+    console.warn("[ERROR] Niciun destinatar email.");
     return { ok: false, error: "Niciun destinatar." };
   }
 
   if (!isEmailsEnabled()) {
-    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ.");
+    console.warn("[ERROR] EMAILS_ENABLED nu este activ.");
     return { ok: false, error: "EMAILS_ENABLED nu este activ." };
   }
 
@@ -166,11 +158,11 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
   const from = getFromAddress();
 
   if (!transport || !from) {
-    console.warn("[EMAIL ERROR] SMTP neconfigurat — setează SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.");
+    console.warn("[SMTP] Neconfigurat — setează SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.");
     return { ok: false, error: "SMTP neconfigurat." };
   }
 
-  console.log("[EMAIL] SMTP conectat");
+  console.log(`[SMTP] Trimitere către ${recipientLabel}...`);
 
   try {
     const info = await transport.sendMail({
@@ -181,7 +173,7 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
       text: input.text ?? htmlToPlainText(input.html),
     });
 
-    console.log("[EMAIL] Trimis cu succes");
+    console.log(`[SUCCESS] Email trimis (${logType}) → ${recipientLabel}`);
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -198,7 +190,7 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
     return { ok: true, messageId: info.messageId };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Eroare necunoscută la trimitere.";
-    console.error(`[EMAIL ERROR] ${errorMessage}`);
+    console.error(`[ERROR] Trimitere eșuată (${logType}) → ${recipientLabel}: ${errorMessage}`);
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -468,6 +460,9 @@ export async function trySendAdminNewOrderEmail(
 }
 
 export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
+  const adminEmail = getAdminNotificationEmail();
+  if (!adminEmail) return false;
+
   const template = await getEmailTemplate("admin_new_order");
   const vars = orderTemplateVars(order);
   const itemsSummary = order.items
@@ -483,8 +478,10 @@ export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
     `)}
   `;
 
+  console.log(`[ADMIN] Notificare comandă nouă ${order.purchaseCode} → ${adminEmail}`);
+
   return sendEmail({
-    to: getAdminNotificationEmail(),
+    to: adminEmail,
     subject: resolveTemplateSubject(template, vars),
     html: body,
     logType: "admin_new_order",
@@ -642,6 +639,7 @@ export async function sendContactFormEmails(input: {
   let adminSent = false;
 
   if (await isAutomationEnabled("contactConfirmation")) {
+    console.log(`[CUSTOMER] Confirmare contact → ${input.email}`);
     const template = await getEmailTemplate("contact_confirmation");
     confirmationSent = await sendEmail({
       to: input.email,
@@ -656,20 +654,45 @@ export async function sendContactFormEmails(input: {
   }
 
   if (await isAutomationEnabled("contactAdmin")) {
-    const template = await getEmailTemplate("contact_admin");
-    adminSent = await sendEmail({
-      to: getAdminNotificationEmail(),
-      subject: resolveTemplateSubject(template, vars),
-      html: renderEmailTemplateHtml(template, vars),
-      logType: "contact_admin",
-      automationKey: "contactAdmin",
-      templateId: "contact_admin",
-    });
+    const adminEmail = getAdminNotificationEmail();
+    if (!adminEmail) {
+      console.warn("[ADMIN] Notificare contact omisă — ADMIN_EMAIL lipsă.");
+    } else {
+      console.log(`[ADMIN] Notificare contact → ${adminEmail}`);
+      const template = await getEmailTemplate("contact_admin");
+      adminSent = await sendEmail({
+        to: adminEmail,
+        subject: resolveTemplateSubject(template, vars),
+        html: renderEmailTemplateHtml(template, vars),
+        logType: "contact_admin",
+        automationKey: "contactAdmin",
+        templateId: "contact_admin",
+      });
+    }
   } else {
     console.log("[EMAIL] Contact admin notification skipped — automation disabled");
   }
 
   return { confirmationSent, adminSent };
+}
+
+export async function sendReviewSubmissionEmails(input: {
+  name: string;
+  email: string;
+  rating: string;
+  message: string;
+}): Promise<{ confirmationSent: boolean; adminSent: boolean }> {
+  const subject = "Recenzie NOVRA";
+  const message = `Rating: ${input.rating}\n\n${input.message}`;
+
+  console.log(`[EMAIL] Trimitere recenzie de la ${input.name} (${input.email})`);
+
+  return sendContactFormEmails({
+    name: input.name,
+    email: input.email,
+    subject,
+    message,
+  });
 }
 
 export async function sendReviewRequestEmail(order: Order): Promise<boolean> {

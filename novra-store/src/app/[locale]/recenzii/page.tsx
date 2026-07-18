@@ -39,16 +39,21 @@ export default function Recenzii() {
     setStatus("sending");
 
     const formData = new FormData(e.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const rating = String(formData.get("rating") ?? "").trim();
+    const message = String(formData.get("message") ?? "").trim();
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/store/reviews/submit", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, rating, message }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.ok) {
         setStatus("success");
         e.currentTarget.reset();
       } else {
@@ -158,16 +163,7 @@ export default function Recenzii() {
             <p className="text-gray-400 font-light text-sm max-w-lg mx-auto">{t("formDesc")}</p>
           </div>
 
-          <form
-            action="https://api.web3forms.com/submit"
-            method="POST"
-            onSubmit={handleSubmit}
-            className="space-y-5 relative z-10"
-          >
-            <input type="hidden" name="access_key" value="b7020925-857c-4f6e-97eb-23f4c1139e97" />
-            <input type="hidden" name="subject" value={t("formSubject")} />
-            <input type="hidden" name="from_name" value="NOVRA Platform" />
-
+          <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2 space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">{t("nameLabel")}</label>

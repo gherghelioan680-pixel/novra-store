@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { sendContactFormEmails } from "@/lib/email";
+import { sendReviewSubmissionEmails } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 
 export const runtime = "nodejs";
@@ -9,10 +9,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-    const subject = typeof body?.subject === "string" ? body.subject.trim() : "";
+    const rating = typeof body?.rating === "string" ? body.rating.trim() : "";
     const message = typeof body?.message === "string" ? body.message.trim() : "";
 
-    if (!name || !email || !subject || !message) {
+    if (!name || !email || !rating || !message) {
       return Response.json({ ok: false, message: "Completează toate câmpurile." }, { status: 400 });
     }
 
@@ -24,19 +24,19 @@ export async function POST(request: NextRequest) {
       return Response.json(
         {
           ok: false,
-          message: "Trimiterea mesajelor prin email nu este activă momentan. Contactează-ne la support@novra.ro.",
+          message: "Trimiterea recenziilor prin email nu este activă momentan. Contactează-ne la support@novra.ro.",
         },
         { status: 503 }
       );
     }
 
-    const result = await sendContactFormEmails({ name, email, subject, message });
+    const result = await sendReviewSubmissionEmails({ name, email, rating, message });
 
     if (!result.confirmationSent && !result.adminSent) {
       return Response.json(
         {
           ok: false,
-          message: "Mesajul nu a putut fi trimis. Verifică setările SMTP și automatizările din Email Center.",
+          message: "Recenzia nu a putut fi trimisă. Verifică setările SMTP și automatizările din Email Center.",
         },
         { status: 500 }
       );
@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
 
     return Response.json({
       ok: true,
-      message: "Mesajul a fost trimis cu succes.",
+      message: "Recenzia a fost trimisă cu succes.",
       confirmationSent: result.confirmationSent,
       adminSent: result.adminSent,
     });
   } catch (error) {
-    console.error("[ERROR] contact POST:", error);
-    return Response.json({ ok: false, message: "Eroare la trimiterea mesajului." }, { status: 500 });
+    console.error("[ERROR] reviews/submit POST:", error);
+    return Response.json({ ok: false, message: "Eroare la trimiterea recenziei." }, { status: 500 });
   }
 }
