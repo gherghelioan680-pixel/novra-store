@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
       }
 
       const token = await createPasswordResetToken(email);
-      const resetUrl = `${getStripeCheckoutOrigin()}/contul-meu?reset=${token}`;
+      const resetUrl = `${getStripeCheckoutOrigin()}/resetare-parola?token=${encodeURIComponent(token)}`;
       const sent = await sendPasswordResetEmail(email, resetUrl);
       if (!sent) {
         return Response.json(
