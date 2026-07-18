@@ -7,7 +7,7 @@ import { trySendOrderConfirmationEmail, trySendAdminNewOrderEmail } from "@/lib/
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { recordAffiliateConversion } from "@/lib/affiliates-server";
-import { fulfillCreditPurchase } from "@/lib/credits-server";
+import { fulfillCreditPurchase, spendCreditsForOrder } from "@/lib/credits-server";
 import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
 import { processReferralRewardsForOrder } from "@/lib/referrals-server";
 
@@ -45,6 +45,17 @@ export async function fulfillOrderFromStripeSession(
   const alreadyPaid = order.paymentStatus === "paid";
 
   if (!alreadyPaid) {
+    const creditsUsed = typeof order.creditsUsed === "number" ? Math.round(order.creditsUsed) : 0;
+    if (creditsUsed > 0) {
+      const spendResult = await spendCreditsForOrder(order.userEmail, creditsUsed, order.id);
+      if (!spendResult.ok) {
+        console.error(
+          `[credits] Failed to deduct ${creditsUsed} NovraCredits for paid order ${order.id}: ${spendResult.message}`
+        );
+        return { ok: false, message: spendResult.message };
+      }
+    }
+
     order = {
       ...order,
       paymentStatus: "paid",

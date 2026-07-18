@@ -5,7 +5,7 @@ import { normalizeOrder, generatePurchaseCode, resolveOrderCustomerEmail, type O
 import { trySendOrderConfirmationEmail, sendTrackingEmail, trySendOrderStatusEmail, trySendAdminNewOrderEmail, scheduleReviewRequestAfterDelivery } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
-import { spendCredits } from "@/lib/credits-server";
+import { spendCreditsForOrder } from "@/lib/credits-server";
 import { decrementStockForOrderItems, restoreStockForOrderItems } from "@/lib/stock-server";
 import {
   getAffiliateRefFromRequest,
@@ -276,8 +276,9 @@ export async function POST(request: NextRequest) {
       await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
     }
 
-    if (creditsUsed > 0 && session?.email) {
-      const spendResult = await spendCredits(session.email, creditsUsed, order.id);
+    // Card + NovraCredits: creditele se scad doar după confirmarea plății Stripe (webhook / verify-session).
+    if (creditsUsed > 0 && session?.email && order.paymentMethod !== "card") {
+      const spendResult = await spendCreditsForOrder(session.email, creditsUsed, order.id);
       if (!spendResult.ok) {
         orders.shift();
         await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));

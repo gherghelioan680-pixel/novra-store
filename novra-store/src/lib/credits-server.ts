@@ -248,6 +248,45 @@ export async function fulfillCreditPurchase(
   };
 }
 
+export async function hasCreditsSpentForOrder(orderId: string): Promise<boolean> {
+  const transactions = await readCreditTransactions();
+  return transactions.some(
+    (transaction) =>
+      transaction.referenceId === orderId && transaction.type === "spend" && transaction.amount < 0
+  );
+}
+
+export async function spendCreditsForOrder(
+  userEmail: string,
+  amount: number,
+  orderId: string
+): Promise<
+  | { ok: true; user: StoredUser; transaction?: CreditTransaction; alreadySpent: boolean }
+  | { ok: false; message: string }
+> {
+  const spendAmount = Math.round(amount);
+  if (spendAmount <= 0) {
+    return { ok: false, message: "Suma de credite invalidă." };
+  }
+
+  if (await hasCreditsSpentForOrder(orderId)) {
+    const email = normalizeEmail(userEmail);
+    const users = await readJsonFile<StoredUser[]>(USERS_FILE, []);
+    const user = users.find((entry) => normalizeEmail(entry.email) === email);
+    if (!user) {
+      return { ok: false, message: "Utilizatorul nu a fost găsit." };
+    }
+    return { ok: true, user, alreadySpent: true };
+  }
+
+  const result = await spendCredits(userEmail, spendAmount, orderId);
+  if (!result.ok) {
+    return result;
+  }
+
+  return { ...result, alreadySpent: false };
+}
+
 export async function spendCredits(
   userEmail: string,
   amount: number,
