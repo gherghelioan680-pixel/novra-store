@@ -383,6 +383,36 @@ function formatOrderDate(order: Order): string {
   return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString("ro-RO");
 }
 
+function resolveOrderCustomerName(order: Order): string {
+  return (order.address?.name?.trim() || order.userName?.trim() || "").trim();
+}
+
+function buildOrderItemsSummary(order: Order): string {
+  if (!order.items?.length) return "—";
+  return order.items
+    .map((item) => `${item.title} (${item.variantLabel}) ×${item.quantity}`)
+    .join(", ");
+}
+
+function buildShippingAddressText(order: Order): string {
+  return [
+    order.address.address,
+    order.address.city,
+    order.address.county,
+    order.address.postalCode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function logProductionOrderEmail(type: string, order: Order): void {
+  const itemCount = order.items?.length ?? 0;
+  const total = Number.isFinite(order.total) ? order.total.toFixed(2) : "0.00";
+  console.log(
+    `[ORDER EMAIL] type: ${type} purchaseCode: ${order.purchaseCode} items: ${itemCount} total: ${total}`
+  );
+}
+
 function withVariableAliases(vars: Record<string, string>): Record<string, string> {
   const next = { ...vars };
   if (next.purchaseCode && !next.orderNumber) next.orderNumber = next.purchaseCode;
@@ -409,7 +439,7 @@ export function buildTemplateVariables(
     const { order, awb, paymentIntro } = context;
     const base = withVariableAliases({
       ...orderTemplateVars(order),
-      name: order.address.name,
+      name: resolveOrderCustomerName(order),
       email: resolveOrderCustomerEmail(order),
       orderDate: formatOrderDate(order),
       shippingDate: order.updatedAt ? new Date(order.updatedAt).toLocaleDateString("ro-RO") : "",
@@ -607,6 +637,12 @@ function paymentMethodLabel(order: Order): string {
 }
 
 function buildItemsHtml(order: Order): string {
+  if (!order.items?.length) {
+    return `<tr>
+          <td colspan="2" style="padding:8px 0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#6b7280;">Nu există produse înregistrate pentru această comandă.</td>
+        </tr>`;
+  }
+
   return order.items
     .map(
       (item) =>
@@ -629,11 +665,17 @@ function trackOrderLinkHtml(purchaseCode: string): string {
 function orderTemplateVars(order: Order): Record<string, string> {
   return {
     purchaseCode: order.purchaseCode,
-    customerName: order.address.name,
+    orderNumber: order.purchaseCode,
+    orderCode: order.purchaseCode,
+    customerName: resolveOrderCustomerName(order),
     customerEmail: resolveOrderCustomerEmail(order),
     total: order.total.toFixed(2),
     paymentMethod: paymentMethodLabel(order),
     status: ORDER_STATUS_LABELS[order.status],
+    shippingAddress: buildShippingAddressText(order),
+    phone: order.address.phone?.trim() || "",
+    itemsCount: String(order.items?.length ?? 0),
+    itemsSummary: buildOrderItemsSummary(order),
   };
 }
 
@@ -756,6 +798,7 @@ export async function sendOrderConfirmationEmail(
   recipientEmail?: string
 ): Promise<boolean> {
   const recipient = (recipientEmail ?? resolveOrderCustomerEmail(order)).trim().toLowerCase();
+  logProductionOrderEmail("order_confirmation", order);
   const { vars, appendHtml } = buildTemplateVariables("order_confirmation", {
     order,
     paymentIntro: confirmationIntro(order),
@@ -807,7 +850,7 @@ export async function trySendOrderStatusEmail(
   orderEmailsEnabled: boolean
 ): Promise<{ sent: boolean; status?: OrderStatus; scheduleReview?: boolean }> {
   if (!isEmailsEnabled() || !orderEmailsEnabled) return { sent: false };
-  if (!order.userEmail?.trim()) return { sent: false };
+  if (!resolveOrderCustomerEmail(order)) return { sent: false };
   if (order.status === previousStatus) return { sent: false };
   if (!NOTIFIABLE_STATUSES.includes(order.status)) return { sent: false };
   if (order.statusEmailsSent?.[order.status]) return { sent: false };
@@ -832,9 +875,17 @@ export async function trySendOrderStatusEmail(
 export async function sendOrderStatusEmail(order: Order, status: OrderStatus): Promise<boolean> {
   const templateId = STATUS_TEMPLATE_ID[status] ?? "order_processing";
   const automationKey = STATUS_AUTOMATION_KEY[status];
-  const { vars, appendHtml } = buildTemplateVariables(templateId, { order });
+  const recipient = resolveOrderCustomerEmail(order);
+  if (!recipient) {
+    console.error(`[ORDER EMAIL] Missing recipient for ${templateId} — ${order.purchaseCode}`);
+    return false;
+  }
 
-  return sendTemplatedEmail(templateId, order.userEmail, vars, {
+  logProductionOrderEmail(templateId, order);
+  const orderForTemplate = order.status === status ? order : { ...order, status };
+  const { vars, appendHtml } = buildTemplateVariables(templateId, { order: orderForTemplate });
+
+  return sendTemplatedEmail(templateId, recipient, vars, {
     appendHtml,
     logType: STATUS_LOG_TYPE[status] ?? "order_status",
     automationKey,
@@ -842,9 +893,16 @@ export async function sendOrderStatusEmail(order: Order, status: OrderStatus): P
 }
 
 export async function sendTrackingEmail(order: Order, awb: string): Promise<boolean> {
+  const recipient = resolveOrderCustomerEmail(order);
+  if (!recipient) {
+    console.error(`[ORDER EMAIL] Missing recipient for order_shipped — ${order.purchaseCode}`);
+    return false;
+  }
+
+  logProductionOrderEmail("order_shipped", order);
   const { vars, appendHtml } = buildTemplateVariables("order_shipped", { order, awb });
 
-  return sendTemplatedEmail("order_shipped", order.userEmail, vars, {
+  return sendTemplatedEmail("order_shipped", recipient, vars, {
     appendHtml,
     logType: "order_shipped",
     automationKey: "orderShipped",
@@ -865,6 +923,7 @@ export async function trySendAdminNewOrderEmail(
 
 export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
   const adminEmail = getOrdersNotificationEmail();
+  logProductionOrderEmail("admin_new_order", order);
   const { vars, appendHtml } = buildTemplateVariables("admin_new_order", { order });
 
   console.log(`[ADMIN] Notificare comandă nouă ${order.purchaseCode} → ${adminEmail}`);
@@ -891,11 +950,13 @@ export async function trySendAdminOrderCancelledEmail(
 
 export async function sendAdminOrderCancelledEmail(order: Order): Promise<boolean> {
   const adminEmail = getOrdersNotificationEmail();
-  const { vars } = buildTemplateVariables("admin_order_cancelled", { order });
+  logProductionOrderEmail("admin_order_cancelled", order);
+  const { vars, appendHtml } = buildTemplateVariables("admin_order_cancelled", { order });
 
   console.log(`[ADMIN] Notificare comandă anulată ${order.purchaseCode} → ${adminEmail}`);
 
   return sendTemplatedEmail("admin_order_cancelled", adminEmail, vars, {
+    appendHtml,
     logType: "admin_order_cancelled",
     automationKey: "adminOrderCancelled",
     fromRole: "noreply",
@@ -1071,7 +1132,8 @@ export async function sendReviewSubmissionEmails(input: {
 }
 
 export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
-  if (!order.userEmail?.trim()) return false;
+  const recipient = resolveOrderCustomerEmail(order);
+  if (!recipient) return false;
 
   const reviewOn = await isAutomationEnabled("reviewRequest");
   if (!reviewOn) {
@@ -1079,9 +1141,11 @@ export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
     return false;
   }
 
-  const { vars } = buildTemplateVariables("review_request", { order });
+  logProductionOrderEmail("review_request", order);
+  const { vars, appendHtml } = buildTemplateVariables("review_request", { order });
 
-  return sendTemplatedEmail("review_request", order.userEmail, vars, {
+  return sendTemplatedEmail("review_request", recipient, vars, {
+    appendHtml,
     logType: "review_request",
     automationKey: "reviewRequest",
   });
@@ -1089,7 +1153,7 @@ export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
 
 export async function scheduleReviewRequestAfterDelivery(order: Order): Promise<string | null> {
   if (order.reviewEmailSent) return null;
-  if (!order.userEmail?.trim()) return null;
+  if (!resolveOrderCustomerEmail(order)) return null;
   if (!(await isAutomationEnabled("reviewRequest"))) return null;
 
   const meta = await getAutomationMeta("reviewRequest");

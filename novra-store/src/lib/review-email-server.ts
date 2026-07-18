@@ -1,7 +1,7 @@
 import "server-only";
 
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
-import { normalizeOrder, type Order } from "@/lib/orders";
+import { normalizeOrder, resolveOrderCustomerEmail, type Order } from "@/lib/orders";
 import { sendReviewRequestEmail } from "@/lib/email";
 
 const ORDERS_FILE = "orders.json";
@@ -22,7 +22,7 @@ export async function processDueReviewRequests(): Promise<{ sent: number; checke
     const order = orders[index];
     if (order.reviewEmailSent) continue;
     if (!order.reviewEmailDueAt) continue;
-    if (!order.userEmail?.trim()) continue;
+    if (!resolveOrderCustomerEmail(order)) continue;
 
     checked += 1;
     const dueAt = Date.parse(order.reviewEmailDueAt);
