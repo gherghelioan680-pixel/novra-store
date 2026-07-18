@@ -409,7 +409,7 @@ export default function AdminSetariPage() {
               <ol className="list-decimal list-inside space-y-1 text-gray-400">
                 <li>Vizitatorul introduce emailul pe pagina Coming Soon (sau homepage).</li>
                 <li>Se salvează în Redis/newsletter și se generează cod <code className="text-purple-300">NOVRA10-XXXX</code> cu procentul din „Coduri reducere newsletter”.</li>
-                <li>Dacă <code className="text-purple-300">RESEND_API_KEY</code> este configurat, codul se trimite automat pe email.</li>
+                <li>Codul de reducere se afișează imediat pe pagină după abonare.</li>
                 <li>La prima comandă, clientul aplică codul la checkout — validare single-use per email.</li>
               </ol>
             </div>
@@ -764,65 +764,22 @@ export default function AdminSetariPage() {
         <section className="rounded-2xl border border-white/10 bg-novra-card/30 p-5 sm:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <Mail size={20} className="text-purple-400" />
-            Email comenzi (Resend)
+            Email
           </h2>
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge
-                ok={integrations?.email.configured ?? false}
-                label={
-                  integrations?.email.configured
-                    ? "Resend configurat"
-                    : "Resend neconfigurat"
-                }
-              />
-              <StatusBadge
-                ok={(integrations?.email.configured && integrations?.email.enabled) ?? false}
-                label={
-                  integrations?.email.configured && integrations?.email.enabled
-                    ? "Emailuri comenzi active"
-                    : "Emailuri comenzi inactive"
-                }
-              />
+              <StatusBadge ok={false} label="Email dezactivat" />
             </div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.orderEmailsEnabled}
-                onChange={(e) => {
-                  markDirty();
-                  setSettings((prev) => ({ ...prev, orderEmailsEnabled: e.target.checked }));
-                }}
-                className="h-4 w-4 rounded border-white/20 bg-novra-bg/50 text-purple-600 focus:ring-purple-500/50"
-              />
-              <span className="text-sm text-gray-300">Trimite email confirmare la plasarea comenzii</span>
-            </label>
-            {!integrations?.email.configured && (
-              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90 leading-relaxed">
-                Adaugă cheile în Vercel Environment Variables (sau în <code className="text-amber-100">.env.local</code>{" "}
-                local), apoi redeploy:
-                <br />
-                <code className="text-amber-100">RESEND_API_KEY</code> (secret, server) și{" "}
-                <code className="text-amber-100">RESEND_FROM_EMAIL</code> (ex.{" "}
-                <code className="text-amber-100">NOVRA &lt;onboarding@resend.dev&gt;</code> pentru test, sau{" "}
-                <code className="text-amber-100">NOVRA &lt;comenzi@novra.ro&gt;</code> după verificarea domeniului).
-              </p>
-            )}
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Necesită <code className="text-purple-300">RESEND_API_KEY</code> și{" "}
-              <code className="text-purple-300">RESEND_FROM_EMAIL</code> (domeniu verificat în Resend) în
-              Vercel Environment Variables sau <code className="text-purple-300">.env.local</code>.
-              Ramburs: email imediat la plasare. Card: email după confirmarea plății Stripe.
-              La salvarea AWB în Comenzi se trimite automat email de tracking.
+            <p className="rounded-xl border border-white/8 bg-novra-bg/30 px-4 py-3 text-sm text-gray-400 leading-relaxed">
+              Trimiterea de emailuri către clienți este <strong className="text-gray-300">dezactivată</strong>.
+              Magazinul funcționează fără configurare DNS sau serviciu email.
             </p>
-            <button
-              type="button"
-              onClick={() => handleSaveSettings("Setările email au fost salvate.")}
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
-            >
-              <Save size={16} />
-              Salvează email
-            </button>
+            <ul className="text-xs text-gray-500 leading-relaxed list-disc list-inside space-y-1">
+              <li>Newsletter: codul de reducere apare direct pe pagină după abonare.</li>
+              <li>Comenzi: codul de comandă apare pe pagina de confirmare.</li>
+              <li>Resetare parolă: contactează suportul la support@novra.ro.</li>
+              <li>AWB / status comandă: vizibile în contul client și la urmărire comandă.</li>
+            </ul>
           </div>
         </section>
 

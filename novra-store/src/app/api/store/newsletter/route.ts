@@ -11,6 +11,7 @@ import {
 import { formatDiscountSuccessMessage } from "@/lib/discount-codes";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
+import { isEmailsEnabled } from "@/lib/emails-enabled";
 
 export const runtime = "nodejs";
 
@@ -120,9 +121,10 @@ export async function POST(request: NextRequest) {
     await writeJsonFile(FILE, subscribers);
 
     const sendWelcome =
-      body?.sendWelcomeEmail !== undefined
+      isEmailsEnabled() &&
+      (body?.sendWelcomeEmail !== undefined
         ? Boolean(body.sendWelcomeEmail)
-        : !isAdminAdd;
+        : false);
 
     if (sendWelcome && discountCode) {
       void sendNewsletterWelcomeEmail(

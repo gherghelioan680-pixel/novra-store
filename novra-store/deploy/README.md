@@ -121,7 +121,7 @@ Dacă **nu** aveți acces la VirtualHost, contactați suportul Hostico: *„Am n
 
 ## Variabile de mediu
 
-Copiați `.env.example` → `.env.local` pe server și completați cheile (Stripe, Resend, Redis, etc.). Reporniți PM2 după modificări:
+Copiați `.env.example` → `.env.local` pe server și completați cheile (Stripe, Redis, etc.). Reporniți PM2 după modificări:
 
 ```bash
 pm2 restart novra-store

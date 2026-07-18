@@ -40,7 +40,7 @@ export type SiteSettings = {
   comingSoon: ComingSoonSettings;
   /** Activează opțiunea „Plată cu cardul” (necesită STRIPE_* env vars) */
   cardPaymentEnabled: boolean;
-  /** Trimite email confirmare la plasarea comenzii (necesită RESEND_API_KEY) */
+  /** Trimite email confirmare la plasarea comenzii (necesită EMAILS_ENABLED=true) */
   orderEmailsEnabled: boolean;
   /** Procent reducere implicit pentru codurile newsletter (NOVRA10-XXXX) */
   newsletterDiscountPercent: number;
@@ -111,7 +111,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   marketingTickerMessages: DEFAULT_MARKETING_TICKER_MESSAGES,
   comingSoon: DEFAULT_COMING_SOON,
   cardPaymentEnabled: false,
-  orderEmailsEnabled: true,
+  orderEmailsEnabled: false,
   newsletterDiscountPercent: 10,
   newsletterAutoGenerateCodes: true,
   newsletterWelcomeMessage: DEFAULT_NEWSLETTER_WELCOME_MESSAGE,

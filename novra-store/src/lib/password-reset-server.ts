@@ -47,6 +47,8 @@ export async function consumePasswordResetToken(
   return match.email;
 }
 
+import { isEmailsEnabled } from "./emails-enabled";
+
 export function isPasswordResetConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY);
+  return isEmailsEnabled();
 }

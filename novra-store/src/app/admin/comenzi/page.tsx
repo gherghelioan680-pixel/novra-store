@@ -60,7 +60,7 @@ export default function AdminComenziPage() {
       setAwbMessage((prev) => ({
         ...prev,
         [order.id]: awb
-          ? "AWB salvat. Email de tracking trimis (dacă Resend este configurat)."
+          ? "AWB salvat."
           : "AWB șters.",
       }));
       setTimeout(() => {

@@ -3,6 +3,7 @@ import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import type { NewsletterCampaign } from "@/lib/newsletter";
 import { sendNewsletterBroadcastEmail } from "@/lib/email";
+import { isEmailsEnabled } from "@/lib/emails-enabled";
 
 export const runtime = "nodejs";
 
@@ -108,6 +109,13 @@ export async function POST(request: NextRequest) {
 
       if (emails.length === 0) {
         return Response.json({ error: "Nu există abonați pentru trimitere." }, { status: 400 });
+      }
+
+      if (!isEmailsEnabled()) {
+        return Response.json(
+          { error: "Trimiterea de emailuri este dezactivată. Campaniile nu pot fi trimise." },
+          { status: 503 }
+        );
       }
 
       const result = await sendNewsletterBroadcastEmail(emails, campaign.subject, campaign.body);
