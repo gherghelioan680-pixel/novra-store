@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
+import ProductImage from "@/components/produse/ProductImage";
 import { useTranslations } from "next-intl";
 import {
   ArrowRight,
@@ -69,12 +69,13 @@ export default function DespreNoi() {
       <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <motion.div {...fadeUp} className="relative h-64 sm:h-80 lg:h-[420px] rounded-3xl overflow-hidden border border-novra-border">
-            <Image
-              src="/technologie.png"
+            <ProductImage
+              src="/products/cabluri/albastru.png"
+              category="usb-c"
               alt={t("storyImageAlt")}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              className="object-contain object-center p-6 sm:p-8"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-novra-bg/80 via-transparent to-transparent" />
           </motion.div>

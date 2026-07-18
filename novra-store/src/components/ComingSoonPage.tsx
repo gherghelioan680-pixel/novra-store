@@ -33,6 +33,7 @@ const COMING_SOON_COUNTDOWN_ID = "coming-soon-countdown";
 type ComingSoonPageProps = {
   settings: ComingSoonSettings;
   whatsappNumber: string;
+  instagramUrl?: string;
   initialTimeLeft?: TimeLeft | null;
   newsletterDiscountPercent?: number;
 };
@@ -156,6 +157,7 @@ function getCountdownDate(settings: ComingSoonSettings): Date | null {
 export default function ComingSoonPage({
   settings,
   whatsappNumber,
+  instagramUrl,
   initialTimeLeft,
   newsletterDiscountPercent = 10,
 }: ComingSoonPageProps) {
@@ -377,15 +379,17 @@ export default function ComingSoonPage({
           )}
 
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-200 transition hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-white"
-            >
-              <FaInstagram size={16} className="text-purple-400" aria-hidden />
-              Instagram
-            </a>
+            {instagramUrl?.trim() ? (
+              <a
+                href={instagramUrl.trim()}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-200 transition hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-white"
+              >
+                <FaInstagram size={16} className="text-purple-400" aria-hidden />
+                Instagram
+              </a>
+            ) : null}
             <a
               href={buildWhatsAppUrl(whatsappNumber, t("whatsappMessage"))}
               target="_blank"
