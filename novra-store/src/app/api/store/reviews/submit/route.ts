@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { sendReviewSubmissionEmails } from "@/lib/email";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
+import { createPendingReview, parseReviewRating } from "@/lib/reviews-server";
 
 export const runtime = "nodejs";
 
@@ -9,8 +10,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-    const rating = typeof body?.rating === "string" ? body.rating.trim() : "";
-    const message = typeof body?.message === "string" ? body.message.trim() : "";
+    const ratingRaw = body?.rating ?? "";
+    const rating =
+      typeof ratingRaw === "string" ? ratingRaw.trim() : String(ratingRaw ?? "").trim();
+    const message =
+      typeof body?.message === "string"
+        ? body.message.trim()
+        : typeof body?.text === "string"
+          ? body.text.trim()
+          : typeof body?.comment === "string"
+            ? body.comment.trim()
+            : "";
+    const title = typeof body?.title === "string" ? body.title.trim() : undefined;
+    const product = typeof body?.product === "string" ? body.product.trim() : undefined;
 
     if (!name || !email || !rating || !message) {
       return Response.json({ ok: false, message: "Completează toate câmpurile." }, { status: 400 });
@@ -20,33 +32,31 @@ export async function POST(request: NextRequest) {
       return Response.json({ ok: false, message: "Adresa de email este invalidă." }, { status: 400 });
     }
 
-    if (!isEmailsEnabled()) {
-      return Response.json(
-        {
-          ok: false,
-          message: "Trimiterea recenziilor prin email nu este activă momentan. Contactează-ne la support@novra.ro.",
-        },
-        { status: 503 }
-      );
-    }
+    const review = await createPendingReview({
+      name,
+      email,
+      rating: parseReviewRating(rating),
+      comment: message,
+      title,
+      product,
+    });
 
-    const result = await sendReviewSubmissionEmails({ name, email, rating, message });
+    let confirmationSent = false;
+    let adminSent = false;
 
-    if (!result.confirmationSent && !result.adminSent) {
-      return Response.json(
-        {
-          ok: false,
-          message: "Recenzia nu a putut fi trimisă. Verifică setările SMTP și automatizările din Email Center.",
-        },
-        { status: 500 }
-      );
+    if (isEmailsEnabled()) {
+      const result = await sendReviewSubmissionEmails({ name, email, rating, message });
+      confirmationSent = result.confirmationSent;
+      adminSent = result.adminSent;
     }
 
     return Response.json({
       ok: true,
-      message: "Recenzia a fost trimisă cu succes.",
-      confirmationSent: result.confirmationSent,
-      adminSent: result.adminSent,
+      message:
+        "Recenzia ta a fost trimisă și va apărea pe site după aprobare. Mulțumim!",
+      reviewId: review.id,
+      confirmationSent,
+      adminSent,
     });
   } catch (error) {
     console.error("[ERROR] reviews/submit POST:", error);

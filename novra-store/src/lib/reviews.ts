@@ -1,13 +1,27 @@
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
 export type Review = {
   id: number;
   name: string;
+  email?: string;
   location: string;
   rating: number;
+  title?: string;
   comment: string;
+  product?: string;
   date: string;
+  status: ReviewStatus;
+  createdAt?: string;
+  publishedAt?: string;
+};
+
+export const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
+  pending: "În așteptare",
+  approved: "Aprobată",
+  rejected: "Respinsă",
 };
 
 export const featuredReviews: Review[] = [
@@ -17,6 +31,7 @@ export const featuredReviews: Review[] = [
     location: "București, RO",
     rating: 5,
     date: "Mai 2026",
+    status: "approved",
     comment:
       "Calitatea produselor NOVRA depășește orice așteptare. Ambalaj premium și livrare rapidă. Recomand cu toată încrederea!",
   },
@@ -26,6 +41,7 @@ export const featuredReviews: Review[] = [
     location: "Cluj-Napoca, RO",
     rating: 5,
     date: "Iunie 2026",
+    status: "approved",
     comment:
       "Produsul a ajuns a doua zi, ambalat impecabil. Design minimalist, exact ce căutam. Un brand românesc de calitate internațională.",
   },
@@ -35,10 +51,28 @@ export const featuredReviews: Review[] = [
     location: "Timișoara, RO",
     rating: 5,
     date: "Aprilie 2026",
+    status: "approved",
     comment:
       "Un amestec perfect de eleganță și utilitate. Materialele se simt incredibil de premium. Cu siguranță voi mai comanda de aici.",
   },
 ];
+
+function normalizeClientReview(raw: Partial<Review> & { id: number }): Review {
+  return {
+    id: raw.id,
+    name: String(raw.name ?? "").trim() || "Client",
+    email: raw.email?.trim(),
+    location: String(raw.location ?? "România").trim() || "România",
+    rating: typeof raw.rating === "number" ? raw.rating : 5,
+    title: raw.title?.trim(),
+    comment: String(raw.comment ?? "").trim(),
+    product: raw.product?.trim(),
+    date: String(raw.date ?? "").trim() || "Recent",
+    status: raw.status === "pending" || raw.status === "rejected" ? raw.status : "approved",
+    createdAt: raw.createdAt,
+    publishedAt: raw.publishedAt,
+  };
+}
 
 export function getReviewAvatarUrl(name: string): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7c3aed&color=fff&size=128&bold=true`;
@@ -67,7 +101,14 @@ export function getAllReviews(): Review[] {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEYS.reviews);
     if (!stored) return featuredReviews;
-    return JSON.parse(stored) as Review[];
+    const parsed = JSON.parse(stored) as Partial<Review>[];
+    return parsed.map((item, index) =>
+      normalizeClientReview({
+        ...item,
+        id: typeof item.id === "number" ? item.id : index + 1,
+        status: item.status ?? "approved",
+      })
+    );
   } catch {
     return featuredReviews;
   }
@@ -107,10 +148,14 @@ export async function saveReviews(reviews: Review[]): Promise<boolean> {
   return persistReviews(reviews);
 }
 
-export async function addReview(review: Omit<Review, "id">): Promise<Review> {
+export async function addReview(review: Omit<Review, "id" | "status"> & { status?: ReviewStatus }): Promise<Review> {
   const reviews = getAllReviews();
   const nextId = reviews.reduce((max, item) => Math.max(max, item.id), 0) + 1;
-  const newReview = { ...review, id: nextId };
+  const newReview = normalizeClientReview({
+    ...review,
+    id: nextId,
+    status: review.status ?? "approved",
+  });
   await persistReviews([newReview, ...reviews]);
   return newReview;
 }
