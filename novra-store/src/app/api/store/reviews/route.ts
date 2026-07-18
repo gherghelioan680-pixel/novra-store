@@ -93,10 +93,22 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ success: false, message: "Recenzia nu a fost găsită." }, { status: 404 });
     }
 
-    if (updated.status === "approved" && previous?.status !== "approved" && updated.email) {
-      void sendReviewApprovedEmail(updated).catch((error) => {
-        console.error("[REVIEWS] Approval email failed:", error);
-      });
+    if (updated.status === "approved" && previous?.status !== "approved") {
+      if (updated.email) {
+        try {
+          console.log(
+            `[REVIEWS] Admin approved review id=${updated.id} name=${updated.name} email=${updated.email}`
+          );
+          const sent = await sendReviewApprovedEmail(updated);
+          console.log(
+            `[REVIEWS] [EMAIL] Approval email sent=${sent} id=${updated.id} → ${updated.email}`
+          );
+        } catch (error) {
+          console.error("[REVIEWS] [EMAIL] Approval email failed:", error);
+        }
+      } else {
+        console.log(`[REVIEWS] [EMAIL] Approval email skipped — no client email on review id=${updated.id}`);
+      }
     }
 
     return Response.json({ success: true, review: updated });

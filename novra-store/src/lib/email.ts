@@ -1,6 +1,7 @@
 import "server-only";
 
 import nodemailer, { type Transporter } from "nodemailer";
+import { formatOrderDate } from "./date-utils";
 import { resolveOrderCustomerEmail, type Order, type OrderStatus } from "./orders";
 import { ORDER_STATUS_LABELS } from "./orders";
 import { buildFanCourierTrackingUrl } from "./tracking";
@@ -377,13 +378,6 @@ export type TemplateVariableContext =
   | { returnRequest: ReturnRequest }
   | { newsletterSubject?: string; newsletterBody?: string; newsletterPreview?: string };
 
-function formatOrderDate(order: Order): string {
-  const raw = order.createdAt?.trim();
-  if (!raw) return "";
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString("ro-RO");
-}
-
 function resolveOrderCustomerName(order: Order): string {
   return (order.address?.name?.trim() || order.userName?.trim() || "").trim();
 }
@@ -442,14 +436,14 @@ export function buildTemplateVariables(
       ...orderTemplateVars(order),
       name: resolveOrderCustomerName(order),
       email: resolveOrderCustomerEmail(order),
-      orderDate: formatOrderDate(order),
-      shippingDate: order.updatedAt ? new Date(order.updatedAt).toLocaleDateString("ro-RO") : "",
-      deliveryDate: order.status === "delivered" ? new Date(order.updatedAt).toLocaleDateString("ro-RO") : "",
+      orderDate: formatOrderDate(order.createdAt),
+      shippingDate: order.updatedAt ? formatOrderDate(order.updatedAt) : "",
+      deliveryDate: order.status === "delivered" && order.updatedAt ? formatOrderDate(order.updatedAt) : "",
       trackingNumber: awb ?? order.awbTracking?.trim() ?? "",
       courier: "Fan Courier",
       reviewUrl,
       paymentIntro: paymentIntro ?? "",
-      registerDate: formatOrderDate(order),
+      registerDate: formatOrderDate(order.createdAt),
     });
 
     let appendHtml = buildOrderSummaryHtml(order, { includeTrackLink: templateId !== "order_shipped" });
@@ -1197,16 +1191,16 @@ export async function sendReviewApprovedEmail(review: {
 }): Promise<boolean> {
   const recipient = review.email?.trim().toLowerCase();
   if (!recipient) {
-    console.log("[REVIEWS] Approval email skipped — no client email for", review.name);
+    console.log("[EMAIL] Review approved skipped — no client email for", review.name);
     return false;
   }
 
   if (!(await isAutomationEnabled("reviewApproved"))) {
-    console.log("[REVIEWS] Approval email skipped — automation disabled for", recipient);
+    console.log("[EMAIL] Review approved skipped — automation disabled for", recipient);
     return false;
   }
 
-  console.log(`[REVIEWS] Sending approval email → ${recipient} (review by ${review.name})`);
+  console.log(`[EMAIL] Review approved → ${recipient} (review by ${review.name})`);
   const { vars } = buildTemplateVariables("review_approved", {
     name: review.name,
     email: recipient,
