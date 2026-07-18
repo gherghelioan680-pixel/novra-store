@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, RotateCcw, Pencil, X, Star, Upload, ImageIcon } from "lucide-react";
+import { Save, RotateCcw, Pencil, X, Star, Upload, ImageIcon, Plus, Trash2 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { requireAdmin } from "@/lib/auth";
 import { getApiHeaders } from "@/lib/api-client";
@@ -14,10 +14,16 @@ import {
   loadProductOverrides,
   saveProductOverride,
   saveProductPriceOverride,
+  createCustomProduct,
+  updateCustomProduct,
+  deleteCustomProduct,
   getBundleSavings,
   getProductImageFolder,
   getProductImagePath,
+  getCustomProductImagePath,
   isBundleProduct,
+  isCustomProductId,
+  slugFromTitle,
   BUNDLE_COLOR_SLUGS,
   type CatalogProduct,
   type ProductOverride,
@@ -25,17 +31,47 @@ import {
 import { subscribeToStoreUpdates } from "@/lib/store";
 
 type EditForm = {
+  id: string;
   title: string;
+  subtitle: string;
   tag: string;
   description: string;
+  category: string;
   basePrice: string;
+  oldPrice: string;
   stockQuantity: string;
   bestseller: boolean;
+  active: boolean;
+  specPower: string;
+  specMaterial: string;
   bundleSavingsOverride: string;
   useAutoBundleSavings: boolean;
 };
 
+const EMPTY_EDIT_FORM: EditForm = {
+  id: "",
+  title: "",
+  subtitle: "",
+  tag: "",
+  description: "",
+  category: "usb-c",
+  basePrice: "",
+  oldPrice: "",
+  stockQuantity: "100",
+  bestseller: false,
+  active: true,
+  specPower: "—",
+  specMaterial: "—",
+  bundleSavingsOverride: "",
+  useAutoBundleSavings: true,
+};
+
 function getProductImageTargets(product: CatalogProduct): Array<{ label: string; path: string }> {
+  if (product.isCustom) {
+    const path = getCustomProductImagePath(product.id);
+    return [{ label: "Imagine principală", path }];
+  }
+
   const folder = getProductImageFolder(product.category);
   const mainPath = getProductImagePath(product).replace(/^\//, "");
   const targets: Array<{ label: string; path: string }> = [
@@ -104,21 +140,13 @@ export default function AdminProdusePage() {
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [editingProduct, setEditingProduct] = useState<CatalogProduct | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [uploadingImagePath, setUploadingImagePath] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
-  const [editForm, setEditForm] = useState<EditForm>({
-    title: "",
-    tag: "",
-    description: "",
-    basePrice: "",
-    stockQuantity: "",
-    bestseller: false,
-    bundleSavingsOverride: "",
-    useAutoBundleSavings: true,
-  });
+  const [editForm, setEditForm] = useState<EditForm>(EMPTY_EDIT_FORM);
 
   const applyProductList = () => {
-    const list = getCatalogProducts();
+    const list = getCatalogProducts(true);
     const overrides = getProductOverrides();
     const initial: Record<string, string> = {};
     const initialStock: Record<string, string> = {};
@@ -203,17 +231,37 @@ export default function AdminProdusePage() {
     showMessage(next ? "Produs marcat ca Bestseller." : "Badge Bestseller dezactivat.");
   };
 
+  const openCreateModal = () => {
+    setEditingProduct(null);
+    setIsCreating(true);
+    setEditForm({ ...EMPTY_EDIT_FORM });
+  };
+
+  const closeEditorModal = () => {
+    setEditingProduct(null);
+    setIsCreating(false);
+    setEditForm({ ...EMPTY_EDIT_FORM });
+  };
+
   const openEditModal = (product: CatalogProduct) => {
     const overrides = getProductOverrides()[product.id];
     const autoSavings = getBundleSavings(product);
+    setIsCreating(false);
     setEditingProduct(product);
     setEditForm({
+      id: product.id,
       title: product.title,
+      subtitle: product.subtitle,
       tag: product.tag,
       description: product.description,
+      category: product.category,
       basePrice: product.basePrice.toFixed(2),
+      oldPrice: product.oldPrice != null ? product.oldPrice.toFixed(2) : "",
       stockQuantity: String(getProductStockQuantity(product)),
       bestseller: product.bestseller === true,
+      active: product.active !== false && overrides?.active !== false,
+      specPower: product.specs.power,
+      specMaterial: product.specs.material,
       bundleSavingsOverride:
         overrides?.bundleSavingsOverride != null
           ? String(overrides.bundleSavingsOverride)
@@ -236,9 +284,25 @@ export default function AdminProdusePage() {
     showMessage(result.message);
   };
 
-  const handleSaveFullEdit = async () => {
-    if (!editingProduct) return;
+  const handleDeleteProduct = async (product: CatalogProduct) => {
+    if (!isCustomProductId(product.id)) {
+      showMessage("Doar produsele adăugate manual pot fi șterse.");
+      return;
+    }
 
+    if (!window.confirm(`Ștergi produsul „${product.title}”?`)) return;
+
+    const result = await deleteCustomProduct(product.id);
+    if (!result.ok) {
+      showMessage(result.message);
+      return;
+    }
+
+    await reloadProducts();
+    showMessage("Produs șters.");
+  };
+
+  const handleSaveFullEdit = async () => {
     const price = parseFloat(editForm.basePrice);
     if (isNaN(price) || price <= 0) {
       showMessage("Introdu un preț valid.");
@@ -256,6 +320,87 @@ export default function AdminProdusePage() {
       return;
     }
 
+    const oldPrice = editForm.oldPrice.trim()
+      ? parseFloat(editForm.oldPrice)
+      : undefined;
+    if (oldPrice !== undefined && (isNaN(oldPrice) || oldPrice < 0)) {
+      showMessage("Introdu un preț vechi valid sau lasă câmpul gol.");
+      return;
+    }
+
+    if (isCreating) {
+      const productId = editForm.id.trim() || slugFromTitle(editForm.title);
+      const result = await createCustomProduct({
+        id: productId,
+        title: editForm.title.trim(),
+        subtitle: editForm.subtitle.trim() || editForm.title.trim(),
+        category: editForm.category,
+        basePrice: price,
+        oldPrice,
+        stockQuantity: stock,
+        tag: editForm.tag.trim() || "Nou",
+        description: editForm.description.trim(),
+        bestseller: editForm.bestseller,
+        active: editForm.active,
+        imageSrc: `/products/custom/${productId}.png`,
+        specs: {
+          power: editForm.specPower.trim() || "—",
+          speed: "—",
+          material: editForm.specMaterial.trim() || "—",
+          chip: "—",
+        },
+        options: [],
+        modifiers: [],
+      });
+
+      if (!result.ok) {
+        showMessage(result.message);
+        return;
+      }
+
+      closeEditorModal();
+      await reloadProducts();
+      showMessage("Produs creat! Apare imediat pe site.");
+      return;
+    }
+
+    if (editingProduct && isCustomProductId(editingProduct.id)) {
+      const result = await updateCustomProduct({
+        id: editingProduct.id,
+        title: editForm.title.trim(),
+        subtitle: editForm.subtitle.trim() || editForm.title.trim(),
+        category: editForm.category,
+        basePrice: price,
+        oldPrice,
+        stockQuantity: stock,
+        tag: editForm.tag.trim() || "Nou",
+        description: editForm.description.trim(),
+        bestseller: editForm.bestseller,
+        active: editForm.active,
+        imageSrc: editingProduct.imageSrc,
+        specs: {
+          power: editForm.specPower.trim() || "—",
+          speed: editingProduct.specs.speed,
+          material: editForm.specMaterial.trim() || "—",
+          chip: editingProduct.specs.chip,
+        },
+        options: editingProduct.options,
+        modifiers: editingProduct.modifiers,
+      });
+
+      if (!result.ok) {
+        showMessage(result.message);
+        return;
+      }
+
+      closeEditorModal();
+      await reloadProducts();
+      showMessage("Produs actualizat! Modificările sunt active imediat pe site.");
+      return;
+    }
+
+    if (!editingProduct) return;
+
     const updates: ProductOverride = {
       title: editForm.title.trim(),
       tag: editForm.tag.trim(),
@@ -263,9 +408,14 @@ export default function AdminProdusePage() {
       basePrice: price,
       stockQuantity: stock,
       bestseller: editForm.bestseller,
+      active: editForm.active,
     };
 
-    if (editingProduct && isBundleProduct(editingProduct.category)) {
+    if (oldPrice !== undefined) {
+      updates.oldPrice = oldPrice;
+    }
+
+    if (isBundleProduct(editingProduct.category)) {
       if (editForm.useAutoBundleSavings) {
         updates.bundleSavingsOverride = null;
       } else {
@@ -284,7 +434,7 @@ export default function AdminProdusePage() {
       return;
     }
 
-    setEditingProduct(null);
+    closeEditorModal();
     await reloadProducts();
     showMessage("Produs actualizat! Modificările sunt active imediat pe site.");
   };
@@ -306,10 +456,20 @@ export default function AdminProdusePage() {
         </div>
       )}
 
-      <p className="mb-6 text-sm text-gray-500">
-        Editează prețuri, titluri, tag-uri și descrieri. Modificările se salvează pe server și
-        apar pe toate dispozitivele (desktop, telefon) după reîncărcare sau în max. 30 secunde.
-      </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-gray-500">
+          Editează prețuri, titluri, tag-uri și descrieri. Modificările se salvează pe server și
+          apar pe toate dispozitivele (desktop, telefon) după reîncărcare sau în max. 30 secunde.
+        </p>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
+        >
+          <Plus size={16} />
+          Adaugă produs nou
+        </button>
+      </div>
 
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
         <table className="w-full min-w-[720px] text-left text-sm">
@@ -331,7 +491,19 @@ export default function AdminProdusePage() {
                 <td className="px-4 py-4 sm:px-6">
                   <p className="font-medium text-white">{product.title}</p>
                   <p className="text-xs text-gray-500 line-clamp-2 max-w-xs">{product.description}</p>
-                  <p className="text-[10px] text-gray-600 mt-1">{product.id}</p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <p className="text-[10px] text-gray-600">{product.id}</p>
+                    {product.isCustom && (
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] text-emerald-300">
+                        Personalizat
+                      </span>
+                    )}
+                    {product.active === false && (
+                      <span className="rounded-full bg-gray-500/15 px-2 py-0.5 text-[10px] text-gray-400">
+                        Ascuns
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-4">
                   <span className="rounded-full bg-purple-600/15 px-2 py-0.5 text-xs text-purple-300">
@@ -440,6 +612,16 @@ export default function AdminProdusePage() {
                       <Pencil size={14} />
                       Editează
                     </button>
+                    {product.isCustom && (
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteProduct(product)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:border-red-500/40"
+                      >
+                        <Trash2 size={14} />
+                        Șterge
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -457,17 +639,21 @@ export default function AdminProdusePage() {
         Reîncarcă
       </button>
 
-      {editingProduct && (
+      {(editingProduct || isCreating) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-novra-card p-6 shadow-2xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-novra-card p-6 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-white">Editează produs</h3>
-                <p className="text-xs text-gray-500">{editingProduct.id}</p>
+                <h3 className="text-lg font-semibold text-white">
+                  {isCreating ? "Adaugă produs nou" : "Editează produs"}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {isCreating ? "Produs nou în catalog" : editingProduct?.id}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setEditingProduct(null)}
+                onClick={closeEditorModal}
                 className="rounded-lg p-1 text-gray-400 hover:bg-white/10 hover:text-white"
                 aria-label="Închide"
               >
@@ -476,13 +662,58 @@ export default function AdminProdusePage() {
             </div>
 
             <div className="space-y-4">
+              {isCreating && (
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">
+                    Slug / ID
+                  </label>
+                  <input
+                    value={editForm.id}
+                    onChange={(e) => setEditForm({ ...editForm, id: e.target.value })}
+                    placeholder={slugFromTitle(editForm.title || "produs-nou")}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                  <p className="mt-1 text-[10px] text-gray-500">
+                    Se generează automat din nume dacă lași gol.
+                  </p>
+                </div>
+              )}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Titlu</label>
+                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Nume</label>
                 <input
                   value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      title: e.target.value,
+                      id: isCreating && !editForm.id.trim() ? slugFromTitle(e.target.value) : editForm.id,
+                    })
+                  }
                   className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Subtitlu</label>
+                <input
+                  value={editForm.subtitle}
+                  onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Categorie</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  disabled={!isCreating && editingProduct != null && !editingProduct.isCustom}
+                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50 disabled:opacity-60"
+                >
+                  {CATALOG_CATEGORIES.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Tag</label>
@@ -492,16 +723,29 @@ export default function AdminProdusePage() {
                   className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Preț (RON)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editForm.basePrice}
-                  onChange={(e) => setEditForm({ ...editForm, basePrice: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Preț (RON)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.basePrice}
+                    onChange={(e) => setEditForm({ ...editForm, basePrice: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Preț vechi (opțional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.oldPrice}
+                    onChange={(e) => setEditForm({ ...editForm, oldPrice: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Stoc (bucăți)</label>
@@ -533,6 +777,35 @@ export default function AdminProdusePage() {
                 />
                 <span className="text-sm text-gray-300">Afișează badge „Bestseller” pe site</span>
               </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editForm.active}
+                  onChange={(e) => setEditForm({ ...editForm, active: e.target.checked })}
+                  className="h-4 w-4 rounded border-white/20 bg-novra-bg/50 text-purple-500 focus:ring-purple-500/50"
+                />
+                <span className="text-sm text-gray-300">Produs activ / vizibil pe site</span>
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Specificație putere</label>
+                  <input
+                    value={editForm.specPower}
+                    onChange={(e) => setEditForm({ ...editForm, specPower: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs uppercase tracking-widest text-gray-500">Specificație material</label>
+                  <input
+                    value={editForm.specMaterial}
+                    onChange={(e) => setEditForm({ ...editForm, specMaterial: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                  />
+                </div>
+              </div>
 
               {editingProduct && isBundleProduct(editingProduct.category) && (
                 <div className="rounded-xl border border-white/8 bg-novra-bg/30 p-4 space-y-3">
@@ -570,14 +843,22 @@ export default function AdminProdusePage() {
                 </div>
               )}
 
-              {editingProduct && (
+              {(editingProduct || isCreating) && (
                 <div className="rounded-xl border border-white/8 bg-novra-bg/30 p-4 space-y-3">
                   <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-500">
                     <ImageIcon size={14} className="text-purple-400" />
                     Imagini produs
                   </p>
                   <div className="space-y-3">
-                    {getProductImageTargets(editingProduct).map((target) => (
+                    {(editingProduct
+                      ? getProductImageTargets(editingProduct)
+                      : [
+                          {
+                            label: "Imagine principală",
+                            path: getCustomProductImagePath(editForm.id.trim() || slugFromTitle(editForm.title || "produs-nou")),
+                          },
+                        ]
+                    ).map((target) => (
                       <div
                         key={target.path}
                         className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-white/8 bg-novra-bg/40 p-3"
@@ -620,15 +901,15 @@ export default function AdminProdusePage() {
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={handleSaveFullEdit}
+                onClick={() => void handleSaveFullEdit()}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-700"
               >
                 <Save size={16} />
-                Salvează modificările
+                {isCreating ? "Creează produsul" : "Salvează modificările"}
               </button>
               <button
                 type="button"
-                onClick={() => setEditingProduct(null)}
+                onClick={closeEditorModal}
                 className="rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-400 hover:text-white"
               >
                 Anulează

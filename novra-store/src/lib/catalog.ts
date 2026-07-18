@@ -9,12 +9,15 @@ export type CatalogProduct = {
   subtitle: string;
   category: string;
   basePrice: number;
+  oldPrice?: number;
   stockQuantity: number;
   imageSrc: string;
   image: string;
   tag: string;
   description: string;
   bestseller?: boolean;
+  active?: boolean;
+  isCustom?: boolean;
   specs: {
     power: string;
     speed: string;
@@ -23,6 +26,26 @@ export type CatalogProduct = {
   };
   options: string[];
   modifiers: number[];
+};
+
+export type StoredCustomProduct = {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  basePrice: number;
+  oldPrice?: number;
+  stockQuantity: number;
+  imageSrc?: string;
+  tag: string;
+  description: string;
+  bestseller?: boolean;
+  active: boolean;
+  specs: CatalogProduct["specs"];
+  options: string[];
+  modifiers: number[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export const PRODUCT_IMAGE_FOLDER: Record<string, string> = {
@@ -93,6 +116,22 @@ function withProductImages(
     imageSrc,
     image: product.image ?? imageSrc,
   };
+}
+
+export function withProductImagesFromStored(stored: StoredCustomProduct): CatalogProduct {
+  const imageSrc =
+    stored.imageSrc?.trim() ||
+    `/products/custom/${stored.id}.png` ||
+    getProductImageFallback(stored.category);
+  return withProductImages({
+    ...stored,
+    isCustom: true,
+    imageSrc,
+  });
+}
+
+export function getCustomProductImagePath(productId: string): string {
+  return `products/custom/${productId}.png`;
 }
 
 export const CATALOG_PRODUCTS: CatalogProduct[] = [
@@ -324,12 +363,39 @@ export const getBundleVariantLabel = (adapterIdx: number, cableIdx: number) =>
 export type ProductOverride = Partial<
   Pick<
     CatalogProduct,
-    "title" | "description" | "tag" | "basePrice" | "bestseller" | "stockQuantity"
+    | "title"
+    | "description"
+    | "tag"
+    | "basePrice"
+    | "oldPrice"
+    | "bestseller"
+    | "stockQuantity"
+    | "active"
+    | "imageSrc"
   >
 > & {
   /** Suprascrie economiile bundle calculate automat; null = folosește calculul automat */
   bundleSavingsOverride?: number | null;
 };
+
+const CUSTOM_PRODUCTS_CACHE_KEY = "novra-custom-products";
+
+let cachedCustomProducts: CatalogProduct[] = [];
+
+function isProductVisible(product: CatalogProduct, includeInactive: boolean): boolean {
+  if (includeInactive) return true;
+  const overrideActive = getProductOverrides()[product.id]?.active;
+  if (overrideActive === false) return false;
+  return product.active !== false;
+}
+
+export function getCachedCustomProducts(includeInactive = false): CatalogProduct[] {
+  return cachedCustomProducts.filter((product) => isProductVisible(product, includeInactive));
+}
+
+export function isCustomProductId(productId: string): boolean {
+  return cachedCustomProducts.some((product) => product.id === productId);
+}
 
 export function getProductStockQuantity(
   product: Pick<CatalogProduct, "id" | "stockQuantity">
@@ -415,6 +481,31 @@ function cacheProductOverrides(overrides: Record<string, ProductOverride>): void
   }
 }
 
+function cacheCustomProducts(products: StoredCustomProduct[]): void {
+  cachedCustomProducts = products.map(withProductImagesFromStored);
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(CUSTOM_PRODUCTS_CACHE_KEY, JSON.stringify(products));
+  } catch {
+    /* ignore */
+  }
+}
+
+function readCachedCustomProductsFromStorage(): StoredCustomProduct[] {
+  if (!isBrowser()) return [];
+  try {
+    const stored = window.localStorage.getItem(CUSTOM_PRODUCTS_CACHE_KEY);
+    if (!stored) return [];
+    return JSON.parse(stored) as StoredCustomProduct[];
+  } catch {
+    return [];
+  }
+}
+
+if (isBrowser()) {
+  cachedCustomProducts = readCachedCustomProductsFromStorage().map(withProductImagesFromStored);
+}
+
 export function getProductOverrides(): Record<string, ProductOverride> {
   if (!isBrowser()) return {};
 
@@ -428,7 +519,15 @@ export function getProductOverrides(): Record<string, ProductOverride> {
 }
 
 export async function loadProductOverrides(): Promise<Record<string, ProductOverride>> {
-  const fromApi = await apiFetch<{ overrides: Record<string, ProductOverride> }>("/api/store/products");
+  const fromApi = await apiFetch<{
+    overrides: Record<string, ProductOverride>;
+    customProducts?: StoredCustomProduct[];
+  }>("/api/store/products");
+
+  if (fromApi?.customProducts) {
+    cacheCustomProducts(fromApi.customProducts);
+  }
+
   if (fromApi?.overrides) {
     cacheProductOverrides(fromApi.overrides);
     return fromApi.overrides;
@@ -494,17 +593,130 @@ export function applyPriceOverrides(product: CatalogProduct): CatalogProduct {
   return applyProductOverrides(product);
 }
 
-export function getCatalogProducts(): CatalogProduct[] {
-  return CATALOG_PRODUCTS.map(applyProductOverrides);
+function getAllCatalogBaseProducts(includeInactive = false): CatalogProduct[] {
+  const builtIn = CATALOG_PRODUCTS.filter((product) => isProductVisible(product, includeInactive));
+  const custom = getCachedCustomProducts(includeInactive);
+  return [...builtIn, ...custom];
 }
 
-export function getProductsByCategory(category: string): CatalogProduct[] {
-  return getCatalogProducts().filter((p) => p.category === category);
+export function getCatalogProducts(includeInactive = false): CatalogProduct[] {
+  return getAllCatalogBaseProducts(includeInactive).map(applyProductOverrides);
 }
 
-export function getProductById(id: string): CatalogProduct | undefined {
-  const product = CATALOG_PRODUCTS.find((p) => p.id === id);
+export function getProductsByCategory(category: string, includeInactive = false): CatalogProduct[] {
+  return getCatalogProducts(includeInactive).filter((product) => product.category === category);
+}
+
+export function getProductById(id: string, includeInactive = false): CatalogProduct | undefined {
+  const product = getAllCatalogBaseProducts(includeInactive).find((entry) => entry.id === id);
   return product ? applyProductOverrides(product) : undefined;
+}
+
+export async function createCustomProduct(
+  input: Omit<StoredCustomProduct, "createdAt" | "updatedAt"> & {
+    createdAt?: string;
+    updatedAt?: string;
+  }
+): Promise<{ ok: true; product: StoredCustomProduct } | { ok: false; message: string }> {
+  if (!isBrowser()) {
+    return { ok: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
+  }
+
+  try {
+    const response = await fetch("/api/store/products", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "create", product: input }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      message?: string;
+      product?: StoredCustomProduct;
+      customProducts?: StoredCustomProduct[];
+    };
+
+    if (!response.ok || !data.ok || !data.product) {
+      return { ok: false, message: data.message ?? "Nu s-a putut crea produsul." };
+    }
+
+    if (data.customProducts) {
+      cacheCustomProducts(data.customProducts);
+    }
+    dispatchStoreUpdate({ scope: "products" });
+    return { ok: true, product: data.product };
+  } catch {
+    return { ok: false, message: "Nu s-a putut crea produsul." };
+  }
+}
+
+export async function updateCustomProduct(
+  input: Omit<StoredCustomProduct, "createdAt" | "updatedAt"> & {
+    createdAt?: string;
+    updatedAt?: string;
+  }
+): Promise<{ ok: true; product: StoredCustomProduct } | { ok: false; message: string }> {
+  if (!isBrowser()) {
+    return { ok: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
+  }
+
+  try {
+    const response = await fetch("/api/store/products", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "update", product: input }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      message?: string;
+      product?: StoredCustomProduct;
+      customProducts?: StoredCustomProduct[];
+    };
+
+    if (!response.ok || !data.ok || !data.product) {
+      return { ok: false, message: data.message ?? "Nu s-a putut actualiza produsul." };
+    }
+
+    if (data.customProducts) {
+      cacheCustomProducts(data.customProducts);
+    }
+    dispatchStoreUpdate({ scope: "products" });
+    return { ok: true, product: data.product };
+  } catch {
+    return { ok: false, message: "Nu s-a putut actualiza produsul." };
+  }
+}
+
+export async function deleteCustomProduct(
+  productId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!isBrowser()) {
+    return { ok: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
+  }
+
+  try {
+    const response = await fetch("/api/store/products", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id: productId }),
+    });
+    const data = (await response.json()) as {
+      ok?: boolean;
+      message?: string;
+      customProducts?: StoredCustomProduct[];
+    };
+
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? "Nu s-a putut șterge produsul." };
+    }
+
+    if (data.customProducts) {
+      cacheCustomProducts(data.customProducts);
+    }
+    dispatchStoreUpdate({ scope: "products" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Nu s-a putut șterge produsul." };
+  }
 }
 
 /** Economii bundle = preț cablu + adaptor minus preț pachet (sau override admin) */
@@ -545,6 +757,17 @@ export function buildCartAddUrl(params: {
     price: params.unitPrice.toFixed(2),
   });
   return `/cos?${search.toString()}`;
+}
+
+export function slugFromTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return slug || `produs-${Date.now()}`;
 }
 
 export function buildProduseUrl(params: { category?: string }) {

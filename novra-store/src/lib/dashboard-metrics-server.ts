@@ -1,6 +1,7 @@
 import "server-only";
 
 import { CATALOG_PRODUCTS, type ProductOverride } from "@/lib/catalog";
+import { readCustomProducts } from "@/lib/products-server";
 import { normalizeOrder, type Order } from "@/lib/orders";
 import { resolveStockQuantity } from "@/lib/stock-server";
 import {
@@ -44,13 +45,21 @@ export type DashboardMetrics = {
   };
 };
 
-function computeStockMetrics(overrides: Record<string, ProductOverride>) {
+function computeStockMetrics(
+  overrides: Record<string, ProductOverride>,
+  customProducts: Awaited<ReturnType<typeof readCustomProducts>>
+) {
   let totalStockUnits = 0;
   let productsInStock = 0;
   let lowStockCount = 0;
 
-  for (const product of CATALOG_PRODUCTS) {
-    const quantity = resolveStockQuantity(product.id, overrides);
+  const allProducts = [
+    ...CATALOG_PRODUCTS.map((product) => ({ id: product.id, stockQuantity: product.stockQuantity })),
+    ...customProducts.map((product) => ({ id: product.id, stockQuantity: product.stockQuantity })),
+  ];
+
+  for (const product of allProducts) {
+    const quantity = resolveStockQuantity(product.id, overrides, new Map(customProducts.map((entry) => [entry.id, entry.stockQuantity])));
     totalStockUnits += quantity;
     if (quantity > 0) productsInStock += 1;
     if (quantity > 0 && quantity < LOW_STOCK_THRESHOLD) lowStockCount += 1;
@@ -75,16 +84,17 @@ function computeTodayOrderMetrics(orders: Order[]) {
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  const [rawOrders, overrides, liveVisitors, uniqueVisitorsToday] = await Promise.all([
+  const [rawOrders, overrides, customProducts, liveVisitors, uniqueVisitorsToday] = await Promise.all([
     readJsonFile<Partial<Order>[]>(ORDERS_FILE, []),
     readJsonFile<Record<string, ProductOverride>>(PRODUCTS_FILE, {}),
+    readCustomProducts(),
     getLiveVisitorCount(),
     getUniqueVisitorsToday(),
   ]);
 
   const orders = rawOrders.map(normalizeOrder);
   const { revenueToday, ordersToday } = computeTodayOrderMetrics(orders);
-  const { totalStockUnits, productsInStock, lowStockCount } = computeStockMetrics(overrides);
+  const { totalStockUnits, productsInStock, lowStockCount } = computeStockMetrics(overrides, customProducts);
 
   const conversionRate =
     uniqueVisitorsToday > 0
