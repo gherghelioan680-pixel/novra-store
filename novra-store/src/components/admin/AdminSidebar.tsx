@@ -22,6 +22,7 @@ import {
   UserPlus,
   Bell,
   UserX,
+  Inbox,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,6 +39,7 @@ const navItems = [
   { href: "/admin/utilizatori", label: "Utilizatori", icon: UserX },
   { href: "/admin/credite", label: "Gift Cards & Credite", icon: Coins },
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
+  { href: "/admin/email-center", label: "Email Center", icon: Inbox },
   { href: "/admin/coduri-reducere", label: "Coduri reducere", icon: Tag },
   { href: "/admin/afiliati", label: "Program Afiliere", icon: Link2 },
   { href: "/admin/campanii", label: "Campanii", icon: Megaphone },

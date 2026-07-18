@@ -17,6 +17,7 @@ import {
   paragraph,
   wrapEmailHtml,
 } from "./email-templates";
+import { appendEmailLog } from "./email-log-server";
 
 const NOTIFIABLE_STATUSES: OrderStatus[] = ["processing", "shipped", "delivered", "cancelled"];
 
@@ -27,6 +28,7 @@ export type SendEmailInput = {
   subject: string;
   html: string;
   text?: string;
+  logType?: string;
 };
 
 function getSmtpPort(): number {
@@ -104,19 +106,36 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
 
   console.log("[email] Sending:", input.subject, "→", normalizedRecipients.join(", "));
 
+  const logType = input.logType ?? "general";
+  const recipientLabel = normalizedRecipients.join(", ");
+
   try {
     await transport.sendMail({
       from,
-      to: normalizedRecipients.join(", "),
+      to: recipientLabel,
       subject: input.subject,
       html: input.html,
       text: input.text ?? htmlToPlainText(input.html),
     });
 
-    console.log("[email] Sent:", input.subject, "→", normalizedRecipients.join(", "));
+    console.log("[email] Sent:", input.subject, "→", recipientLabel);
+    void appendEmailLog({
+      to: recipientLabel,
+      subject: input.subject,
+      type: logType,
+      status: "sent",
+      sentAt: new Date().toISOString(),
+    });
     return true;
   } catch (error) {
-    console.error("[email] Send failed:", input.subject, "→", normalizedRecipients.join(", "), error);
+    console.error("[email] Send failed:", input.subject, "→", recipientLabel, error);
+    void appendEmailLog({
+      to: recipientLabel,
+      subject: input.subject,
+      type: logType,
+      status: "failed",
+      sentAt: new Date().toISOString(),
+    });
     return false;
   }
 }
@@ -225,6 +244,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
     to: order.userEmail,
     subject: `Confirmare comandă NOVRA — ${order.purchaseCode}`,
     html: wrapEmailHtml("Confirmare comandă", body, "Comanda ta a fost înregistrată cu succes."),
+    logType: "order_confirmation",
   });
 }
 
@@ -324,6 +344,7 @@ export async function sendOrderStatusEmail(order: Order, status: OrderStatus): P
     to: order.userEmail,
     subject: statusEmailSubject(status, order.purchaseCode, awb),
     html: wrapEmailHtml(statusEmailTitle(status), body),
+    logType: status === "shipped" ? "order_shipped" : "order_status",
   });
 }
 
@@ -342,6 +363,7 @@ export async function sendTrackingEmail(order: Order, awb: string): Promise<bool
     to: order.userEmail,
     subject: `Comanda ${order.purchaseCode} a fost expediată — AWB ${awb}`,
     html: wrapEmailHtml("Coletul tău este în drum", body),
+    logType: "order_shipped",
   });
 }
 
@@ -382,6 +404,7 @@ export async function sendNewsletterWelcomeEmail(
     to: email,
     subject: `Codul tău NOVRA — ${discountPercent}% reducere la prima comandă`,
     html: wrapEmailHtml("Bine ai venit la NOVRA", body, "Abonare confirmată la newsletter."),
+    logType: "welcome",
   });
 }
 
@@ -414,7 +437,7 @@ export async function sendNewsletterBroadcastEmail(
   let failed = 0;
 
   for (const email of emails) {
-    const ok = await sendEmail({ to: email, subject: safeSubject, html });
+    const ok = await sendEmail({ to: email, subject: safeSubject, html, logType: "newsletter" });
     if (ok) sent += 1;
     else failed += 1;
   }
@@ -434,6 +457,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
     to: email,
     subject: "Resetare parolă NOVRA",
     html: wrapEmailHtml("Resetare parolă", body),
+    logType: "password_reset",
   });
 }
 
@@ -476,5 +500,6 @@ export async function sendAbandonedCartReminderEmail(input: {
     to: input.email,
     subject: "Ai produse în coș — finalizează comanda NOVRA",
     html: wrapEmailHtml("Ai uitat ceva în coș?", body, "Produsele tale te așteaptă în checkout."),
+    logType: "abandoned_cart",
   });
 }
