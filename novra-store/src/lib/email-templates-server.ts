@@ -16,6 +16,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/orders";
 export type EmailTemplateId =
   | "welcome"
   | "newsletter"
+  | "special_subscribers"
   | "subscription_confirmation"
   | "order_confirmation"
   | "order_processing"
@@ -65,6 +66,7 @@ const FILE = "email-templates.json";
 export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   welcome: "Bun venit",
   newsletter: "Newsletter",
+  special_subscribers: "Mesaj special abonați",
   subscription_confirmation: "Confirmare abonare newsletter",
   order_confirmation: "Confirmare comandă",
   order_processing: "Comandă în procesare",
@@ -118,6 +120,20 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       title: "Noutăți de la NOVRA",
       subtitle: "Rămâi la curent cu produsele noastre.",
       content: "Salut! Avem noutăți de la NOVRA — cabluri și adaptoare premium pentru setup-ul tău.",
+      buttonText: "Vizitează NOVRA",
+      buttonLink: site,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    special_subscribers: {
+      name: TEMPLATE_NAMES.special_subscribers,
+      subject: "Mesaj special de la NOVRA",
+      previewText: "Un mesaj personalizat de la echipa NOVRA",
+      title: "Mesaj special pentru tine",
+      subtitle: "Rămâi conectat cu noutățile NOVRA.",
+      content:
+        "Salut, {name}! Îți mulțumim că faci parte din comunitatea NOVRA. Scrie aici mesajul tău personalizat pentru abonați.",
       buttonText: "Vizitează NOVRA",
       buttonLink: site,
       footer: "© NOVRA — Cabluri & adaptoare premium",
@@ -449,6 +465,7 @@ const ADMIN_TEMPLATE_IDS: EmailTemplateId[] = [
   "admin_new_order",
   "admin_order_cancelled",
   "return_request_admin",
+  "special_subscribers",
 ];
 
 export async function getAllEmailTemplates(): Promise<EmailTemplateConfig[]> {

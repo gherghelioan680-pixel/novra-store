@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const ids = Object.keys(TEMPLATE_NAMES) as EmailTemplateId[];
     const templates = await Promise.all(
       ids
-        .filter((id) => !["order_cancelled", "contact_admin", "admin_new_order", "admin_order_cancelled", "return_request_admin"].includes(id))
+        .filter((id) => !["order_cancelled", "contact_admin", "admin_new_order", "admin_order_cancelled", "return_request_admin", "special_subscribers"].includes(id))
         .map((id) => getEmailTemplate(id))
     );
     return Response.json({ templates });

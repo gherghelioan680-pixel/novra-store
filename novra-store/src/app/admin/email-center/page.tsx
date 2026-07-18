@@ -200,10 +200,29 @@ type BroadcastForm = {
   templateId: string;
   subject: string;
   previewText: string;
+  title: string;
+  subtitle: string;
   content: string;
+  buttonText: string;
+  buttonLink: string;
   sendToAll: boolean;
   selectedEmails: string[];
+  isSpecial: boolean;
 };
+
+const emptySpecialBroadcastForm = (subscribers: SubscriberRow[]): BroadcastForm => ({
+  templateId: "special_subscribers",
+  subject: "",
+  previewText: "",
+  title: "",
+  subtitle: "",
+  content: "",
+  buttonText: "",
+  buttonLink: "",
+  sendToAll: true,
+  selectedEmails: subscribers.map((s) => s.email),
+  isSpecial: true,
+});
 
 export default function AdminEmailCenterPage() {
   const admin = requireAdmin();
@@ -766,10 +785,19 @@ export default function AdminEmailCenterPage() {
       templateId,
       subject: data.config.subject,
       previewText: data.config.previewText,
+      title: data.config.title,
+      subtitle: data.config.subtitle,
       content: data.config.content,
+      buttonText: data.config.buttonText,
+      buttonLink: data.config.buttonLink,
       sendToAll: true,
       selectedEmails: subscribers.map((s) => s.email),
+      isSpecial: false,
     });
+  };
+
+  const openSpecialBroadcastForm = () => {
+    setBroadcastForm(emptySpecialBroadcastForm(subscribers));
   };
 
   const handleBroadcastTemplateChange = async (templateId: string) => {
@@ -790,10 +818,43 @@ export default function AdminEmailCenterPage() {
             templateId,
             subject: data.config.subject,
             previewText: data.config.previewText,
+            title: data.config.title,
+            subtitle: data.config.subtitle,
             content: data.config.content,
+            buttonText: data.config.buttonText,
+            buttonLink: data.config.buttonLink,
           }
         : prev
     );
+  };
+
+  const handleBroadcastPreview = async (mode: "desktop" | "mobile") => {
+    if (!broadcastForm) return;
+    setPreviewMode(mode);
+    const res = await fetch("/api/admin/email/templates", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({
+        action: "preview_live",
+        template: broadcastForm.templateId,
+        config: {
+          subject: broadcastForm.subject,
+          previewText: broadcastForm.previewText,
+          title: broadcastForm.title,
+          subtitle: broadcastForm.subtitle,
+          content: broadcastForm.content,
+          buttonText: broadcastForm.buttonText,
+          buttonLink: broadcastForm.buttonLink,
+        },
+      }),
+    });
+    if (!res.ok) {
+      showMessage("Nu s-a putut genera previzualizarea.");
+      return;
+    }
+    const data = (await res.json()) as { html: string; label?: string };
+    setPreviewTitle(broadcastForm.isSpecial ? "Spune Special Abonaților" : (data.label ?? "Broadcast"));
+    setPreviewHtml(data.html);
   };
 
   const toggleBroadcastRecipient = (email: string) => {
@@ -832,7 +893,11 @@ export default function AdminEmailCenterPage() {
         templateId: broadcastForm.templateId,
         subject: broadcastForm.subject,
         previewText: broadcastForm.previewText,
+        title: broadcastForm.title,
+        subtitle: broadcastForm.subtitle,
         content: broadcastForm.content,
+        buttonText: broadcastForm.buttonText,
+        buttonLink: broadcastForm.buttonLink,
         sendToAll: broadcastForm.sendToAll,
         recipients: broadcastForm.sendToAll ? undefined : broadcastForm.selectedEmails,
       }),
@@ -1403,8 +1468,33 @@ export default function AdminEmailCenterPage() {
 
       {activeTab === "templates" && (
         <>
+          <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-br from-purple-950/60 via-novra-card/40 to-novra-bg/30 p-5 shadow-lg shadow-purple-900/20 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-600/20 text-2xl">
+                  📧
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Spune Special Abonaților</h3>
+                  <p className="mt-1 text-sm text-gray-400">
+                    Trimite un mesaj personalizat abonaților newsletter
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={loading || subscribers.length === 0}
+                onClick={openSpecialBroadcastForm}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                <Megaphone size={16} />
+                Compune și trimite
+              </button>
+            </div>
+          </div>
+
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex-1 max-w-md">
+            <div className="max-w-md flex-1">
               <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
                 Email pentru teste
               </label>
@@ -1416,15 +1506,6 @@ export default function AdminEmailCenterPage() {
                 className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
               />
             </div>
-            <button
-              type="button"
-              disabled={loading || subscribers.length === 0}
-              onClick={() => void openBroadcastForm("newsletter")}
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-            >
-              <Megaphone size={16} />
-              Trimite către abonați
-            </button>
           </div>
 
           <div className="space-y-4">
@@ -1646,7 +1727,7 @@ export default function AdminEmailCenterPage() {
                 <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6">
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
                     <Megaphone size={18} className="text-purple-400" />
-                    Trimite șablon către abonați
+                    {broadcastForm.isSpecial ? "Spune Special Abonaților" : "Trimite șablon către abonați"}
                   </h3>
                   <button
                     type="button"
@@ -1658,21 +1739,23 @@ export default function AdminEmailCenterPage() {
                   </button>
                 </div>
                 <div className="space-y-4 overflow-y-auto p-4 sm:p-6">
-                  <div>
-                    <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Șablon</label>
-                    <select
-                      value={broadcastForm.templateId}
-                      disabled={broadcastSending}
-                      onChange={(e) => void handleBroadcastTemplateChange(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-                    >
-                      {EMAIL_TEMPLATES.map((tpl) => (
-                        <option key={tpl.id} value={tpl.id}>
-                          {tpl.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {!broadcastForm.isSpecial && (
+                    <div>
+                      <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Șablon</label>
+                      <select
+                        value={broadcastForm.templateId}
+                        disabled={broadcastSending}
+                        onChange={(e) => void handleBroadcastTemplateChange(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                      >
+                        {EMAIL_TEMPLATES.map((tpl) => (
+                          <option key={tpl.id} value={tpl.id}>
+                            {tpl.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Subiect email</label>
                     <input
@@ -1694,6 +1777,30 @@ export default function AdminEmailCenterPage() {
                       className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
                     />
                   </div>
+                  {broadcastForm.isSpecial && (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Titlu email</label>
+                        <input
+                          type="text"
+                          disabled={broadcastSending}
+                          value={broadcastForm.title}
+                          onChange={(e) => setBroadcastForm((p) => (p ? { ...p, title: e.target.value } : p))}
+                          className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Subtitlu (opțional)</label>
+                        <input
+                          type="text"
+                          disabled={broadcastSending}
+                          value={broadcastForm.subtitle}
+                          onChange={(e) => setBroadcastForm((p) => (p ? { ...p, subtitle: e.target.value } : p))}
+                          className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                        />
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Conținut email</label>
                     <textarea
@@ -1708,6 +1815,30 @@ export default function AdminEmailCenterPage() {
                       Poți folosi variabile: {"{name}"}, {"{email}"}. Conținutul personalizat păstrează stilul șablonului selectat.
                     </p>
                   </div>
+                  {broadcastForm.isSpecial && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Buton — text</label>
+                        <input
+                          type="text"
+                          disabled={broadcastSending}
+                          value={broadcastForm.buttonText}
+                          onChange={(e) => setBroadcastForm((p) => (p ? { ...p, buttonText: e.target.value } : p))}
+                          className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">Buton — link</label>
+                        <input
+                          type="url"
+                          disabled={broadcastSending}
+                          value={broadcastForm.buttonLink}
+                          onChange={(e) => setBroadcastForm((p) => (p ? { ...p, buttonLink: e.target.value } : p))}
+                          className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="rounded-xl border border-white/10 bg-novra-card/30 p-4">
                     <label className="mb-3 flex items-center gap-2 text-sm text-gray-200">
                       <input
@@ -1779,6 +1910,28 @@ export default function AdminEmailCenterPage() {
                       <Send size={16} />
                       {broadcastSending ? "Se trimite..." : "Trimite acum"}
                     </button>
+                    {broadcastForm.isSpecial && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={broadcastSending}
+                          onClick={() => void handleBroadcastPreview("desktop")}
+                          className="inline-flex items-center gap-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50"
+                        >
+                          <Monitor size={16} />
+                          Preview Desktop
+                        </button>
+                        <button
+                          type="button"
+                          disabled={broadcastSending}
+                          onClick={() => void handleBroadcastPreview("mobile")}
+                          className="inline-flex items-center gap-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50"
+                        >
+                          <Smartphone size={16} />
+                          Preview Mobile
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       disabled={broadcastSending}

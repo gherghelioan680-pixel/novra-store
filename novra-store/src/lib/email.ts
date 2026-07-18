@@ -1074,6 +1074,10 @@ export type TemplateBroadcastOptions = {
   subjectOverride?: string;
   contentOverride?: string;
   previewTextOverride?: string;
+  titleOverride?: string;
+  subtitleOverride?: string;
+  buttonTextOverride?: string;
+  buttonLinkOverride?: string;
 };
 
 const BROADCAST_BATCH_SIZE = 50;
@@ -1108,6 +1112,10 @@ export async function sendTemplateBroadcastEmail(
   if (options.subjectOverride?.trim()) configOverrides.subject = options.subjectOverride.trim();
   if (options.contentOverride?.trim()) configOverrides.content = options.contentOverride.trim();
   if (options.previewTextOverride?.trim()) configOverrides.previewText = options.previewTextOverride.trim();
+  if (options.titleOverride?.trim()) configOverrides.title = options.titleOverride.trim();
+  if (options.subtitleOverride?.trim()) configOverrides.subtitle = options.subtitleOverride.trim();
+  if (options.buttonTextOverride?.trim()) configOverrides.buttonText = options.buttonTextOverride.trim();
+  if (options.buttonLinkOverride?.trim()) configOverrides.buttonLink = options.buttonLinkOverride.trim();
 
   let sent = 0;
   let failed = 0;

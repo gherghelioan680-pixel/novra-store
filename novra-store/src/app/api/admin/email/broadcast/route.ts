@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
     const subject = typeof body?.subject === "string" ? body.subject.trim() : "";
     const content = typeof body?.content === "string" ? body.content.trim() : "";
     const previewText = typeof body?.previewText === "string" ? body.previewText.trim() : undefined;
+    const title = typeof body?.title === "string" ? body.title.trim() : undefined;
+    const subtitle = typeof body?.subtitle === "string" ? body.subtitle.trim() : undefined;
+    const buttonText = typeof body?.buttonText === "string" ? body.buttonText.trim() : undefined;
+    const buttonLink = typeof body?.buttonLink === "string" ? body.buttonLink.trim() : undefined;
 
     if (!subject || !content) {
       return Response.json({ error: "Subiectul și conținutul sunt obligatorii." }, { status: 400 });
@@ -81,6 +85,10 @@ export async function POST(request: NextRequest) {
       subjectOverride: subject,
       contentOverride: content,
       previewTextOverride: previewText,
+      titleOverride: title,
+      subtitleOverride: subtitle,
+      buttonTextOverride: buttonText,
+      buttonLinkOverride: buttonLink,
     });
 
     return Response.json({
