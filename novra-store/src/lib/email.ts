@@ -102,6 +102,8 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
     return false;
   }
 
+  console.log("[email] Sending:", input.subject, "→", normalizedRecipients.join(", "));
+
   try {
     await transport.sendMail({
       from,
@@ -359,6 +361,12 @@ export async function sendNewsletterWelcomeEmail(
   discountPercent: number,
   welcomeTemplate?: string
 ): Promise<boolean> {
+  console.log("[newsletter] sendNewsletterWelcomeEmail called:", {
+    email,
+    discountCode,
+    discountPercent,
+  });
+
   const templateText = welcomeTemplate?.trim()
     ? formatNewsletterWelcomePreview(welcomeTemplate, discountCode, discountPercent)
     : "Mulțumim că te-ai abonat la newsletter-ul NOVRA. Iată codul tău exclusiv pentru prima comandă:";

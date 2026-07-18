@@ -124,15 +124,37 @@ export async function POST(request: NextRequest) {
       isEmailsEnabled() &&
       (body?.sendWelcomeEmail !== undefined
         ? Boolean(body.sendWelcomeEmail)
-        : false);
+        : !isAdminAdd);
+
+    console.log("[newsletter] Subscribe saved:", {
+      email,
+      source,
+      sendWelcome,
+      hasDiscountCode: Boolean(discountCode),
+      emailsEnabled: isEmailsEnabled(),
+      isAdminAdd,
+    });
 
     if (sendWelcome && discountCode) {
+      console.log("[newsletter] Dispatching welcome email to:", email);
       void sendNewsletterWelcomeEmail(
         email,
         discountCode,
         discountPercent,
         settings.newsletterWelcomeMessage
-      );
+      ).then((sent) => {
+        if (sent) {
+          console.log("[newsletter] Welcome email completed successfully for:", email);
+        } else {
+          console.error("[newsletter] Welcome email failed for:", email);
+        }
+      });
+    } else {
+      console.log("[newsletter] Welcome email skipped:", {
+        email,
+        sendWelcome,
+        discountCode: discountCode ?? null,
+      });
     }
 
     return Response.json({
@@ -144,6 +166,7 @@ export async function POST(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
+    console.error("[newsletter] POST subscribe error:", error);
     const message = error instanceof Error ? error.message : "Invalid request";
     return Response.json({ error: message }, { status: 400 });
   }
