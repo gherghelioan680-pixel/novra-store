@@ -66,7 +66,7 @@ const FILE = "email-templates.json";
 export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   welcome: "Bun venit",
   newsletter: "Newsletter",
-  special_subscribers: "Mesaj special abonați",
+  special_subscribers: "Spune Special Abonaților",
   subscription_confirmation: "Confirmare abonare newsletter",
   order_confirmation: "Confirmare comandă",
   order_processing: "Comandă în procesare",

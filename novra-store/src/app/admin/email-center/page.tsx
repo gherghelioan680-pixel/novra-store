@@ -129,6 +129,7 @@ type EmailTemplateDef = {
 const EMAIL_TEMPLATES: EmailTemplateDef[] = [
   { id: "welcome", name: "Bun venit" },
   { id: "newsletter", name: "Newsletter" },
+  { id: "special_subscribers", name: "Spune Special Abonaților" },
   { id: "subscription_confirmation", name: "Confirmare abonare" },
   { id: "order_confirmation", name: "Confirmare comandă" },
   { id: "order_processing", name: "Comandă în procesare" },
@@ -792,7 +793,7 @@ export default function AdminEmailCenterPage() {
       buttonLink: data.config.buttonLink,
       sendToAll: true,
       selectedEmails: subscribers.map((s) => s.email),
-      isSpecial: false,
+      isSpecial: templateId === "special_subscribers",
     });
   };
 
@@ -823,6 +824,7 @@ export default function AdminEmailCenterPage() {
             content: data.config.content,
             buttonText: data.config.buttonText,
             buttonLink: data.config.buttonLink,
+            isSpecial: templateId === "special_subscribers",
           }
         : prev
     );
