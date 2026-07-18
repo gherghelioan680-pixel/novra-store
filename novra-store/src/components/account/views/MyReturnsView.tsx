@@ -1,26 +1,59 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Loader2, PackageX } from "lucide-react";
 import { getApiHeaders } from "@/lib/api-client";
 import { getCurrentUser } from "@/lib/auth";
-import { RETURN_REASONS, RETURN_STATUS_LABELS, type ReturnRequest } from "@/lib/returns-types";
+import {
+  RETURN_REASON_KEYS,
+  resolveReturnReasonKey,
+  type ReturnReasonKey,
+  type ReturnRequest,
+  type ReturnStatus,
+} from "@/lib/returns-types";
+
+function getDateLocale(locale: string) {
+  if (locale === "ro") return "ro-RO";
+  if (locale === "de") return "de-DE";
+  return "en-US";
+}
+
+const STATUS_KEYS: Record<ReturnStatus, "statusPending" | "statusApproved" | "statusRejected" | "statusCompleted"> = {
+  pending: "statusPending",
+  approved: "statusApproved",
+  rejected: "statusRejected",
+  completed: "statusCompleted",
+};
+
+const REASON_KEYS: Record<ReturnReasonKey, "reasonDefective" | "reasonNotAsDescribed" | "reasonWrongProduct" | "reasonChangedMind" | "reasonOther"> = {
+  defective: "reasonDefective",
+  notAsDescribed: "reasonNotAsDescribed",
+  wrongProduct: "reasonWrongProduct",
+  changedMind: "reasonChangedMind",
+  other: "reasonOther",
+};
 
 export default function MyReturnsView() {
   const t = useTranslations("returns");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const user = getCurrentUser();
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [messageOk, setMessageOk] = useState(false);
-  const [form, setForm] = useState<{ orderCode: string; reason: string; description: string }>({
+  const [form, setForm] = useState<{ orderCode: string; reason: ReturnReasonKey; description: string }>({
     orderCode: "",
-    reason: RETURN_REASONS[0],
+    reason: RETURN_REASON_KEYS[0],
     description: "",
   });
+
+  const reasonLabel = (reason: string) => {
+    const key = resolveReturnReasonKey(reason);
+    return key ? t(REASON_KEYS[key]) : reason;
+  };
 
   useEffect(() => {
     void fetch("/api/store/returns", { headers: getApiHeaders() })
@@ -53,7 +86,7 @@ export default function MyReturnsView() {
       }
 
       setReturns((prev) => [data.returnRequest!, ...prev]);
-      setForm({ orderCode: "", reason: RETURN_REASONS[0], description: "" });
+      setForm({ orderCode: "", reason: RETURN_REASON_KEYS[0], description: "" });
       setMessageOk(true);
       setMessage(t("submitSuccess"));
     } catch {
@@ -94,12 +127,12 @@ export default function MyReturnsView() {
             id="return-reason"
             required
             value={form.reason}
-            onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value as ReturnReasonKey }))}
             className="w-full min-h-11 rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
           >
-            {RETURN_REASONS.map((reason) => (
-              <option key={reason} value={reason}>
-                {reason}
+            {RETURN_REASON_KEYS.map((reasonKey) => (
+              <option key={reasonKey} value={reasonKey}>
+                {t(REASON_KEYS[reasonKey])}
               </option>
             ))}
           </select>
@@ -155,11 +188,11 @@ export default function MyReturnsView() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-mono text-sm text-purple-300">{item.orderCode}</p>
-                    <p className="mt-1 text-sm text-gray-300">{item.reason}</p>
+                    <p className="mt-1 text-sm text-gray-300">{reasonLabel(item.reason)}</p>
                     <p className="mt-1 text-xs text-gray-500">{item.description}</p>
                   </div>
                   <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">
-                    {RETURN_STATUS_LABELS[item.status]}
+                    {t(STATUS_KEYS[item.status])}
                   </span>
                 </div>
                 {item.adminNote && (
@@ -168,7 +201,7 @@ export default function MyReturnsView() {
                   </p>
                 )}
                 <p className="mt-2 text-xs text-gray-600">
-                  {new Date(item.createdAt).toLocaleDateString("ro-RO")}
+                  {new Date(item.createdAt).toLocaleDateString(getDateLocale(locale))}
                 </p>
               </li>
             ))}

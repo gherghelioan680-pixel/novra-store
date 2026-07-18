@@ -363,7 +363,16 @@
     "submitSuccess": "Cererea de retur a fost înregistrată. Te contactăm în curând.",
     "history": "Istoric cereri",
     "empty": "Nu ai cereri de retur înregistrate.",
-    "adminNote": "Notă admin"
+    "adminNote": "Notă admin",
+    "statusPending": "În așteptare",
+    "statusApproved": "Aprobat",
+    "statusRejected": "Respins",
+    "statusCompleted": "Finalizat",
+    "reasonDefective": "Produs defect",
+    "reasonNotAsDescribed": "Nu corespunde descrierii",
+    "reasonWrongProduct": "Am primit alt produs",
+    "reasonChangedMind": "Nu mai doresc produsul",
+    "reasonOther": "Alt motiv"
   },
   "account": {
     "overview": "Prezentare generală",
@@ -423,7 +432,29 @@
     "edit": "Editează",
     "backToSite": "Înapoi pe site",
     "logoAlt": "Logo NOVRA",
-    "emailPlaceholder": "exemplu@email.com"
+    "emailPlaceholder": "exemplu@email.com",
+    "loginSuccess": "Autentificare reușită!",
+    "registerSuccess": "Cont creat cu succes! Ai primit 50 NovraCredits.",
+    "invalidCredentials": "Date de autentificare incorecte.",
+    "fillAllFields": "Completează toate câmpurile.",
+    "fillEmailPassword": "Completează emailul și parola.",
+    "guestUser": "acolo"
+  },
+  "accountProfile": {
+    "title": "Profilul meu",
+    "subtitle": "Completează profilul și primești până la 100 NovraCredits",
+    "email": "Email",
+    "firstName": "Prenume",
+    "lastName": "Nume",
+    "dateOfBirth": "Data nașterii",
+    "phone": "Număr de telefon",
+    "country": "Țară/Regiune",
+    "firstNamePlaceholder": "Prenume",
+    "lastNamePlaceholder": "Nume",
+    "phonePlaceholder": "+40 7XX XXX XXX",
+    "romania": "România",
+    "profileSaved": "Datele au fost salvate cu succes.",
+    "profileSavedWithCredits": "Datele au fost salvate. Ai primit {credits} NovraCredits!"
   },
   "accountOverview": {
     "adminPanel": "Panou Admin",
@@ -469,7 +500,9 @@
     "cashOnDelivery": "Ramburs (numerar la livrare)",
     "paid": "Plătit",
     "tracking": "Urmărire colet",
-    "trackFanCourier": "Urmărește pe Fan Courier"
+    "trackFanCourier": "Urmărește pe Fan Courier",
+    "emptyTitle": "Nu ai comenzi încă",
+    "shopNow": "Cumpără acum"
   },
   "accountCoupons": {
     "title": "Cupoanele mele",
@@ -498,7 +531,14 @@
     "transactionHistory": "Istoric tranzacții",
     "loading": "Se încarcă...",
     "noTransactions": "Nicio tranzacție încă.",
-    "balance": "Sold:"
+    "balance": "Sold:",
+    "txPurchase": "Achiziție Gift Card",
+    "txSpend": "Plată comandă",
+    "txAdminAdjust": "Ajustare admin",
+    "txSignupBonus": "Bonus înregistrare",
+    "txReferralReward": "Recompensă recomandare",
+    "txProfileBonus": "Bonus profil complet",
+    "txRevoke": "Revocare credite"
   },
   "accountGiftCards": {
     "title": "Gift Cards",
@@ -613,7 +653,9 @@
     "deleteWarning": "Această acțiune este permanentă. Contul tău și toate datele asociate vor fi șterse.",
     "deleting": "Se șterge...",
     "confirmDelete": "Confirmă ștergerea",
-    "closeAria": "Închide"
+    "closeAria": "Închide",
+    "passwordChanged": "Parola a fost schimbată cu succes.",
+    "invalidCurrentPassword": "Parola curentă este incorectă."
   },
   "accountShipping": {
     "title": "Adresa de livrare",
@@ -631,7 +673,9 @@
     "addressPlaceholder": "Strada, număr, bloc, apartament",
     "cityPlaceholder": "București",
     "postalCodePlaceholder": "010101",
-    "phonePlaceholder": "+40 7XX XXX XXX"
+    "phonePlaceholder": "+40 7XX XXX XXX",
+    "addressSaved": "Adresa de livrare a fost salvată cu succes.",
+    "fillAllFields": "Completează toate câmpurile adresei de livrare."
   },
   "accountEmail": {
     "title": "Preferințe email",

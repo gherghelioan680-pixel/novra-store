@@ -5,11 +5,21 @@ import { useLocale, useTranslations } from "next-intl";
 import { Coins, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { getNovraCredits, refreshCurrentUserFromServer, type User } from "@/lib/auth";
 import { createStoreRefreshEffect } from "@/lib/store";
-import {
-  loadCreditTransactions,
-  CREDIT_TRANSACTION_LABELS,
-  type CreditTransactionClient,
-} from "@/lib/credits";
+import { loadCreditTransactions, type CreditTransactionClient } from "@/lib/credits";
+import type { CreditTransaction } from "@/lib/credits-types";
+
+const TX_KEYS: Record<
+  CreditTransaction["type"],
+  "txPurchase" | "txSpend" | "txAdminAdjust" | "txSignupBonus" | "txReferralReward" | "txProfileBonus" | "txRevoke"
+> = {
+  purchase: "txPurchase",
+  spend: "txSpend",
+  admin_adjust: "txAdminAdjust",
+  signup_bonus: "txSignupBonus",
+  referral_reward: "txReferralReward",
+  profile_bonus: "txProfileBonus",
+  revoke: "txRevoke",
+};
 
 type NovraCreditsViewProps = {
   user: User;
@@ -107,7 +117,7 @@ export default function NovraCreditsView({ user }: NovraCreditsViewProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white">
-                        {tx.description || CREDIT_TRANSACTION_LABELS[tx.type]}
+                        {tx.description || t(TX_KEYS[tx.type])}
                       </p>
                       <p className="text-xs text-gray-500">{formatDate(tx.createdAt)}</p>
                     </div>

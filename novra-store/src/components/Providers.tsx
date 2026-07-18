@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { CartProvider } from "@/context/CartContext";
 import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
 import CountdownFallbackScript from "@/components/CountdownFallbackScript";
-import DevToolsBlocker from "@/components/DevToolsBlocker";
 import SessionCookieSync from "@/components/SessionCookieSync";
 
 const CookieConsent = dynamic(() => import("@/components/CookieConsent"), { ssr: false });
@@ -31,7 +30,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <InviteRefTracker />
         </Suspense>
         <VisitorTracker />
-        <DevToolsBlocker />
         {children}
         <CountdownFallbackScript />
         <CookieConsent />

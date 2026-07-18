@@ -3,6 +3,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import Providers from "@/components/Providers";
+import DevToolsBlocker from "@/components/DevToolsBlocker";
 import ComingSoonGate from "@/components/ComingSoonGate";
 import SetDocumentLang from "@/components/SetDocumentLang";
 import { routing } from "@/i18n/routing";
@@ -46,7 +47,10 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <SetDocumentLang locale={locale} />
       <ComingSoonGate>
-        <Providers>{children}</Providers>
+        <Providers>
+          <DevToolsBlocker />
+          {children}
+        </Providers>
       </ComingSoonGate>
     </NextIntlClientProvider>
   );

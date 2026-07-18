@@ -1,19 +1,20 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import ShakeButton from "./ShakeButton";
 
 type EmptyOrdersStateProps = {
-  title?: string;
   shopHref?: string;
   showShopButton?: boolean;
 };
 
 export default function EmptyOrdersState({
-  title = "No Orders Yet",
   shopHref = "/produse",
   showShopButton = true,
 }: EmptyOrdersStateProps) {
+  const t = useTranslations("accountOrders");
+
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="relative mb-4">
@@ -22,10 +23,10 @@ export default function EmptyOrdersState({
           +
         </span>
       </div>
-      <p className="text-lg font-medium text-gray-300">{title}</p>
+      <p className="text-lg font-medium text-gray-300">{t("emptyTitle")}</p>
       {showShopButton && (
         <div className="mt-6">
-          <ShakeButton href={shopHref}>Shop Now</ShakeButton>
+          <ShakeButton href={shopHref}>{t("shopNow")}</ShakeButton>
         </div>
       )}
     </div>

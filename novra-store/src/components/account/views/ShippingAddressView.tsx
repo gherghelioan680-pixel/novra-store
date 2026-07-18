@@ -64,9 +64,9 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
     const result = updateShippingAddress(form);
 
     if (result.success && result.user) {
-      onSave(result.user, result.message);
+      onSave(result.user, t("addressSaved"));
     } else {
-      setError(result.message);
+      setError(t("fillAllFields"));
     }
   };
 

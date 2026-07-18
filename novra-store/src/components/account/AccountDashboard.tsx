@@ -23,6 +23,7 @@ import EmailPreferencesView from "./views/EmailPreferencesView";
 import SupportCenterView from "./views/SupportCenterView";
 import AffiliateProgramView from "./views/AffiliateProgramView";
 import ReferFriendView from "./views/ReferFriendView";
+import AccountLocaleSync from "./AccountLocaleSync";
 
 const VALID_SECTIONS: AccountSection[] = [
   "overview",
@@ -183,6 +184,7 @@ function AccountDashboardContent() {
 
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
+      <AccountLocaleSync />
       <div className="flex min-h-screen">
         <AccountSidebar
           activeSection={activeSection}

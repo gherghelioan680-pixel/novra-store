@@ -363,7 +363,16 @@
     "submitSuccess": "Your return request has been submitted. We will contact you soon.",
     "history": "Request history",
     "empty": "You have no return requests yet.",
-    "adminNote": "Admin note"
+    "adminNote": "Admin note",
+    "statusPending": "Pending",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "statusCompleted": "Completed",
+    "reasonDefective": "Defective product",
+    "reasonNotAsDescribed": "Does not match description",
+    "reasonWrongProduct": "Received wrong product",
+    "reasonChangedMind": "Changed my mind",
+    "reasonOther": "Other reason"
   },
   "account": {
     "overview": "Overview",
@@ -423,7 +432,29 @@
     "edit": "Edit",
     "backToSite": "Back to site",
     "logoAlt": "NOVRA Logo",
-    "emailPlaceholder": "example@email.com"
+    "emailPlaceholder": "example@email.com",
+    "loginSuccess": "Signed in successfully!",
+    "registerSuccess": "Account created! You received 50 NovraCredits.",
+    "invalidCredentials": "Incorrect email or password.",
+    "fillAllFields": "Please fill in all fields.",
+    "fillEmailPassword": "Please enter your email and password.",
+    "guestUser": "there"
+  },
+  "accountProfile": {
+    "title": "My Profile",
+    "subtitle": "Complete your profile and earn up to 100 NovraCredits",
+    "email": "Email",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "dateOfBirth": "Date of Birth",
+    "phone": "Phone Number",
+    "country": "Country/Region",
+    "firstNamePlaceholder": "First name",
+    "lastNamePlaceholder": "Last name",
+    "phonePlaceholder": "+40 7XX XXX XXX",
+    "romania": "Romania",
+    "profileSaved": "Your profile was saved successfully.",
+    "profileSavedWithCredits": "Your profile was saved. You received {credits} NovraCredits!"
   },
   "accountOverview": {
     "adminPanel": "Admin Panel",
@@ -469,7 +500,9 @@
     "cashOnDelivery": "Cash on delivery",
     "paid": "Paid",
     "tracking": "Package tracking",
-    "trackFanCourier": "Track on Fan Courier"
+    "trackFanCourier": "Track on Fan Courier",
+    "emptyTitle": "No orders yet",
+    "shopNow": "Shop now"
   },
   "accountCoupons": {
     "title": "My coupons",
@@ -498,7 +531,14 @@
     "transactionHistory": "Transaction history",
     "loading": "Loading...",
     "noTransactions": "No transactions yet.",
-    "balance": "Balance:"
+    "balance": "Balance:",
+    "txPurchase": "Gift Card purchase",
+    "txSpend": "Order payment",
+    "txAdminAdjust": "Admin adjustment",
+    "txSignupBonus": "Sign-up bonus",
+    "txReferralReward": "Referral reward",
+    "txProfileBonus": "Profile completion bonus",
+    "txRevoke": "Credits revoked"
   },
   "accountGiftCards": {
     "title": "Gift Cards",
@@ -613,7 +653,9 @@
     "deleteWarning": "This action is permanent. Your account and all associated data will be deleted.",
     "deleting": "Deleting...",
     "confirmDelete": "Confirm deletion",
-    "closeAria": "Close"
+    "closeAria": "Close",
+    "passwordChanged": "Password changed successfully.",
+    "invalidCurrentPassword": "Current password is incorrect."
   },
   "accountShipping": {
     "title": "Shipping address",
@@ -631,7 +673,9 @@
     "addressPlaceholder": "Street, number, building, apartment",
     "cityPlaceholder": "Bucharest",
     "postalCodePlaceholder": "010101",
-    "phonePlaceholder": "+40 7XX XXX XXX"
+    "phonePlaceholder": "+40 7XX XXX XXX",
+    "addressSaved": "Shipping address saved successfully.",
+    "fillAllFields": "Please fill in all shipping address fields."
   },
   "accountEmail": {
     "title": "Email preferences",

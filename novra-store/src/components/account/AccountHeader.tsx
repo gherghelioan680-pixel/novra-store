@@ -28,7 +28,8 @@ export default function AccountHeader({ user, onEditProfile, onUserUpdate }: Acc
     return createStoreRefreshEffect(refresh, { scopes: ["users"] });
   }, [onUserUpdate]);
 
-  const firstName = getDisplayFirstName(liveUser);
+  const rawFirstName = getDisplayFirstName(liveUser);
+  const firstName = rawFirstName || t("guestUser");
   const credits = getNovraCredits(liveUser);
 
   return (

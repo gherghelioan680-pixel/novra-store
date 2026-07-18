@@ -51,20 +51,36 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
       }
 
       if (mode === "register") {
+        if (!name.trim() || !email.trim() || !password.trim()) {
+          setMessage(t("fillAllFields"));
+          return;
+        }
+
         const result = await registerUser(name, email, password);
-        setMessage(result.message);
         if (result.success && result.user) {
+          const successMessage = t("registerSuccess");
+          setMessage(successMessage);
           setMessageIsSuccess(true);
-          onAuthSuccess(result.user, result.message);
+          onAuthSuccess(result.user, successMessage);
+        } else {
+          setMessage(tc("error"));
         }
         return;
       }
 
+      if (!email.trim() || !password.trim()) {
+        setMessage(t("fillEmailPassword"));
+        return;
+      }
+
       const result = await loginUser(email, password);
-      setMessage(result.message);
       if (result.success && result.user) {
+        const successMessage = t("loginSuccess");
+        setMessage(successMessage);
         setMessageIsSuccess(true);
-        onAuthSuccess(result.user, result.message);
+        onAuthSuccess(result.user, successMessage);
+      } else {
+        setMessage(t("invalidCredentials"));
       }
     } finally {
       setIsSubmitting(false);

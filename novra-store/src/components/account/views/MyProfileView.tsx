@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { updateCurrentUserProfile, type User } from "@/lib/auth";
+import { useTranslations } from "next-intl";
+import { getNovraCredits, updateCurrentUserProfile, type User } from "@/lib/auth";
 
 type MyProfileViewProps = {
   user: User;
@@ -10,6 +11,8 @@ type MyProfileViewProps = {
 };
 
 export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewProps) {
+  const t = useTranslations("accountProfile");
+  const tc = useTranslations("common");
   const [form, setForm] = useState({
     email: user.email,
     firstName: user.firstName || user.name.split(/\s+/)[0] || "",
@@ -21,6 +24,7 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const beforeCredits = getNovraCredits(user);
     const result = updateCurrentUserProfile({
       firstName: form.firstName,
       lastName: form.lastName,
@@ -30,20 +34,23 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
     });
 
     if (result.success && result.user) {
-      onSave(result.user, result.message);
+      const earnedCredits = getNovraCredits(result.user) - beforeCredits;
+      const message =
+        earnedCredits > 0
+          ? t("profileSavedWithCredits", { credits: earnedCredits })
+          : t("profileSaved");
+      onSave(result.user, message);
     }
   };
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-white">My Profile</h2>
-      <p className="mt-1 text-sm text-gray-400">
-        Complete your profile and earn up to 100 NovraCredits
-      </p>
+      <h2 className="text-xl font-semibold text-white">{t("title")}</h2>
+      <p className="mt-1 text-sm text-gray-400">{t("subtitle")}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <div>
-          <label className="mb-2 block text-sm text-gray-400">Email</label>
+          <label className="mb-2 block text-sm text-gray-400">{t("email")}</label>
           <input
             type="email"
             value={form.email}
@@ -54,28 +61,28 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm text-gray-400">First Name</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("firstName")}</label>
             <input
               value={form.firstName}
               onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="Prenume"
+              placeholder={t("firstNamePlaceholder")}
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Last Name</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("lastName")}</label>
             <input
               value={form.lastName}
               onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="Nume"
+              placeholder={t("lastNamePlaceholder")}
             />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Date of Birth</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("dateOfBirth")}</label>
             <input
               type="date"
               value={form.dateOfBirth}
@@ -84,25 +91,25 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Phone Number</label>
+            <label className="mb-2 block text-sm text-gray-400">{t("phone")}</label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
-              placeholder="+40 7XX XXX XXX"
+              placeholder={t("phonePlaceholder")}
             />
           </div>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-400">Country/Region</label>
+          <label className="mb-2 block text-sm text-gray-400">{t("country")}</label>
           <select
             value={form.country}
             onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
             className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm outline-none focus:border-purple-500/50"
           >
-            <option value="Romania">Romania</option>
+            <option value="Romania">{t("romania")}</option>
           </select>
         </div>
 
@@ -112,13 +119,13 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
             onClick={onCancel}
             className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
           >
-            Cancel
+            {tc("cancel")}
           </button>
           <button
             type="submit"
             className="rounded-xl bg-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-700"
           >
-            Save
+            {tc("save")}
           </button>
         </div>
       </form>

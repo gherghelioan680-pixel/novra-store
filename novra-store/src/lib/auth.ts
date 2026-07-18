@@ -2,6 +2,7 @@ import { addNewsletterSubscriber } from "./newsletter";
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate } from "./store";
 import { getInviteRef } from "./referral-attribution";
+import type { AppLocale } from "@/i18n/routing";
 
 export type ShippingAddress = {
   fullName: string;
@@ -59,6 +60,8 @@ export type User = {
   createdAt: string;
   /** Cont blocat de admin — nu poate autentifica sau plasa comenzi. */
   banned?: boolean;
+  /** Last browsing locale synced from the public site. */
+  preferredLocale?: AppLocale;
 };
 
 export type SafeUser = Omit<User, "password"> & { adminNotes?: string };
@@ -186,10 +189,10 @@ export function getNovraCredits(user: User | null | undefined): number {
 }
 
 export function getDisplayFirstName(user: User | null | undefined): string {
-  if (!user) return "Utilizator";
+  if (!user) return "";
   if (user.firstName?.trim()) return user.firstName.trim();
   const parts = user.name.trim().split(/\s+/);
-  return parts[0] || "Utilizator";
+  return parts[0] || "";
 }
 
 export function isProfileComplete(user: User): boolean {
@@ -720,6 +723,27 @@ export async function syncUserToServer(user: User): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function syncUserLocale(locale: AppLocale): Promise<void> {
+  if (!isBrowser()) return;
+
+  const currentUser = getCurrentUser();
+  if (!currentUser || currentUser.preferredLocale === locale) return;
+
+  const updatedUser: User = { ...currentUser, preferredLocale: locale };
+  const users = getStoredUsers();
+  const index = users.findIndex((user) => user.id === currentUser.id);
+  if (index === -1) return;
+
+  users[index] = updatedUser;
+  const savedUsers = saveUsers(users);
+  if (!savedUsers.ok) return;
+
+  const savedSession = setCurrentUser(updatedUser);
+  if (!savedSession.ok) return;
+
+  await syncUserToServer(updatedUser);
 }
 
 export async function loadUserFromServer(email: string): Promise<SafeUser | null> {

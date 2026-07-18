@@ -56,13 +56,14 @@ export default function ManageAccountView({ user, onPasswordChanged }: ManageAcc
     const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
 
     if (result.success && result.user) {
-      setPasswordSuccess(result.message);
-      onPasswordChanged?.(result.user, result.message);
+      const successMessage = t("passwordChanged");
+      setPasswordSuccess(successMessage);
+      onPasswordChanged?.(result.user, successMessage);
       setTimeout(() => {
         handleClosePasswordForm();
       }, 1500);
     } else {
-      setPasswordError(result.message);
+      setPasswordError(t("invalidCurrentPassword"));
     }
   };
 
