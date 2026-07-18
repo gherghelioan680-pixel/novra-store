@@ -26,6 +26,7 @@ import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { parseIsoDate } from "@/lib/datetime";
 import { buildWhatsAppUrl } from "@/lib/store";
 import CopyButton from "@/components/CopyButton";
+import { Link } from "@/i18n/navigation";
 import type { ComingSoonSettings } from "@/lib/site-settings";
 
 const COMING_SOON_COUNTDOWN_ID = "coming-soon-countdown";
@@ -162,6 +163,7 @@ export default function ComingSoonPage({
   newsletterDiscountPercent = 10,
 }: ComingSoonPageProps) {
   const t = useTranslations("comingSoon");
+  const tFooter = useTranslations("footer");
   const tCopy = useTranslations("copy");
   const headline = settings.headline?.trim() || t("defaultHeadline");
   const subtitle = settings.subtitle?.trim() || t("defaultSubtitle");
@@ -402,7 +404,34 @@ export default function ComingSoonPage({
           </div>
         </div>
 
-        <p className="mt-8 text-center text-[10px] sm:text-xs uppercase tracking-[0.35em] text-gray-500">
+        <nav
+          aria-label={tFooter("legalNavAria")}
+          className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] sm:text-xs text-gray-500"
+        >
+          <Link href="/politica-confidentialitate" className="hover:text-purple-400 transition">
+            {tFooter("privacy")}
+          </Link>
+          <span aria-hidden className="text-gray-700">
+            ·
+          </span>
+          <Link href="/termeni-si-conditii" className="hover:text-purple-400 transition">
+            {tFooter("terms")}
+          </Link>
+          <span aria-hidden className="text-gray-700">
+            ·
+          </span>
+          <Link href="/politica-cookies" className="hover:text-purple-400 transition">
+            {tFooter("cookies")}
+          </Link>
+          <span aria-hidden className="text-gray-700">
+            ·
+          </span>
+          <Link href="/termeni-program-afiliere" className="hover:text-purple-400 transition">
+            {tFooter("affiliateTerms")}
+          </Link>
+        </nav>
+
+        <p className="mt-6 text-center text-[10px] sm:text-xs uppercase tracking-[0.35em] text-gray-500">
           {t("tagline")}
         </p>
       </main>

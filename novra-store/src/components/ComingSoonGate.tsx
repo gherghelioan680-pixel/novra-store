@@ -9,13 +9,15 @@ import { parseSessionRaw, type SessionData } from "@/lib/server-auth";
 const DEFAULT_COMING_SOON_COUNTDOWN = "2026-08-11T23:59:59+03:00";
 
 import { stripLocalePrefix } from "@/lib/locale-path";
+import { isLegalPagePath } from "@/lib/legal-paths";
 
 function isExemptPath(pathname: string): boolean {
   const path = stripLocalePrefix(pathname);
   return (
     path.startsWith("/admin") ||
     path.startsWith("/api") ||
-    path.startsWith("/_next")
+    path.startsWith("/_next") ||
+    isLegalPagePath(pathname)
   );
 }
 
