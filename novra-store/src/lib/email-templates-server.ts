@@ -460,12 +460,29 @@ export async function saveEmailTemplate(
   return next;
 }
 
-export function applyTemplatePlaceholders(text: string, vars: Record<string, string>): string {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Replace `{key}` / `{{key}}` placeholders in any template field before send or HTML assembly. */
+export function replaceTemplateVariables(
+  text: string,
+  vars: Record<string, string | undefined>
+): string {
   let result = text;
-  for (const [key, value] of Object.entries(vars)) {
-    result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
+  for (const [key, rawValue] of Object.entries(vars)) {
+    const value = rawValue ?? "";
+    const escapedKey = escapeRegExp(key);
+    result = result.replace(new RegExp(`\\{${escapedKey}\\}`, "g"), value);
+    result = result.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, "g"), value);
   }
+  result = result.replace(/\{\{[a-zA-Z0-9_.]+\}\}/g, "");
+  result = result.replace(/\{[a-zA-Z0-9_.]+\}/g, "");
   return result;
+}
+
+export function applyTemplatePlaceholders(text: string, vars: Record<string, string>): string {
+  return replaceTemplateVariables(text, vars);
 }
 
 export function renderEmailTemplateHtml(
@@ -475,13 +492,14 @@ export function renderEmailTemplateHtml(
   const subjectVars = vars ?? {};
   const resolved = {
     ...config,
-    subject: applyTemplatePlaceholders(config.subject, subjectVars),
-    title: applyTemplatePlaceholders(config.title, subjectVars),
-    subtitle: applyTemplatePlaceholders(config.subtitle, subjectVars),
-    content: applyTemplatePlaceholders(config.content, subjectVars),
-    buttonText: applyTemplatePlaceholders(config.buttonText, subjectVars),
-    buttonLink: applyTemplatePlaceholders(config.buttonLink, subjectVars),
-    previewText: applyTemplatePlaceholders(config.previewText, subjectVars),
+    subject: replaceTemplateVariables(config.subject, subjectVars),
+    title: replaceTemplateVariables(config.title, subjectVars),
+    subtitle: replaceTemplateVariables(config.subtitle, subjectVars),
+    content: replaceTemplateVariables(config.content, subjectVars),
+    buttonText: replaceTemplateVariables(config.buttonText, subjectVars),
+    buttonLink: replaceTemplateVariables(config.buttonLink, subjectVars),
+    previewText: replaceTemplateVariables(config.previewText, subjectVars),
+    footer: replaceTemplateVariables(config.footer, subjectVars),
   };
 
   const contentHtml = resolved.content
@@ -506,5 +524,5 @@ export function renderEmailTemplateHtml(
 }
 
 export function resolveTemplateSubject(config: EmailTemplateConfig, vars?: Record<string, string>): string {
-  return applyTemplatePlaceholders(config.subject, vars ?? {});
+  return replaceTemplateVariables(config.subject, vars ?? {});
 }

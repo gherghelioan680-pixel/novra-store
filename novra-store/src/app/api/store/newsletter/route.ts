@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
         email,
         discountCode,
         discountPercent,
-        settings.newsletterWelcomeMessage
+        next.name
       ).then((sent) => {
         if (sent) {
           console.log("[newsletter] Welcome email completed successfully for:", email);

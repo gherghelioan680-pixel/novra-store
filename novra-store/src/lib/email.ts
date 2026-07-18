@@ -690,21 +690,11 @@ export async function sendAdminOrderCancelledEmail(order: Order): Promise<boolea
   });
 }
 
-export function formatNewsletterWelcomePreview(
-  template: string,
-  discountCode: string,
-  discountPercent: number
-): string {
-  return template
-    .replace(/\{code\}/g, discountCode)
-    .replace(/\{percent\}/g, String(discountPercent));
-}
-
 export async function sendNewsletterWelcomeEmail(
   email: string,
   discountCode: string,
   discountPercent: number,
-  welcomeTemplate?: string
+  name?: string
 ): Promise<boolean> {
   console.log("[EMAIL] Tip email: welcome");
   console.log(`[EMAIL] Destinatar: ${email}`);
@@ -716,32 +706,25 @@ export async function sendNewsletterWelcomeEmail(
   }
 
   const template = await getEmailTemplate("welcome");
-  const customContent = welcomeTemplate?.trim()
-    ? formatNewsletterWelcomePreview(welcomeTemplate, discountCode, discountPercent)
-    : applyTemplatePlaceholders(template.content, {
-        code: discountCode,
-        percent: String(discountPercent),
-      });
+  const vars: Record<string, string> = {
+    code: discountCode,
+    percent: String(discountPercent),
+    name: name?.trim() || "",
+    email,
+  };
 
-  const vars = { code: discountCode, percent: String(discountPercent) };
-  const body = `
-    ${paragraph(`Bună!<br>${escapeHtml(customContent)}`)}
-    ${highlightBox("Cod reducere", discountCode, `${discountPercent}% reducere la prima comandă`)}
-    ${paragraph("Introdu codul la checkout. Valabil o singură dată per email.")}
-    ${emailButton(getSiteOrigin(), template.buttonText || "Vizitează NOVRA")}
-  `;
+  console.log(
+    `[EMAIL] Welcome template vars: code=${vars.code}, percent=${vars.percent}, name=${vars.name || "—"}, email=${vars.email}`
+  );
 
   return sendEmail({
     to: email,
-    subject: applyTemplatePlaceholders(template.subject, vars),
-    html: wrapEmailHtml(
-      applyTemplatePlaceholders(template.title, vars),
-      body,
-      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
-    ),
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
     logType: "welcome",
     automationKey: "welcome",
     templateId: "welcome",
+    fromRole: "newsletter",
   });
 }
 

@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
           to,
           generateNewsletterDiscountCode(),
           settings.newsletterDiscountPercent ?? 10,
-          settings.newsletterWelcomeMessage
+          "Client Demo"
         );
       } else if (templateId === "newsletter") {
         const tpl = await getEmailTemplate("newsletter");
