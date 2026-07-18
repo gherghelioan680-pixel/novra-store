@@ -266,3 +266,42 @@ export async function getReferralStats(): Promise<{
     ).length,
   };
 }
+
+export async function updateFriendReferral(
+  id: string,
+  updates: Partial<
+    Pick<FriendReferral, "referrerEmail" | "refereeEmail" | "referrerRewarded" | "refereeRewarded">
+  >
+): Promise<{ ok: true; referral: FriendReferral } | { ok: false; message: string }> {
+  const referrals = await readFriendReferrals();
+  const index = referrals.findIndex((r) => r.id === id);
+  if (index === -1) {
+    return { ok: false, message: "Recomandarea nu a fost găsită." };
+  }
+
+  referrals[index] = {
+    ...referrals[index],
+    ...(updates.referrerEmail !== undefined
+      ? { referrerEmail: updates.referrerEmail.trim().toLowerCase() }
+      : {}),
+    ...(updates.refereeEmail !== undefined
+      ? { refereeEmail: updates.refereeEmail.trim().toLowerCase() || undefined }
+      : {}),
+    ...(updates.referrerRewarded !== undefined ? { referrerRewarded: updates.referrerRewarded } : {}),
+    ...(updates.refereeRewarded !== undefined ? { refereeRewarded: updates.refereeRewarded } : {}),
+  };
+  await writeFriendReferrals(referrals);
+  return { ok: true, referral: referrals[index] };
+}
+
+export async function deleteFriendReferral(
+  id: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const referrals = await readFriendReferrals();
+  const filtered = referrals.filter((r) => r.id !== id);
+  if (filtered.length === referrals.length) {
+    return { ok: false, message: "Recomandarea nu a fost găsită." };
+  }
+  await writeFriendReferrals(filtered);
+  return { ok: true };
+}

@@ -1,12 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Send, RefreshCw } from "lucide-react";
+import { Bell, Send, RefreshCw, Pencil, Save, Trash2, X } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { requireAdmin } from "@/lib/auth";
-import { loadPushNotificationsAdmin, sendPushNotificationAdmin } from "@/lib/push";
+import {
+  deletePushNotificationAdmin,
+  loadPushNotificationsAdmin,
+  sendPushNotificationAdmin,
+  updatePushNotificationAdmin,
+} from "@/lib/push";
 import { createStoreRefreshEffect } from "@/lib/store";
 import type { PushNotificationRecord } from "@/lib/push-types";
+
+const STATUS_LABELS: Record<PushNotificationRecord["status"], string> = {
+  draft: "Ciornă",
+  scheduled: "Programată",
+  sent: "Trimisă",
+  failed: "Eșuată",
+};
 
 export default function AdminNotificariPage() {
   const admin = requireAdmin();
@@ -19,6 +31,9 @@ export default function AdminNotificariPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<PushNotificationRecord | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", body: "", link: "", scheduledAt: "" });
 
   const refresh = async () => {
     const data = await loadPushNotificationsAdmin();
@@ -35,6 +50,11 @@ export default function AdminNotificariPage() {
 
   if (!admin) return null;
 
+  const showMessage = (text: string) => {
+    setMessage(text);
+    setTimeout(() => setMessage(""), 4000);
+  };
+
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
       setMessage("Completează titlul și mesajul.");
@@ -49,7 +69,7 @@ export default function AdminNotificariPage() {
     });
     setSending(false);
     if (result.ok) {
-      setMessage(
+      showMessage(
         scheduledAt
           ? "Notificare programată."
           : `Trimis: ${result.successCount} reușite, ${result.failureCount} eșuate.`
@@ -59,8 +79,47 @@ export default function AdminNotificariPage() {
       setScheduledAt("");
       await refresh();
     } else {
-      setMessage(result.message);
+      showMessage(result.message);
     }
+  };
+
+  const startEdit = (item: PushNotificationRecord) => {
+    setEditingItem(item);
+    setEditForm({
+      title: item.title,
+      body: item.body,
+      link: item.link,
+      scheduledAt: item.scheduledAt ? item.scheduledAt.slice(0, 16) : "",
+    });
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    setActionId(editingItem.id);
+    const result = await updatePushNotificationAdmin(editingItem.id, {
+      title: editForm.title.trim(),
+      body: editForm.body.trim(),
+      link: editForm.link.trim() || "/",
+      scheduledAt: editForm.scheduledAt || undefined,
+    });
+    setActionId(null);
+    if (!result.ok) {
+      showMessage(result.message);
+      return;
+    }
+    setEditingItem(null);
+    await refresh();
+    showMessage("Notificare actualizată.");
+  };
+
+  const handleDelete = async (item: PushNotificationRecord) => {
+    if (!window.confirm(`Ștergi notificarea „${item.title}"?`)) return;
+    setActionId(item.id);
+    const result = await deletePushNotificationAdmin(item.id);
+    setActionId(null);
+    showMessage(result.ok ? "Notificare ștearsă." : result.message);
+    if (result.ok) await refresh();
   };
 
   return (
@@ -135,13 +194,35 @@ export default function AdminNotificariPage() {
                   <p className="text-sm text-gray-400 mt-1">{n.body}</p>
                   <p className="text-xs text-gray-500 mt-2">→ {n.link}</p>
                 </div>
-                <span className={`shrink-0 text-[10px] px-2 py-1 rounded-full ${
-                  n.status === "sent" ? "bg-green-500/20 text-green-300" :
-                  n.status === "scheduled" ? "bg-yellow-500/20 text-yellow-300" :
-                  "bg-gray-500/20 text-gray-400"
-                }`}>
-                  {n.status}
-                </span>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${
+                    n.status === "sent" ? "bg-green-500/20 text-green-300" :
+                    n.status === "scheduled" ? "bg-yellow-500/20 text-yellow-300" :
+                    n.status === "failed" ? "bg-red-500/20 text-red-300" :
+                    "bg-gray-500/20 text-gray-400"
+                  }`}>
+                    {STATUS_LABELS[n.status]}
+                  </span>
+                  <div className="flex gap-1">
+                    {n.status !== "sent" && (
+                      <button
+                        type="button"
+                        onClick={() => startEdit(n)}
+                        className="rounded-lg border border-white/10 px-2 py-1 text-xs text-gray-300"
+                      >
+                        <Pencil size={12} className="inline" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={actionId === n.id}
+                      onClick={() => void handleDelete(n)}
+                      className="rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 disabled:opacity-50"
+                    >
+                      <Trash2 size={12} className="inline" />
+                    </button>
+                  </div>
+                </div>
               </div>
               {n.sentAt && (
                 <p className="text-xs text-gray-500 mt-2">
@@ -149,8 +230,65 @@ export default function AdminNotificariPage() {
                   {n.successCount !== undefined && ` · ${n.successCount}/${n.recipientCount} trimise`}
                 </p>
               )}
+              {n.scheduledAt && n.status === "scheduled" && (
+                <p className="text-xs text-yellow-400/80 mt-1">
+                  Programată: {new Date(n.scheduledAt).toLocaleString("ro-RO")}
+                </p>
+              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditingItem(null)} />
+          <form
+            onSubmit={(e) => void handleSaveEdit(e)}
+            className="relative z-10 w-full max-w-lg rounded-2xl border border-purple-500/20 bg-novra-bg-alt p-5 shadow-2xl"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Editează notificare</h3>
+              <button type="button" onClick={() => setEditingItem(null)} className="text-gray-400">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <input
+                value={editForm.title}
+                onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm text-white"
+                placeholder="Titlu"
+              />
+              <textarea
+                rows={3}
+                value={editForm.body}
+                onChange={(e) => setEditForm((p) => ({ ...p, body: e.target.value }))}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-3 text-sm text-white"
+                placeholder="Mesaj"
+              />
+              <input
+                value={editForm.link}
+                onChange={(e) => setEditForm((p) => ({ ...p, link: e.target.value }))}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm text-white"
+                placeholder="Link"
+              />
+              <input
+                type="datetime-local"
+                value={editForm.scheduledAt}
+                onChange={(e) => setEditForm((p) => ({ ...p, scheduledAt: e.target.value }))}
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm text-white"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={actionId === editingItem.id}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              <Save size={16} />
+              Salvează
+            </button>
+          </form>
         </div>
       )}
 

@@ -1,6 +1,11 @@
 import type { NextRequest } from "next/server";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
-import { getEmailLogsFiltered, type EmailLogStatus } from "@/lib/email-log-server";
+import {
+  deleteEmailLog,
+  getEmailLogsFiltered,
+  updateEmailLog,
+  type EmailLogStatus,
+} from "@/lib/email-log-server";
 
 export const runtime = "nodejs";
 
@@ -28,4 +33,53 @@ export async function GET(request: NextRequest) {
   });
 
   return Response.json({ logs });
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const id = typeof body?.id === "string" ? body.id.trim() : "";
+    if (!id) {
+      return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const updated = await updateEmailLog(id, {
+      to: typeof body?.to === "string" ? body.to : undefined,
+      subject: typeof body?.subject === "string" ? body.subject : undefined,
+      type: typeof body?.type === "string" ? body.type : undefined,
+      status: body?.status === "sent" || body?.status === "failed" ? body.status : undefined,
+      error: typeof body?.error === "string" ? body.error : undefined,
+    });
+
+    if (!updated) {
+      return Response.json({ ok: false, message: "Intrare negăsită." }, { status: 404 });
+    }
+
+    return Response.json({ ok: true, log: updated });
+  } catch {
+    return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const id = typeof body?.id === "string" ? body.id.trim() : "";
+    if (!id) {
+      return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const deleted = await deleteEmailLog(id);
+    if (!deleted) {
+      return Response.json({ ok: false, message: "Intrare negăsită." }, { status: 404 });
+    }
+
+    return Response.json({ ok: true });
+  } catch {
+    return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
+  }
 }

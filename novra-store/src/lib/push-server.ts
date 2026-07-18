@@ -215,3 +215,41 @@ export async function processScheduledPushNotifications(): Promise<{
 
   return { processed, sent };
 }
+
+export async function updatePushNotification(
+  id: string,
+  updates: Partial<Pick<PushNotificationRecord, "title" | "body" | "link" | "scheduledAt">>
+): Promise<{ ok: true; notification: PushNotificationRecord } | { ok: false; message: string }> {
+  const records = await readPushNotifications();
+  const index = records.findIndex((r) => r.id === id);
+  if (index === -1) {
+    return { ok: false, message: "Notificarea nu a fost găsită." };
+  }
+
+  const current = records[index];
+  if (current.status === "sent") {
+    return { ok: false, message: "Notificările trimise nu pot fi editate." };
+  }
+
+  records[index] = {
+    ...current,
+    ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
+    ...(updates.body !== undefined ? { body: updates.body.trim() } : {}),
+    ...(updates.link !== undefined ? { link: updates.link.trim() || "/" } : {}),
+    ...(updates.scheduledAt !== undefined ? { scheduledAt: updates.scheduledAt || undefined } : {}),
+  };
+  await writePushNotifications(records);
+  return { ok: true, notification: records[index] };
+}
+
+export async function deletePushNotification(
+  id: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const records = await readPushNotifications();
+  const filtered = records.filter((r) => r.id !== id);
+  if (filtered.length === records.length) {
+    return { ok: false, message: "Notificarea nu a fost găsită." };
+  }
+  await writePushNotifications(filtered);
+  return { ok: true };
+}

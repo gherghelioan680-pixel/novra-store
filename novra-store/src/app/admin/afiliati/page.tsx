@@ -37,6 +37,7 @@ import {
   reviewApplicationAdmin,
   updateAffiliateAdmin,
   updatePayoutStatusAdmin,
+  deletePayoutAdmin,
   deleteReferralAdmin,
 } from "@/lib/affiliates";
 import { createStoreRefreshEffect } from "@/lib/store";
@@ -206,26 +207,37 @@ export default function AdminAfiliatiPage() {
             <PayoutBankDetails payout={payout} />
           </div>
         </div>
-        {showActions && payout.status === "pending" && (
-          <div className="flex shrink-0 gap-2 lg:flex-col">
-            <button
-              type="button"
-              disabled={actionId === payout.id}
-              onClick={() => handleMarkPayoutPaid(payout)}
-              className="rounded-lg bg-emerald-600/20 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
-            >
-              Marchează plătit
-            </button>
-            <button
-              type="button"
-              disabled={actionId === payout.id}
-              onClick={() => handleRejectPayout(payout)}
-              className="rounded-lg bg-red-600/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
-            >
-              Respinge
-            </button>
-          </div>
-        )}
+        <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+          {showActions && payout.status === "pending" && (
+            <>
+              <button
+                type="button"
+                disabled={actionId === payout.id}
+                onClick={() => handleMarkPayoutPaid(payout)}
+                className="rounded-lg bg-emerald-600/20 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
+              >
+                Marchează plătit
+              </button>
+              <button
+                type="button"
+                disabled={actionId === payout.id}
+                onClick={() => handleRejectPayout(payout)}
+                className="rounded-lg bg-red-600/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
+              >
+                Respinge
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={actionId === payout.id}
+            onClick={() => handleDeletePayout(payout)}
+            className="rounded-lg border border-red-500/20 px-4 py-2 text-sm text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+          >
+            <Trash2 size={14} className="inline mr-1" />
+            Șterge
+          </button>
+        </div>
       </div>
       {payout.status === "rejected" && payout.adminNote && (
         <p className="mt-3 text-xs text-red-400/80">Motiv: {payout.adminNote}</p>
@@ -391,6 +403,15 @@ export default function AdminAfiliatiPage() {
     const result = await updatePayoutStatusAdmin(payout.id, "rejected", note || undefined);
     setActionId(null);
     showMessage(result.ok ? "Cerere respinsă." : result.message);
+    if (result.ok) await refresh();
+  };
+
+  const handleDeletePayout = async (payout: AffiliatePayout) => {
+    if (!window.confirm(`Ștergi cererea de retragere ${payout.amount.toFixed(2)} RON?`)) return;
+    setActionId(payout.id);
+    const result = await deletePayoutAdmin(payout.id);
+    setActionId(null);
+    showMessage(result.ok ? "Cerere ștearsă." : result.message);
     if (result.ok) await refresh();
   };
 

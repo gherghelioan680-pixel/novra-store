@@ -48,6 +48,47 @@ export async function saveReferralSettingsAdmin(
   }
 }
 
+export async function updateReferralAdmin(
+  referralId: string,
+  updates: Partial<Pick<FriendReferral, "referrerEmail" | "refereeEmail" | "referrerRewarded" | "refereeRewarded">>
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/referrals", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "update-referral", referralId, ...updates }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? "Actualizare eșuată." };
+    }
+    dispatchStoreUpdate({ scope: "referrals" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function deleteReferralAdmin(
+  referralId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/referrals", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "delete-referral", referralId }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? "Ștergere eșuată." };
+    }
+    dispatchStoreUpdate({ scope: "referrals" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
 export function getInviteLinkForCode(code: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://novra.ro";
   return buildInviteLink(code, origin);

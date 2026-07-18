@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Gift, Save, RefreshCw } from "lucide-react";
+import { Users, Gift, Save, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { requireAdmin } from "@/lib/auth";
-import { loadReferralsAdmin, saveReferralSettingsAdmin } from "@/lib/referrals";
+import {
+  deleteReferralAdmin,
+  loadReferralsAdmin,
+  saveReferralSettingsAdmin,
+  updateReferralAdmin,
+} from "@/lib/referrals";
 import { createStoreRefreshEffect } from "@/lib/store";
 import { DEFAULT_REFERRAL_SETTINGS, type FriendReferral, type ReferralSettings } from "@/lib/referrals-types";
 
@@ -16,6 +21,14 @@ export default function AdminRecomandariPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    referrerEmail: "",
+    refereeEmail: "",
+    referrerRewarded: false,
+    refereeRewarded: false,
+  });
 
   const refresh = async () => {
     const data = await loadReferralsAdmin();
@@ -33,11 +46,48 @@ export default function AdminRecomandariPage() {
 
   if (!admin) return null;
 
+  const showMessage = (text: string) => {
+    setMessage(text);
+    setTimeout(() => setMessage(""), 4000);
+  };
+
   const handleSaveSettings = async () => {
     setSaving(true);
     const result = await saveReferralSettingsAdmin(settings);
     setSaving(false);
-    setMessage(result.ok ? "Setări salvate." : result.message);
+    showMessage(result.ok ? "Setări salvate." : result.message);
+  };
+
+  const startEdit = (r: FriendReferral) => {
+    setEditingId(r.id);
+    setEditForm({
+      referrerEmail: r.referrerEmail,
+      refereeEmail: r.refereeEmail ?? "",
+      referrerRewarded: r.referrerRewarded,
+      refereeRewarded: r.refereeRewarded,
+    });
+  };
+
+  const handleSaveReferral = async (referralId: string) => {
+    setActionId(referralId);
+    const result = await updateReferralAdmin(referralId, editForm);
+    setActionId(null);
+    if (!result.ok) {
+      showMessage(result.message);
+      return;
+    }
+    setEditingId(null);
+    await refresh();
+    showMessage("Recomandare actualizată.");
+  };
+
+  const handleDeleteReferral = async (referralId: string) => {
+    if (!window.confirm("Ștergi această recomandare?")) return;
+    setActionId(referralId);
+    const result = await deleteReferralAdmin(referralId);
+    setActionId(null);
+    showMessage(result.ok ? "Recomandare ștearsă." : result.message);
+    if (result.ok) await refresh();
   };
 
   return (
@@ -127,32 +177,126 @@ export default function AdminRecomandariPage() {
         <p className="text-gray-500 text-sm py-8 text-center">Nicio recomandare încă.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[800px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500">
                 <th className="p-3">Cod</th>
                 <th className="p-3">Recomandator</th>
                 <th className="p-3">Invitat</th>
                 <th className="p-3">Status</th>
+                <th className="p-3">Recompense</th>
+                <th className="p-3">Acțiuni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {referrals.map((r) => (
-                <tr key={r.id} className="text-gray-300">
-                  <td className="p-3 font-mono text-xs text-purple-300">{r.referralCode}</td>
-                  <td className="p-3">{r.referrerEmail}</td>
-                  <td className="p-3">{r.refereeEmail ?? "—"}</td>
-                  <td className="p-3">
-                    {r.firstOrderId ? (
-                      <span className="text-green-300 text-xs">Comandă #{r.firstOrderId.slice(-6)}</span>
-                    ) : r.registeredAt ? (
-                      <span className="text-yellow-300 text-xs">Înregistrat</span>
-                    ) : (
-                      <span className="text-gray-500 text-xs">Link accesat</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {referrals.map((r) => {
+                const isEditing = editingId === r.id;
+                return (
+                  <tr key={r.id} className="text-gray-300">
+                    <td className="p-3 font-mono text-xs text-purple-300">{r.referralCode}</td>
+                    <td className="p-3">
+                      {isEditing ? (
+                        <input
+                          value={editForm.referrerEmail}
+                          onChange={(e) => setEditForm((p) => ({ ...p, referrerEmail: e.target.value }))}
+                          className="w-full rounded border border-white/10 bg-novra-bg/50 px-2 py-1 text-xs"
+                        />
+                      ) : (
+                        r.referrerEmail
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {isEditing ? (
+                        <input
+                          value={editForm.refereeEmail}
+                          onChange={(e) => setEditForm((p) => ({ ...p, refereeEmail: e.target.value }))}
+                          className="w-full rounded border border-white/10 bg-novra-bg/50 px-2 py-1 text-xs"
+                        />
+                      ) : (
+                        r.refereeEmail ?? "—"
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {r.firstOrderId ? (
+                        <span className="text-green-300 text-xs">Comandă #{r.firstOrderId.slice(-6)}</span>
+                      ) : r.registeredAt ? (
+                        <span className="text-yellow-300 text-xs">Înregistrat</span>
+                      ) : (
+                        <span className="text-gray-500 text-xs">Link accesat</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-xs">
+                      {isEditing ? (
+                        <div className="space-y-1">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editForm.referrerRewarded}
+                              onChange={(e) => setEditForm((p) => ({ ...p, referrerRewarded: e.target.checked }))}
+                            />
+                            Recomandator
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editForm.refereeRewarded}
+                              onChange={(e) => setEditForm((p) => ({ ...p, refereeRewarded: e.target.checked }))}
+                            />
+                            Invitat
+                          </label>
+                        </div>
+                      ) : (
+                        <>
+                          Rec: {r.referrerRewarded ? "da" : "nu"} · Inv: {r.refereeRewarded ? "da" : "nu"}
+                        </>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {isEditing ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={actionId === r.id}
+                              onClick={() => void handleSaveReferral(r.id)}
+                              className="rounded-lg bg-purple-600 px-2 py-1 text-xs text-white disabled:opacity-50"
+                            >
+                              Salvează
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                              className="rounded-lg border border-white/10 px-2 py-1 text-xs text-gray-400"
+                            >
+                              Anulează
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => startEdit(r)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs text-gray-300"
+                            >
+                              <Pencil size={12} />
+                              Editează
+                            </button>
+                            <button
+                              type="button"
+                              disabled={actionId === r.id}
+                              onClick={() => void handleDeleteReferral(r.id)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 disabled:opacity-50"
+                            >
+                              <Trash2 size={12} />
+                              Șterge
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

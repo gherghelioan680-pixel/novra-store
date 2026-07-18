@@ -131,3 +131,116 @@ export async function adminRevokeCreditPurchase(
     return { ok: false, message: "Eroare de rețea." };
   }
 }
+
+export async function loadAllCreditTransactionsAdmin(): Promise<CreditTransactionClient[]> {
+  const data = await apiFetch<{ transactions: CreditTransactionClient[] }>(
+    "/api/store/credits?transactions=1"
+  );
+  return data?.transactions ?? [];
+}
+
+export async function adminUpdateCreditPurchase(
+  purchaseId: string,
+  input: { adminNote?: string; amount?: number }
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/store/credits", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "update_purchase", purchaseId, reason: input.adminNote, amount: input.amount }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Eroare." };
+    }
+    dispatchStoreUpdate({ scope: "credits" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function adminDeleteCreditPurchase(
+  purchaseId: string
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/store/credits", {
+      method: "POST",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "delete_purchase", purchaseId }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Eroare." };
+    }
+    dispatchStoreUpdate({ scope: "credits" });
+    dispatchStoreUpdate({ scope: "users" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function adminAdjustUserCredits(
+  userEmail: string,
+  delta: number,
+  reason?: string
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/store/credits", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "adjust_credits", userEmail, delta, reason }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Eroare." };
+    }
+    dispatchStoreUpdate({ scope: "credits" });
+    dispatchStoreUpdate({ scope: "users" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function adminUpdateCreditTransaction(
+  transactionId: string,
+  description: string
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/store/credits", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "update_transaction", transactionId, description }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Eroare." };
+    }
+    dispatchStoreUpdate({ scope: "credits" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function adminDeleteCreditTransaction(
+  transactionId: string
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/store/credits", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ action: "delete_transaction", transactionId }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string; error?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Eroare." };
+    }
+    dispatchStoreUpdate({ scope: "credits" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}

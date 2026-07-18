@@ -41,18 +41,49 @@ export async function createReturnRequest(input: {
 export async function updateReturnStatus(
   id: string,
   status: ReturnStatus,
-  adminNote?: string
+  adminNote?: string,
+  refundAmount?: number
+): Promise<ReturnRequest | null> {
+  return updateReturnRequest(id, { status, adminNote, refundAmount });
+}
+
+export async function updateReturnRequest(
+  id: string,
+  updates: {
+    status?: ReturnStatus;
+    adminNote?: string;
+    refundAmount?: number | null;
+  }
 ): Promise<ReturnRequest | null> {
   const returns = await readReturns();
   const index = returns.findIndex((item) => item.id === id);
   if (index === -1) return null;
 
+  const current = returns[index];
   returns[index] = {
-    ...returns[index],
-    status,
-    adminNote: adminNote?.trim() || returns[index].adminNote,
+    ...current,
+    ...(updates.status !== undefined ? { status: updates.status } : {}),
+    ...(updates.adminNote !== undefined
+      ? { adminNote: updates.adminNote.trim() || undefined }
+      : {}),
+    ...(updates.refundAmount !== undefined
+      ? {
+          refundAmount:
+            updates.refundAmount === null || updates.refundAmount === undefined
+              ? undefined
+              : Math.max(0, Number(updates.refundAmount) || 0),
+        }
+      : {}),
     updatedAt: new Date().toISOString(),
   };
   await writeReturns(returns);
   return returns[index];
+}
+
+export async function deleteReturnRequest(id: string): Promise<boolean> {
+  const returns = await readReturns();
+  const filtered = returns.filter((item) => item.id !== id);
+  if (filtered.length === returns.length) return false;
+  await writeReturns(filtered);
+  return true;
 }

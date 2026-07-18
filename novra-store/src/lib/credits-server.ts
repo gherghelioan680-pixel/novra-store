@@ -566,3 +566,81 @@ export async function updateCreditPurchaseSession(
   await writeCreditPurchases(purchases);
   return purchases[index];
 }
+
+export async function adminUpdateCreditPurchase(
+  purchaseId: string,
+  updates: { adminNote?: string; amount?: number }
+): Promise<{ ok: true; purchase: CreditPurchase } | { ok: false; message: string }> {
+  const purchases = await readCreditPurchases();
+  const index = purchases.findIndex((p) => p.id === purchaseId);
+  if (index === -1) {
+    return { ok: false, message: "Achiziția nu a fost găsită." };
+  }
+
+  const purchase = purchases[index];
+  if (purchase.status === "credited" && updates.amount !== undefined && updates.amount !== purchase.amount) {
+    return { ok: false, message: "Nu poți modifica suma unei achiziții deja creditate." };
+  }
+
+  purchases[index] = {
+    ...purchase,
+    ...(updates.adminNote !== undefined ? { adminNote: updates.adminNote.trim() || undefined } : {}),
+    ...(updates.amount !== undefined && purchase.status !== "credited"
+      ? { amount: Math.max(1, Math.round(updates.amount)) }
+      : {}),
+    updatedAt: new Date().toISOString(),
+  };
+  await writeCreditPurchases(purchases);
+  return { ok: true, purchase: purchases[index] };
+}
+
+export async function adminDeleteCreditPurchase(
+  purchaseId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const purchases = await readCreditPurchases();
+  const purchase = purchases.find((p) => p.id === purchaseId);
+  if (!purchase) {
+    return { ok: false, message: "Achiziția nu a fost găsită." };
+  }
+
+  if (purchase.status === "credited") {
+    const revokeResult = await adminRevokeCreditPurchase(purchaseId, "Șters din admin");
+    if (!revokeResult.ok) {
+      return revokeResult;
+    }
+  }
+
+  const filtered = purchases.filter((p) => p.id !== purchaseId);
+  await writeCreditPurchases(filtered);
+  return { ok: true };
+}
+
+export async function adminDeleteCreditTransaction(
+  transactionId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const transactions = await readCreditTransactions();
+  const filtered = transactions.filter((t) => t.id !== transactionId);
+  if (filtered.length === transactions.length) {
+    return { ok: false, message: "Tranzacția nu a fost găsită." };
+  }
+  await writeCreditTransactions(filtered);
+  return { ok: true };
+}
+
+export async function adminUpdateCreditTransaction(
+  transactionId: string,
+  description: string
+): Promise<{ ok: true; transaction: CreditTransaction } | { ok: false; message: string }> {
+  const transactions = await readCreditTransactions();
+  const index = transactions.findIndex((t) => t.id === transactionId);
+  if (index === -1) {
+    return { ok: false, message: "Tranzacția nu a fost găsită." };
+  }
+
+  transactions[index] = {
+    ...transactions[index],
+    description: description.trim() || transactions[index].description,
+  };
+  await writeCreditTransactions(transactions);
+  return { ok: true, transaction: transactions[index] };
+}

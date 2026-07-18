@@ -5,11 +5,13 @@ import {
   unauthorizedResponse,
 } from "@/lib/server-auth";
 import {
+  deleteFriendReferral,
   ensureUserReferralCode,
   getReferralStats,
   linkRefereeOnRegister,
   readFriendReferrals,
   readReferralSettings,
+  updateFriendReferral,
   writeReferralSettings,
 } from "@/lib/referrals-server";
 import type { ReferralSettings } from "@/lib/referrals-types";
@@ -84,6 +86,39 @@ export async function POST(request: NextRequest) {
       if (!user) return unauthorizedResponse();
 
       await linkRefereeOnRegister(user, inviteCode);
+      return Response.json({ ok: true });
+    }
+
+    if (action === "update-referral") {
+      if (!isAdminRequest(request)) return unauthorizedResponse();
+      const referralId = typeof body?.referralId === "string" ? body.referralId : "";
+      if (!referralId) {
+        return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+      }
+      const result = await updateFriendReferral(referralId, {
+        referrerEmail: typeof body?.referrerEmail === "string" ? body.referrerEmail : undefined,
+        refereeEmail: typeof body?.refereeEmail === "string" ? body.refereeEmail : undefined,
+        referrerRewarded:
+          typeof body?.referrerRewarded === "boolean" ? body.referrerRewarded : undefined,
+        refereeRewarded:
+          typeof body?.refereeRewarded === "boolean" ? body.refereeRewarded : undefined,
+      });
+      if (!result.ok) {
+        return Response.json({ ok: false, message: result.message }, { status: 400 });
+      }
+      return Response.json({ ok: true, referral: result.referral });
+    }
+
+    if (action === "delete-referral") {
+      if (!isAdminRequest(request)) return unauthorizedResponse();
+      const referralId = typeof body?.referralId === "string" ? body.referralId : "";
+      if (!referralId) {
+        return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+      }
+      const result = await deleteFriendReferral(referralId);
+      if (!result.ok) {
+        return Response.json({ ok: false, message: result.message }, { status: 400 });
+      }
       return Response.json({ ok: true });
     }
 

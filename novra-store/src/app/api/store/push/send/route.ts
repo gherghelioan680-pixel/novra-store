@@ -4,6 +4,8 @@ import {
   readPushNotifications,
   readPushSubscriptions,
   sendPushToAll,
+  updatePushNotification,
+  deletePushNotification,
 } from "@/lib/push-server";
 
 export const runtime = "nodejs";
@@ -46,6 +48,54 @@ export async function POST(request: NextRequest) {
       failureCount: result.failureCount,
       notification: result.notification,
     });
+  } catch {
+    return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const id = typeof body?.id === "string" ? body.id : "";
+    if (!id) {
+      return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const result = await updatePushNotification(id, {
+      title: typeof body?.title === "string" ? body.title : undefined,
+      body: typeof body?.body === "string" ? body.body : undefined,
+      link: typeof body?.link === "string" ? body.link : undefined,
+      scheduledAt: typeof body?.scheduledAt === "string" ? body.scheduledAt : undefined,
+    });
+
+    if (!result.ok) {
+      return Response.json({ ok: false, message: result.message }, { status: 400 });
+    }
+
+    return Response.json({ ok: true, notification: result.notification });
+  } catch {
+    return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const id = typeof body?.id === "string" ? body.id : "";
+    if (!id) {
+      return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const result = await deletePushNotification(id);
+    if (!result.ok) {
+      return Response.json({ ok: false, message: result.message }, { status: 400 });
+    }
+
+    return Response.json({ ok: true });
   } catch {
     return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
   }

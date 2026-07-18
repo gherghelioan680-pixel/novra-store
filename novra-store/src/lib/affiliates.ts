@@ -274,4 +274,24 @@ export async function updatePayoutStatusAdmin(
   }
 }
 
+export async function deletePayoutAdmin(
+  payoutId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/affiliates/payouts", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ payoutId }),
+    });
+    const data = (await response.json()) as { message?: string; error?: string };
+    if (!response.ok) {
+      return { ok: false, message: data.message ?? data.error ?? "Ștergere eșuată." };
+    }
+    dispatchStoreUpdate({ scope: "affiliates" });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
 export { generateAffiliateCode } from "./affiliates-types";

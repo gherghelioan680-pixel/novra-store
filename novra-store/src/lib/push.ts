@@ -71,6 +71,45 @@ export async function sendPushNotificationAdmin(input: {
   }
 }
 
+export async function updatePushNotificationAdmin(
+  id: string,
+  input: { title?: string; body?: string; link?: string; scheduledAt?: string }
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/push/send", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id, ...input }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? "Actualizare eșuată." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
+export async function deletePushNotificationAdmin(
+  id: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const response = await fetch("/api/store/push/send", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id }),
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string };
+    if (!response.ok || !data.ok) {
+      return { ok: false, message: data.message ?? "Ștergere eșuată." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Eroare de rețea." };
+  }
+}
+
 export function isPushSupported(): boolean {
   if (typeof window === "undefined") return false;
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;

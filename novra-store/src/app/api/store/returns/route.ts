@@ -4,8 +4,9 @@ import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/l
 import { normalizeOrder, type Order } from "@/lib/orders";
 import {
   createReturnRequest,
+  deleteReturnRequest,
   readReturns,
-  updateReturnStatus,
+  updateReturnRequest,
 } from "@/lib/returns-server";
 import type { ReturnStatus } from "@/lib/returns-types";
 import {
@@ -102,13 +103,19 @@ export async function PATCH(request: NextRequest) {
     const id = typeof body?.id === "string" ? body.id.trim() : "";
     const status = body?.status as ReturnStatus | undefined;
     const adminNote = typeof body?.adminNote === "string" ? body.adminNote.trim() : undefined;
+    const refundAmount =
+      body?.refundAmount === null || body?.refundAmount === ""
+        ? null
+        : body?.refundAmount !== undefined
+          ? Number(body.refundAmount)
+          : undefined;
 
-    if (!id || !status) {
+    if (!id) {
       return Response.json({ success: false, message: "Date incomplete." }, { status: 400 });
     }
 
     const valid: ReturnStatus[] = ["pending", "approved", "rejected", "completed"];
-    if (!valid.includes(status)) {
+    if (status !== undefined && !valid.includes(status)) {
       return Response.json({ success: false, message: "Status invalid." }, { status: 400 });
     }
 
@@ -118,14 +125,41 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ success: false, message: "Cererea nu a fost găsită." }, { status: 404 });
     }
 
-    const updated = await updateReturnStatus(id, status, adminNote);
+    if (status === undefined && adminNote === undefined && refundAmount === undefined) {
+      return Response.json({ success: false, message: "Nicio modificare specificată." }, { status: 400 });
+    }
+
+    const updated = await updateReturnRequest(id, { status, adminNote, refundAmount });
     if (!updated) {
       return Response.json({ success: false, message: "Cererea nu a fost găsită." }, { status: 404 });
     }
 
-    void trySendReturnStatusEmails(updated, existing.status);
+    if (status !== undefined && status !== existing.status) {
+      void trySendReturnStatusEmails(updated, existing.status);
+    }
 
     return Response.json({ success: true, returnRequest: updated });
+  } catch {
+    return Response.json({ success: false, message: "Cerere invalidă." }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const id = typeof body?.id === "string" ? body.id.trim() : "";
+    if (!id) {
+      return Response.json({ success: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const deleted = await deleteReturnRequest(id);
+    if (!deleted) {
+      return Response.json({ success: false, message: "Cererea nu a fost găsită." }, { status: 404 });
+    }
+
+    return Response.json({ success: true });
   } catch {
     return Response.json({ success: false, message: "Cerere invalidă." }, { status: 400 });
   }

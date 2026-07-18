@@ -5,6 +5,7 @@ import {
   unauthorizedResponse,
 } from "@/lib/server-auth";
 import {
+  deleteAffiliatePayout,
   findAffiliateByEmail,
   findAffiliateByUserId,
   getAvailablePayoutBalance,
@@ -107,6 +108,26 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ ok: false, message: result.message }, { status: 400 });
     }
     return Response.json({ ok: true, payout: result.payout });
+  } catch {
+    return Response.json({ error: "Cerere invalidă." }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const payoutId = body?.payoutId as string | undefined;
+    if (!payoutId) {
+      return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
+    }
+
+    const result = await deleteAffiliatePayout(payoutId);
+    if (!result.ok) {
+      return Response.json({ ok: false, message: result.message }, { status: 400 });
+    }
+    return Response.json({ ok: true });
   } catch {
     return Response.json({ error: "Cerere invalidă." }, { status: 400 });
   }

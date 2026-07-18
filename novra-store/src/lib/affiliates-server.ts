@@ -218,6 +218,24 @@ export async function updateAffiliatePayoutStatus(
   return { ok: true, payout: payouts[index] };
 }
 
+export async function deleteAffiliatePayout(
+  payoutId: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const payouts = await readAffiliatePayouts();
+  const payout = payouts.find((p) => p.id === payoutId);
+  if (!payout) return { ok: false, message: "Cerere negăsită." };
+
+  if (payout.status === "pending") {
+    const filtered = payouts.filter((p) => p.id !== payoutId);
+    await writeAffiliatePayouts(filtered);
+    return { ok: true };
+  }
+
+  const filtered = payouts.filter((p) => p.id !== payoutId);
+  await writeAffiliatePayouts(filtered);
+  return { ok: true };
+}
+
 export function getAffiliateRefFromRequest(request: NextRequest): string | undefined {
   const cookie = request.cookies.get(AFFILIATE_REF_COOKIE)?.value;
   if (!cookie) return undefined;

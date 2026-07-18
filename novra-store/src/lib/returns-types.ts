@@ -9,6 +9,7 @@ export type ReturnRequest = {
   description: string;
   status: ReturnStatus;
   adminNote?: string;
+  refundAmount?: number;
   createdAt: string;
   updatedAt: string;
 };

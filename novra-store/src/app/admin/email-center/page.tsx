@@ -230,6 +230,9 @@ export default function AdminEmailCenterPage() {
   const [logDateFrom, setLogDateFrom] = useState("");
   const [logDateTo, setLogDateTo] = useState("");
   const [logsLoading, setLogsLoading] = useState(false);
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
+  const [logEditForm, setLogEditForm] = useState({ to: "", subject: "", type: "", status: "sent" as "sent" | "failed" });
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
 
   const mergeSubscribers = (fromStorage: NewsletterSubscriber[]): SubscriberRow[] => {
     const fromUsers = getStoredUsers()
@@ -529,6 +532,42 @@ export default function AdminEmailCenterPage() {
     }
     await refresh();
     showMessage("Campanie ștearsă.");
+  };
+
+  const handleDeleteLog = async (id: string) => {
+    if (!window.confirm("Ștergi această intrare din istoric?")) return;
+    setDeletingLogId(id);
+    const res = await fetch("/api/admin/email/logs", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id }),
+    });
+    setDeletingLogId(null);
+    const data = (await res.json()) as { ok?: boolean; message?: string };
+    if (!res.ok || !data.ok) {
+      showMessage(data.message ?? "Ștergere eșuată.");
+      return;
+    }
+    await refresh();
+    showMessage("Intrare ștearsă.");
+  };
+
+  const handleSaveLogEdit = async (id: string) => {
+    setLogsLoading(true);
+    const res = await fetch("/api/admin/email/logs", {
+      method: "PATCH",
+      headers: getApiHeaders(),
+      body: JSON.stringify({ id, ...logEditForm }),
+    });
+    setLogsLoading(false);
+    const data = (await res.json()) as { ok?: boolean; message?: string };
+    if (!res.ok || !data.ok) {
+      showMessage(data.message ?? "Actualizare eșuată.");
+      return;
+    }
+    setEditingLogId(null);
+    await refresh();
+    showMessage("Intrare actualizată.");
   };
 
   const handleToggleAutomation = async (key: EmailAutomationKey, value: boolean) => {
@@ -930,12 +969,73 @@ export default function AdminEmailCenterPage() {
                         {log.messageId ?? "—"}
                       </td>
                       <td className="px-4 py-4 sm:px-6">
-                        {log.error ? (
-                          <span className="text-xs text-red-300" title={log.error}>
-                            Eroare
-                          </span>
+                        {editingLogId === log.id ? (
+                          <div className="flex flex-col gap-2 min-w-[180px]">
+                            <input
+                              value={logEditForm.subject}
+                              onChange={(e) => setLogEditForm((p) => ({ ...p, subject: e.target.value }))}
+                              className="rounded border border-white/10 bg-novra-bg/50 px-2 py-1 text-xs"
+                              placeholder="Subject"
+                            />
+                            <select
+                              value={logEditForm.status}
+                              onChange={(e) =>
+                                setLogEditForm((p) => ({
+                                  ...p,
+                                  status: e.target.value as "sent" | "failed",
+                                }))
+                              }
+                              className="rounded border border-white/10 bg-novra-bg/50 px-2 py-1 text-xs"
+                            >
+                              <option value="sent">Trimis</option>
+                              <option value="failed">Eșuat</option>
+                            </select>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                disabled={logsLoading}
+                                onClick={() => void handleSaveLogEdit(log.id)}
+                                className="rounded bg-purple-600 px-2 py-1 text-xs text-white"
+                              >
+                                Salvează
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingLogId(null)}
+                                className="rounded border border-white/10 px-2 py-1 text-xs text-gray-400"
+                              >
+                                Anulează
+                              </button>
+                            </div>
+                          </div>
                         ) : (
-                          <span className="text-xs text-gray-500">—</span>
+                          <div className="flex flex-wrap gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingLogId(log.id);
+                                setLogEditForm({
+                                  to: log.to,
+                                  subject: log.subject,
+                                  type: log.type,
+                                  status: log.status,
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-xs text-gray-300 hover:bg-white/5"
+                            >
+                              <Pencil size={12} />
+                              Editează
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deletingLogId === log.id}
+                              onClick={() => void handleDeleteLog(log.id)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                            >
+                              <Trash2 size={12} />
+                              Șterge
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>

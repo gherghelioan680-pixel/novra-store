@@ -146,3 +146,31 @@ export async function getEmailChartData(days = 30): Promise<EmailChartDay[]> {
 
   return result;
 }
+
+export async function deleteEmailLog(id: string): Promise<boolean> {
+  const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
+  const filtered = logs.filter((entry) => entry.id !== id);
+  if (filtered.length === logs.length) return false;
+  await writeJsonFile(FILE, filtered);
+  return true;
+}
+
+export async function updateEmailLog(
+  id: string,
+  updates: Partial<Pick<EmailLogEntry, "to" | "subject" | "type" | "status" | "error">>
+): Promise<EmailLogEntry | null> {
+  const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
+  const index = logs.findIndex((entry) => entry.id === id);
+  if (index === -1) return null;
+
+  logs[index] = {
+    ...logs[index],
+    ...(updates.to !== undefined ? { to: updates.to.trim() } : {}),
+    ...(updates.subject !== undefined ? { subject: updates.subject.trim() } : {}),
+    ...(updates.type !== undefined ? { type: updates.type.trim() } : {}),
+    ...(updates.status !== undefined ? { status: updates.status } : {}),
+    ...(updates.error !== undefined ? { error: updates.error.trim() || undefined } : {}),
+  };
+  await writeJsonFile(FILE, logs);
+  return logs[index];
+}
