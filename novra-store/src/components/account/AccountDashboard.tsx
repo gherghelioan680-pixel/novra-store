@@ -195,7 +195,7 @@ function AccountDashboardContent() {
           onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] pt-14 sm:pt-16 md:pb-8 md:pt-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))] max-md:pt-14 sm:max-md:pt-16 md:pb-8 md:pt-0">
           <div className="mx-auto max-w-4xl px-4 py-6 sm:px-8 sm:py-10">
             {showHeader && (
               <AccountHeader
@@ -226,7 +226,7 @@ function AccountDashboardContent() {
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-50 -translate-x-1/2 max-w-[calc(100vw-2rem)] rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl md:bottom-8"
+            className="fixed max-md:bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:bottom-8 left-1/2 z-50 -translate-x-1/2 max-w-[calc(100vw-2rem)] rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl"
           >
             {toast}
           </motion.div>
