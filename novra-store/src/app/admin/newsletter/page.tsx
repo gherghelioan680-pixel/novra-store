@@ -650,17 +650,15 @@ export default function AdminNewsletterPage() {
                               Editează
                             </button>
                           )}
-                          {sub.fromStorage && (
-                            <button
-                              type="button"
-                              disabled={deletingEmail === sub.email}
-                              onClick={() => void handleDeleteSubscriber(sub.email)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                            >
-                              <Trash2 size={12} />
-                              Șterge
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            disabled={deletingEmail === sub.email}
+                            onClick={() => void handleDeleteSubscriber(sub.email)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                          >
+                            <Trash2 size={12} />
+                            Șterge
+                          </button>
                         </div>
                       </td>
                     </tr>

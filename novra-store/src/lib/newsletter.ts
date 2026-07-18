@@ -1,4 +1,5 @@
 import { apiFetch, getApiHeaders } from "./api-client";
+import { getStoredUsers, saveUsers } from "./auth";
 import { dispatchStoreUpdate, STORAGE_KEYS } from "./store";
 
 export type NewsletterSubscriber = {
@@ -184,7 +185,10 @@ export async function deleteNewsletterSubscriber(
       return { ok: false, message: "Nu s-a putut șterge abonatul." };
     }
 
-    const data = (await response.json()) as { subscribers?: NewsletterSubscriber[] };
+    const data = (await response.json()) as {
+      subscribers?: NewsletterSubscriber[];
+      unsubscribedUser?: boolean;
+    };
     if (data.subscribers) {
       cacheNewsletterSubscribers(data.subscribers);
     } else {
@@ -192,6 +196,15 @@ export async function deleteNewsletterSubscriber(
         getNewsletterSubscribers().filter((subscriber) => subscriber.email !== trimmed)
       );
     }
+
+    const users = getStoredUsers();
+    const userIndex = users.findIndex((user) => user.email.toLowerCase() === trimmed);
+    if (userIndex !== -1 && users[userIndex].subscribedToNewsletter) {
+      users[userIndex] = { ...users[userIndex], subscribedToNewsletter: false };
+      saveUsers(users);
+      dispatchStoreUpdate({ scope: "users" });
+    }
+
     dispatchStoreUpdate({ scope: "newsletter" });
     return { ok: true };
   } catch {

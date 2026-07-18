@@ -148,11 +148,31 @@ export async function getEmailChartData(days = 30): Promise<EmailChartDay[]> {
 }
 
 export async function deleteEmailLog(id: string): Promise<boolean> {
+  const deleted = await deleteEmailLogs([id]);
+  return deleted > 0;
+}
+
+export async function deleteEmailLogs(ids: string[]): Promise<number> {
+  const uniqueIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return 0;
+
   const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
-  const filtered = logs.filter((entry) => entry.id !== id);
-  if (filtered.length === logs.length) return false;
+  const idSet = new Set(uniqueIds);
+  const filtered = logs.filter((entry) => !idSet.has(entry.id));
+  const deletedCount = logs.length - filtered.length;
+  if (deletedCount === 0) return 0;
+
   await writeJsonFile(FILE, filtered);
-  return true;
+  return deletedCount;
+}
+
+export async function deleteAllEmailLogs(): Promise<number> {
+  const logs = await readJsonFile<EmailLogEntry[]>(FILE, []);
+  const count = logs.length;
+  if (count === 0) return 0;
+
+  await writeJsonFile(FILE, []);
+  return count;
 }
 
 export async function updateEmailLog(

@@ -248,6 +248,20 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
+async function unsubscribeUserAccount(email: string): Promise<boolean> {
+  const users = await readJsonFile<
+    Array<{ email: string; subscribedToNewsletter?: boolean }>
+  >("users.json", []);
+  const index = users.findIndex((user) => user.email.toLowerCase() === email);
+  if (index === -1) return false;
+
+  if (users[index].subscribedToNewsletter === false) return false;
+
+  users[index] = { ...users[index], subscribedToNewsletter: false };
+  await writeJsonFile("users.json", users);
+  return true;
+}
+
 export async function DELETE(request: NextRequest) {
   if (!isAdminRequest(request)) return unauthorizedResponse();
 
@@ -259,13 +273,23 @@ export async function DELETE(request: NextRequest) {
     }
 
     const subscribers = await readSubscribers();
+    const hadSubscriber = subscribers.some((subscriber) => subscriber.email === email);
     const next = subscribers.filter((subscriber) => subscriber.email !== email);
-    if (next.length === subscribers.length) {
+    const unsubscribedUser = await unsubscribeUserAccount(email);
+
+    if (!hadSubscriber && !unsubscribedUser) {
       return Response.json({ error: "Subscriber not found" }, { status: 404 });
     }
 
-    await writeJsonFile(FILE, next);
-    return Response.json({ ok: true, subscribers: next });
+    if (hadSubscriber) {
+      await writeJsonFile(FILE, next);
+    }
+
+    return Response.json({
+      ok: true,
+      subscribers: hadSubscriber ? next : subscribers,
+      unsubscribedUser,
+    });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

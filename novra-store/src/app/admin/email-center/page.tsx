@@ -235,6 +235,8 @@ export default function AdminEmailCenterPage() {
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [logEditForm, setLogEditForm] = useState({ to: "", subject: "", type: "", status: "sent" as "sent" | "failed" });
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+  const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
+  const [bulkLogsWorking, setBulkLogsWorking] = useState(false);
 
   const mergeSubscribers = (fromStorage: NewsletterSubscriber[]): SubscriberRow[] => {
     const fromUsers = getStoredUsers()
@@ -313,6 +315,9 @@ export default function AdminEmailCenterPage() {
     if (res.ok) {
       const data = (await res.json()) as { logs: EmailLogEntry[] };
       setEmailLogs(data.logs);
+      setSelectedLogIds((current) =>
+        current.filter((id) => data.logs.some((log) => log.id === id))
+      );
     }
   };
 
@@ -750,6 +755,52 @@ export default function AdminEmailCenterPage() {
   const displayLogs = emailLogs.length ? emailLogs : (dashboard?.recentLogs ?? []);
   const chartData = dashboard?.chartData ?? [];
   const chartMax = Math.max(1, ...chartData.map((day) => day.sent + day.failed));
+  const allLogsSelected =
+    displayLogs.length > 0 && selectedLogIds.length === displayLogs.length;
+
+  const toggleLogSelected = (id: string) => {
+    setSelectedLogIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const toggleSelectAllLogs = () => {
+    setSelectedLogIds(allLogsSelected ? [] : displayLogs.map((log) => log.id));
+  };
+
+  const handleBulkDeleteLogs = async (deleteAll = false) => {
+    const count = deleteAll ? displayLogs.length : selectedLogIds.length;
+    if (count === 0) return;
+
+    const confirmMessage = deleteAll
+      ? "Ștergi tot istoricul emailurilor?"
+      : `Ștergi ${count} intrări selectate din istoric?`;
+    if (!window.confirm(confirmMessage)) return;
+
+    setBulkLogsWorking(true);
+    const res = await fetch("/api/admin/email/logs", {
+      method: "DELETE",
+      headers: getApiHeaders(),
+      body: JSON.stringify(
+        deleteAll ? { deleteAll: true } : { ids: selectedLogIds }
+      ),
+    });
+    setBulkLogsWorking(false);
+
+    const data = (await res.json()) as { ok?: boolean; message?: string; deletedCount?: number };
+    if (!res.ok || !data.ok) {
+      showMessage(data.message ?? "Ștergere eșuată.");
+      return;
+    }
+
+    setSelectedLogIds([]);
+    await refresh();
+    showMessage(
+      deleteAll
+        ? `Istoric șters (${data.deletedCount ?? count} intrări).`
+        : `${data.deletedCount ?? count} intrări șterse.`
+    );
+  };
 
   return (
     <div>
@@ -927,10 +978,43 @@ export default function AdminEmailCenterPage() {
 
           <div className="overflow-x-auto rounded-2xl border border-white/10 bg-novra-card/30">
             <div className="border-b border-white/10 px-4 py-3 sm:px-6">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-                <Mail size={16} className="text-purple-400" />
-                Istoric emailuri
-              </h3>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <Mail size={16} className="text-purple-400" />
+                  Istoric emailuri
+                </h3>
+                {displayLogs.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 text-xs text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={allLogsSelected}
+                        onChange={toggleSelectAllLogs}
+                        className="rounded border-white/20"
+                      />
+                      Selectează toate ({selectedLogIds.length}/{displayLogs.length})
+                    </label>
+                    {selectedLogIds.length > 0 && (
+                      <button
+                        type="button"
+                        disabled={bulkLogsWorking}
+                        onClick={() => void handleBulkDeleteLogs(false)}
+                        className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        Șterge selectate
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={bulkLogsWorking}
+                      onClick={() => void handleBulkDeleteLogs(true)}
+                      className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      Șterge toate
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             {displayLogs.length === 0 ? (
               <div className="px-4 py-12 text-center sm:px-6">
@@ -941,6 +1025,15 @@ export default function AdminEmailCenterPage() {
               <table className="w-full min-w-[1000px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500">
+                    <th className="px-4 py-4 sm:px-6 w-10">
+                      <input
+                        type="checkbox"
+                        checked={allLogsSelected}
+                        onChange={toggleSelectAllLogs}
+                        className="rounded border-white/20"
+                        aria-label="Selectează toate intrările"
+                      />
+                    </th>
                     <th className="px-4 py-4 sm:px-6">Data</th>
                     <th className="px-4 py-4">Email destinatar</th>
                     <th className="px-4 py-4">Tip email</th>
@@ -953,6 +1046,15 @@ export default function AdminEmailCenterPage() {
                 <tbody className="divide-y divide-white/5">
                   {displayLogs.map((log) => (
                     <tr key={log.id} className="text-gray-300">
+                      <td className="px-4 py-4 sm:px-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedLogIds.includes(log.id)}
+                          onChange={() => toggleLogSelected(log.id)}
+                          className="rounded border-white/20"
+                          aria-label={`Selectează intrarea ${log.subject}`}
+                        />
+                      </td>
                       <td className="px-4 py-4 sm:px-6 text-xs text-gray-500">{formatDate(log.sentAt)}</td>
                       <td className="px-4 py-4 font-medium text-white truncate max-w-[180px]">{log.to}</td>
                       <td className="px-4 py-4 text-xs text-purple-300">{typeLabel(log.type)}</td>
@@ -1118,19 +1220,15 @@ export default function AdminEmailCenterPage() {
                       <td className="px-4 py-4 text-xs text-purple-300">{sourceLabel(sub.source)}</td>
                       <td className="px-4 py-4 sm:px-6 text-xs text-gray-500">{formatShortDate(sub.date)}</td>
                       <td className="px-4 py-4">
-                        {sub.fromStorage ? (
-                          <button
-                            type="button"
-                            disabled={deletingEmail === sub.email}
-                            onClick={() => void handleDeleteSubscriber(sub.email)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                          >
-                            <Trash2 size={12} />
-                            Șterge
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-500">—</span>
-                        )}
+                        <button
+                          type="button"
+                          disabled={deletingEmail === sub.email}
+                          onClick={() => void handleDeleteSubscriber(sub.email)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                        >
+                          <Trash2 size={12} />
+                          Șterge
+                        </button>
                       </td>
                     </tr>
                   ))}

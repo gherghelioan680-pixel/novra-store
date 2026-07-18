@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import {
+  deleteAllEmailLogs,
   deleteEmailLog,
+  deleteEmailLogs,
   getEmailLogsFiltered,
   updateEmailLog,
   type EmailLogStatus,
@@ -68,6 +70,24 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    if (body?.deleteAll === true) {
+      const deletedCount = await deleteAllEmailLogs();
+      return Response.json({ ok: true, deletedCount });
+    }
+
+    const ids = Array.isArray(body?.ids)
+      ? body.ids.filter((value: unknown): value is string => typeof value === "string")
+      : [];
+
+    if (ids.length > 0) {
+      const deletedCount = await deleteEmailLogs(ids);
+      if (deletedCount === 0) {
+        return Response.json({ ok: false, message: "Nicio intrare găsită." }, { status: 404 });
+      }
+      return Response.json({ ok: true, deletedCount });
+    }
+
     const id = typeof body?.id === "string" ? body.id.trim() : "";
     if (!id) {
       return Response.json({ ok: false, message: "ID lipsă." }, { status: 400 });
@@ -78,7 +98,7 @@ export async function DELETE(request: NextRequest) {
       return Response.json({ ok: false, message: "Intrare negăsită." }, { status: 404 });
     }
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, deletedCount: 1 });
   } catch {
     return Response.json({ ok: false, message: "Cerere invalidă." }, { status: 400 });
   }
