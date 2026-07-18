@@ -136,9 +136,15 @@ function normalizeStatus(status: string | undefined): OrderStatus {
   return "pending";
 }
 
+/** Resolve the customer inbox for order emails (userEmail, address, legacy customer). */
+export function resolveOrderCustomerEmail(order: Partial<Order>): string {
+  const address = order.address ?? order.customer;
+  return (order.userEmail ?? address?.email ?? "").trim().toLowerCase();
+}
+
 export function normalizeOrder(raw: Partial<Order>): Order {
   const address = raw.address ?? raw.customer;
-  const userEmail = (raw.userEmail ?? address?.email ?? "").toLowerCase();
+  const userEmail = resolveOrderCustomerEmail(raw);
   const userName = raw.userName ?? address?.name ?? "";
   const total = raw.total ?? raw.totalPrice ?? 0;
   const createdAt = raw.createdAt ?? new Date().toISOString();

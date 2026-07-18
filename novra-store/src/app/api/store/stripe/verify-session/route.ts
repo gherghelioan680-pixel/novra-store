@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getStripeClient } from "@/lib/stripe-server";
-import { normalizeOrder, type Order } from "@/lib/orders";
+import { normalizeOrder, resolveOrderCustomerEmail, type Order } from "@/lib/orders";
 import { trySendOrderConfirmationEmail, trySendAdminNewOrderEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
@@ -76,6 +76,9 @@ export async function GET(request: NextRequest) {
     }
 
     const settings = await getServerSiteSettings();
+    const customerEmail = resolveOrderCustomerEmail(order);
+    console.log(`[ORDER] Order created: ${order.purchaseCode}, ${customerEmail || "—"}`);
+
     const sent = await trySendOrderConfirmationEmail(order, settings.orderEmailsEnabled);
     if (sent) {
       order = { ...order, confirmationEmailSent: true };

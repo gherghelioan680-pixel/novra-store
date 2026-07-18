@@ -2,7 +2,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
-import { normalizeOrder, type Order } from "@/lib/orders";
+import { normalizeOrder, resolveOrderCustomerEmail, type Order } from "@/lib/orders";
 import { trySendOrderConfirmationEmail, trySendAdminNewOrderEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
@@ -69,6 +69,9 @@ export async function fulfillOrderFromStripeSession(
       await markAbandonedCartCompleted(order.userEmail);
     }
   }
+
+  const customerEmail = resolveOrderCustomerEmail(order);
+  console.log(`[ORDER] Order created: ${order.purchaseCode}, ${customerEmail || "—"}`);
 
   const settings = await getServerSiteSettings();
   const sent = await trySendOrderConfirmationEmail(order, settings.orderEmailsEnabled);

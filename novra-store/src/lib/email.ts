@@ -1,7 +1,7 @@
 import "server-only";
 
 import nodemailer, { type Transporter } from "nodemailer";
-import type { Order, OrderStatus } from "./orders";
+import { resolveOrderCustomerEmail, type Order, type OrderStatus } from "./orders";
 import { ORDER_STATUS_LABELS } from "./orders";
 import { buildFanCourierTrackingUrl } from "./tracking";
 import { isEmailsEnabled } from "./emails-enabled";
@@ -344,7 +344,7 @@ function orderTemplateVars(order: Order): Record<string, string> {
   return {
     purchaseCode: order.purchaseCode,
     customerName: order.address.name,
-    customerEmail: order.userEmail,
+    customerEmail: resolveOrderCustomerEmail(order),
     total: order.total.toFixed(2),
     paymentMethod: paymentMethodLabel(order),
     status: ORDER_STATUS_LABELS[order.status],
@@ -427,36 +427,90 @@ async function buildOrderEmailHtml(
   };
 }
 
+function logOrderConfirmationAttempt(input: {
+  recipient: string;
+  subject: string;
+  template: string;
+  smtp: string;
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}): void {
+  console.log(`[EMAIL] Recipient: ${input.recipient}`);
+  console.log(`[EMAIL] Subject: ${input.subject}`);
+  console.log(`[EMAIL] Template: ${input.template}`);
+  console.log(`[EMAIL] SMTP: ${input.smtp}`);
+  console.log(`[EMAIL] Success: ${input.success ? "true" : "false"}`);
+  console.log(`[EMAIL] MessageId: ${input.messageId ?? "—"}`);
+  if (input.error) {
+    console.error(`[EMAIL] Error: ${input.error}`);
+  }
+}
+
 /** Send confirmation email if enabled and not already sent. Returns true when email was sent. */
 export async function trySendOrderConfirmationEmail(
   order: Order,
   orderEmailsEnabled: boolean
 ): Promise<boolean> {
-  const automationOn = await isAutomationEnabled("orderConfirmation");
-  if (!isEmailsEnabled() || !orderEmailsEnabled || !automationOn) {
-    console.log("[EMAIL] Order confirmation skipped — disabled for", order.purchaseCode);
+  const recipient = resolveOrderCustomerEmail(order);
+
+  if (!isEmailsEnabled()) {
+    console.log(
+      `[EMAIL] Order confirmation skipped — EMAILS_ENABLED=false for ${order.purchaseCode} (recipient: ${recipient || "—"})`
+    );
     return false;
   }
-  if (order.confirmationEmailSent) return false;
-  if (!order.userEmail?.trim()) {
-    console.warn("[EMAIL ERROR] Missing customer email — skipping confirmation for", order.purchaseCode);
+
+  if (!orderEmailsEnabled) {
+    console.log(
+      `[EMAIL] Order confirmation skipped — orderEmailsEnabled=false for ${order.purchaseCode} (recipient: ${recipient || "—"})`
+    );
     return false;
   }
-  return sendOrderConfirmationEmail(order);
+
+  if (order.confirmationEmailSent) {
+    console.log(`[EMAIL] Order confirmation skipped — already sent for ${order.purchaseCode}`);
+    return false;
+  }
+
+  if (!recipient) {
+    console.error(
+      `[EMAIL] Error: Missing customer email — userEmail=${order.userEmail || "—"}, address.email=${order.address?.email || "—"} — skipping confirmation for ${order.purchaseCode}`
+    );
+    return false;
+  }
+
+  if (recipient !== order.userEmail) {
+    console.log(
+      `[EMAIL] Using resolved customer email ${recipient} (order.userEmail=${order.userEmail || "—"}) for ${order.purchaseCode}`
+    );
+  }
+
+  return sendOrderConfirmationEmail(order, recipient);
 }
 
-export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
+export async function sendOrderConfirmationEmail(
+  order: Order,
+  recipientEmail?: string
+): Promise<boolean> {
+  const recipient = (recipientEmail ?? resolveOrderCustomerEmail(order)).trim().toLowerCase();
   const template = await getEmailTemplate("order_confirmation");
   const vars = orderTemplateVars(order);
+  const subject = resolveTemplateSubject(template, vars);
   const intro = `${applyTemplatePlaceholders(template.content, vars)}<br>${confirmationIntro(order)}`;
   const body = `
     ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${intro}`)}
     ${buildOrderSummaryHtml(order, { includeTrackLink: true })}
   `;
+  const fromRole = resolveFromRole({
+    logType: "order_confirmation",
+    templateId: "order_confirmation",
+  });
+  const smtpFrom = getFromAddress(fromRole) ?? "—";
 
-  return sendEmail({
-    to: order.userEmail,
-    subject: resolveTemplateSubject(template, vars),
+  const result = await sendEmailDetailed({
+    to: recipient,
+    subject,
     html: wrapEmailHtml(
       applyTemplatePlaceholders(template.title, vars),
       body,
@@ -465,7 +519,20 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
     logType: "order_confirmation",
     automationKey: "orderConfirmation",
     templateId: "order_confirmation",
+    fromRole,
   });
+
+  logOrderConfirmationAttempt({
+    recipient,
+    subject,
+    template: "order_confirmation",
+    smtp: smtpFrom,
+    success: result.ok,
+    messageId: result.messageId,
+    error: result.error,
+  });
+
+  return result.ok;
 }
 
 function buildStatusExtraBlocks(order: Order, status: OrderStatus): string {

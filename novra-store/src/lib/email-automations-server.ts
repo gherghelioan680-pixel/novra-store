@@ -123,6 +123,11 @@ export async function getEmailAutomations(): Promise<EmailAutomations> {
 }
 
 export async function isAutomationEnabled(key: EmailAutomationKey): Promise<boolean> {
+  if (key === "orderConfirmation") {
+    const siteSettings = await getServerSiteSettings();
+    return siteSettings.orderEmailsEnabled;
+  }
+
   const automations = await getEmailAutomations();
   return automations[key].enabled;
 }

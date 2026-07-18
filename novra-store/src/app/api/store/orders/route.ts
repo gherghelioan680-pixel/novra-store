@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
-import { normalizeOrder, generatePurchaseCode, type Order, type OrderStatus } from "@/lib/orders";
+import { normalizeOrder, generatePurchaseCode, resolveOrderCustomerEmail, type Order, type OrderStatus } from "@/lib/orders";
 import { trySendOrderConfirmationEmail, sendTrackingEmail, trySendOrderStatusEmail, trySendAdminNewOrderEmail, scheduleReviewRequestAfterDelivery } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const order = normalizeOrder(body.order as Partial<Order>);
+    let order = normalizeOrder(body.order as Partial<Order>);
 
     const checkoutEmail = (order.userEmail || order.address?.email || "").trim().toLowerCase();
     if (checkoutEmail && (await isEmailBanned(checkoutEmail))) {
@@ -262,6 +262,19 @@ export async function POST(request: NextRequest) {
 
     orders.unshift(order);
     await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
+
+    const customerEmail = resolveOrderCustomerEmail(orders[0]);
+    console.log(`[ORDER] Order created: ${orders[0].purchaseCode}, ${customerEmail || "—"}`);
+
+    if (customerEmail && customerEmail !== orders[0].userEmail) {
+      orders[0] = {
+        ...orders[0],
+        userEmail: customerEmail,
+        address: { ...orders[0].address, email: customerEmail },
+      };
+      order = orders[0];
+      await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
+    }
 
     if (creditsUsed > 0 && session?.email) {
       const spendResult = await spendCredits(session.email, creditsUsed, order.id);
