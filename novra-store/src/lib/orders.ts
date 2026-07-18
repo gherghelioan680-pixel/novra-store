@@ -60,6 +60,10 @@ export type Order = {
   trackingEmailSent?: boolean;
   /** Emailuri de notificare trimise per status (processing, shipped, delivered, cancelled). */
   statusEmailsSent?: Partial<Record<OrderStatus, boolean>>;
+  /** Cerere recenzie trimisă după livrare. */
+  reviewEmailSent?: boolean;
+  /** Data programată pentru trimiterea cererii de recenzie. */
+  reviewEmailDueAt?: string;
   createdAt: string;
   updatedAt: string;
   /** @deprecated Legacy field */
@@ -165,6 +169,8 @@ export function normalizeOrder(raw: Partial<Order>): Order {
     confirmationEmailSent: raw.confirmationEmailSent,
     trackingEmailSent: raw.trackingEmailSent,
     statusEmailsSent: raw.statusEmailsSent,
+    reviewEmailSent: raw.reviewEmailSent,
+    reviewEmailDueAt: raw.reviewEmailDueAt,
     address: {
       name: address?.name ?? userName,
       email: address?.email ?? userEmail,

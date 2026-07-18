@@ -3,7 +3,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { normalizeOrder, type Order } from "@/lib/orders";
-import { trySendOrderConfirmationEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail, trySendAdminNewOrderEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { recordAffiliateConversion } from "@/lib/affiliates-server";
@@ -77,6 +77,8 @@ export async function fulfillOrderFromStripeSession(
     orders[index] = order;
     await writeJsonFile(ORDERS_FILE, orders);
   }
+
+  void trySendAdminNewOrderEmail(order, settings.orderEmailsEnabled);
 
   return { ok: true, order, alreadyProcessed: alreadyPaid };
 }

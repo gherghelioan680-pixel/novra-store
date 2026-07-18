@@ -19,17 +19,41 @@ import {
 } from "./email-templates";
 import { appendEmailLog } from "./email-log-server";
 import {
+  getAutomationMeta,
   isAutomationEnabled,
   recordAutomationRun,
   type EmailAutomationKey,
 } from "./email-automations-server";
 import {
+  applyTemplatePlaceholders,
   getEmailTemplate,
   renderEmailTemplateHtml,
+  resolveTemplateSubject,
   type EmailTemplateId,
 } from "./email-templates-server";
 
 const NOTIFIABLE_STATUSES: OrderStatus[] = ["processing", "shipped", "delivered", "cancelled"];
+
+const STATUS_AUTOMATION_KEY: Partial<Record<OrderStatus, EmailAutomationKey>> = {
+  processing: "orderProcessing",
+  shipped: "orderShipped",
+  delivered: "orderDelivered",
+  cancelled: "orderCancelled",
+};
+
+const STATUS_TEMPLATE_ID: Partial<Record<OrderStatus, EmailTemplateId>> = {
+  processing: "order_processing",
+  shipped: "order_shipped",
+  delivered: "order_delivered",
+  cancelled: "order_cancelled",
+};
+
+const STATUS_LOG_TYPE: Partial<Record<OrderStatus, string>> = {
+  processing: "order_processing",
+  shipped: "order_shipped",
+  delivered: "order_delivered",
+  cancelled: "order_cancelled",
+};
 
 let transporter: Transporter | null | undefined;
 
@@ -40,6 +64,7 @@ export type SendEmailInput = {
   text?: string;
   logType?: string;
   automationKey?: EmailAutomationKey;
+  templateId?: EmailTemplateId;
 };
 
 export type SendEmailResult = {
@@ -65,6 +90,20 @@ export function isSmtpConfigured(): boolean {
 function getFromAddress(): string | null {
   const from = process.env.SMTP_FROM?.trim();
   return from || null;
+}
+
+export function getAdminNotificationEmail(): string {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (adminEmail) return adminEmail;
+
+  const from = process.env.SMTP_FROM?.trim() ?? "";
+  const match = from.match(/<([^>]+)>/);
+  if (match?.[1]) return match[1].trim().toLowerCase();
+
+  const smtpUser = process.env.SMTP_USER?.trim().toLowerCase();
+  if (smtpUser) return smtpUser;
+
+  return "support@novra.ro";
 }
 
 function getTransporter(): Transporter | null {
@@ -105,13 +144,21 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
   const recipients = Array.isArray(input.to) ? input.to : [input.to];
   const normalizedRecipients = recipients.map((email) => email.trim()).filter(Boolean);
 
+  const logType = input.logType ?? "general";
+  const recipientLabel = normalizedRecipients.join(", ");
+  const templateLabel = input.templateId ?? "custom";
+
+  console.log(`[EMAIL] Tip email: ${logType}`);
+  console.log(`[EMAIL] Destinatar: ${recipientLabel}`);
+  console.log(`[EMAIL] Template folosit: ${templateLabel}`);
+
   if (normalizedRecipients.length === 0) {
-    console.warn("[email] sendEmail skipped — no recipients");
+    console.warn("[EMAIL ERROR] Niciun destinatar.");
     return { ok: false, error: "Niciun destinatar." };
   }
 
   if (!isEmailsEnabled()) {
-    console.log("[email] EMAILS_ENABLED is not true — skipping:", input.subject, "→", normalizedRecipients.join(", "));
+    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ.");
     return { ok: false, error: "EMAILS_ENABLED nu este activ." };
   }
 
@@ -119,17 +166,11 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
   const from = getFromAddress();
 
   if (!transport || !from) {
-    console.warn(
-      "[email] SMTP not configured — set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM:",
-      input.subject
-    );
+    console.warn("[EMAIL ERROR] SMTP neconfigurat — setează SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.");
     return { ok: false, error: "SMTP neconfigurat." };
   }
 
-  console.log("[email] Sending:", input.subject, "→", normalizedRecipients.join(", "));
-
-  const logType = input.logType ?? "general";
-  const recipientLabel = normalizedRecipients.join(", ");
+  console.log("[EMAIL] SMTP conectat");
 
   try {
     const info = await transport.sendMail({
@@ -140,7 +181,7 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
       text: input.text ?? htmlToPlainText(input.html),
     });
 
-    console.log("[email] Sent:", input.subject, "→", recipientLabel, info.messageId ?? "");
+    console.log("[EMAIL] Trimis cu succes");
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -157,7 +198,7 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
     return { ok: true, messageId: info.messageId };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Eroare necunoscută la trimitere.";
-    console.error("[email] Send failed:", input.subject, "→", recipientLabel, error);
+    console.error(`[EMAIL ERROR] ${errorMessage}`);
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -183,6 +224,12 @@ function paymentStatusLabel(order: Order): string {
   return "În așteptare";
 }
 
+function paymentMethodLabel(order: Order): string {
+  if (order.paymentMethod === "card") return "Plată cu cardul";
+  if (order.paymentMethod === "credits") return "NovraCredits";
+  return "Ramburs (numerar la livrare)";
+}
+
 function buildItemsHtml(order: Order): string {
   return order.items
     .map(
@@ -203,26 +250,19 @@ function trackOrderLinkHtml(purchaseCode: string): string {
   return emailSecondaryButton(getTrackOrderUrl(purchaseCode), "Urmărește comanda");
 }
 
-/** Send confirmation email if enabled and not already sent. Returns true when email was sent. */
-export async function trySendOrderConfirmationEmail(
-  order: Order,
-  orderEmailsEnabled: boolean
-): Promise<boolean> {
-  const automationOn = await isAutomationEnabled("orderConfirmation");
-  if (!isEmailsEnabled() || !orderEmailsEnabled || !automationOn) {
-    console.log("[email] Order emails disabled — skipping confirmation for", order.purchaseCode);
-    return false;
-  }
-  if (order.confirmationEmailSent) return false;
-  if (!order.userEmail?.trim()) {
-    console.warn("[email] Missing customer email — skipping confirmation for", order.purchaseCode);
-    return false;
-  }
-  return sendOrderConfirmationEmail(order);
+function orderTemplateVars(order: Order): Record<string, string> {
+  return {
+    purchaseCode: order.purchaseCode,
+    customerName: order.address.name,
+    customerEmail: order.userEmail,
+    total: order.total.toFixed(2),
+    paymentMethod: paymentMethodLabel(order),
+    status: ORDER_STATUS_LABELS[order.status],
+  };
 }
 
-export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
-  const paymentLabel = order.paymentMethod === "card" ? "Plată cu cardul" : "Ramburs (numerar la livrare)";
+function buildOrderSummaryHtml(order: Order, options?: { includeTrackLink?: boolean }): string {
+  const paymentLabel = paymentMethodLabel(order);
   const discountRow =
     order.discountAmount && order.discountAmount > 0
       ? `<tr>
@@ -239,8 +279,9 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
     .filter(Boolean)
     .join(", ");
 
-  const body = `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${confirmationIntro(order)}`)}
+  const trackLink = options?.includeTrackLink === false ? "" : trackOrderLinkHtml(order.purchaseCode);
+
+  return `
     ${highlightBox("Cod comandă", order.purchaseCode)}
     <p style="margin:0 0 12px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#6b7280;">Produse comandate</p>
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
@@ -268,88 +309,83 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
       <p style="margin:0 0 8px;"><strong style="color:#111111;">Status comandă:</strong> ${ORDER_STATUS_LABELS[order.status]}</p>
       <p style="margin:0;"><strong style="color:#111111;">Adresă livrare:</strong> ${deliveryLines}</p>
     `)}
-    ${trackOrderLinkHtml(order.purchaseCode)}
+    ${trackLink}
+  `;
+}
+
+async function buildOrderEmailHtml(
+  templateId: EmailTemplateId,
+  order: Order,
+  extraBlocks = ""
+): Promise<{ html: string; subject: string }> {
+  const template = await getEmailTemplate(templateId);
+  const vars = orderTemplateVars(order);
+  const intro = applyTemplatePlaceholders(template.content, vars);
+  const body = `
+    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${escapeHtml(intro)}`)}
+    ${extraBlocks}
+    ${buildOrderSummaryHtml(order, { includeTrackLink: true })}
+  `;
+
+  return {
+    subject: resolveTemplateSubject(template, vars),
+    html: wrapEmailHtml(
+      applyTemplatePlaceholders(template.title, vars),
+      body,
+      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
+    ),
+  };
+}
+
+/** Send confirmation email if enabled and not already sent. Returns true when email was sent. */
+export async function trySendOrderConfirmationEmail(
+  order: Order,
+  orderEmailsEnabled: boolean
+): Promise<boolean> {
+  const automationOn = await isAutomationEnabled("orderConfirmation");
+  if (!isEmailsEnabled() || !orderEmailsEnabled || !automationOn) {
+    console.log("[EMAIL] Order confirmation skipped — disabled for", order.purchaseCode);
+    return false;
+  }
+  if (order.confirmationEmailSent) return false;
+  if (!order.userEmail?.trim()) {
+    console.warn("[EMAIL ERROR] Missing customer email — skipping confirmation for", order.purchaseCode);
+    return false;
+  }
+  return sendOrderConfirmationEmail(order);
+}
+
+export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
+  const template = await getEmailTemplate("order_confirmation");
+  const vars = orderTemplateVars(order);
+  const intro = `${applyTemplatePlaceholders(template.content, vars)}<br>${confirmationIntro(order)}`;
+  const body = `
+    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${intro}`)}
+    ${buildOrderSummaryHtml(order, { includeTrackLink: true })}
   `;
 
   return sendEmail({
     to: order.userEmail,
-    subject: `Confirmare comandă NOVRA — ${order.purchaseCode}`,
-    html: wrapEmailHtml("Confirmare comandă", body, "Comanda ta a fost înregistrată cu succes."),
+    subject: resolveTemplateSubject(template, vars),
+    html: wrapEmailHtml(
+      applyTemplatePlaceholders(template.title, vars),
+      body,
+      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
+    ),
     logType: "order_confirmation",
     automationKey: "orderConfirmation",
+    templateId: "order_confirmation",
   });
 }
 
-function statusEmailSubject(status: OrderStatus, purchaseCode: string, awb?: string): string {
-  switch (status) {
-    case "processing":
-      return `Comanda ${purchaseCode} este în procesare`;
-    case "shipped":
-      return awb
-        ? `Comanda ${purchaseCode} a fost expediată — AWB ${awb}`
-        : `Comanda ${purchaseCode} a fost expediată`;
-    case "delivered":
-      return `Comanda ${purchaseCode} a fost livrată`;
-    case "cancelled":
-      return `Comanda ${purchaseCode} a fost anulată`;
-    default:
-      return `Actualizare comandă ${purchaseCode}`;
-  }
-}
-
-function statusEmailTitle(status: OrderStatus): string {
-  switch (status) {
-    case "processing":
-      return "Comanda ta este în procesare";
-    case "shipped":
-      return "Coletul tău este în drum";
-    case "delivered":
-      return "Comanda ta a fost livrată";
-    case "cancelled":
-      return "Comanda ta a fost anulată";
-    default:
-      return "Actualizare comandă";
-  }
-}
-
-function buildStatusEmailBody(order: Order, status: OrderStatus): string {
+function buildStatusExtraBlocks(order: Order, status: OrderStatus): string {
   const awb = order.awbTracking?.trim();
   const trackingUrl = awb ? buildFanCourierTrackingUrl(awb) : "";
 
-  let intro = "";
-  switch (status) {
-    case "processing":
-      intro =
-        "Comanda ta este acum <strong style=\"color:#111111;\">în procesare</strong>. Pregătim produsele și te vom anunța când coletul pleacă spre tine.";
-      break;
-    case "shipped":
-      intro = awb
-        ? `Comanda ta <strong style="color:#111111;">${escapeHtml(order.purchaseCode)}</strong> a fost expediată.`
-        : `Comanda ta <strong style="color:#111111;">${escapeHtml(order.purchaseCode)}</strong> a fost expediată și este în drum spre tine.`;
-      break;
-    case "delivered":
-      intro =
-        "Comanda ta a fost <strong style=\"color:#111111;\">livrată</strong>. Sperăm că te bucuri de produsele NOVRA!";
-      break;
-    case "cancelled":
-      intro =
-        "Comanda ta a fost <strong style=\"color:#111111;\">anulată</strong>. Dacă ai întrebări, contactează-ne la contact@novra.ro.";
-      break;
-    default:
-      intro = `Statusul comenzii tale este acum: ${ORDER_STATUS_LABELS[status]}.`;
+  if (awb && status === "shipped") {
+    return `${highlightBox("Număr AWB", awb)}${emailButton(trackingUrl, "Urmărește coletul Fan Courier")}`;
   }
-
-  const awbBlock =
-    awb && status === "shipped"
-      ? `${highlightBox("Număr AWB", awb)}${emailButton(trackingUrl, "Urmărește coletul Fan Courier")}`
-      : "";
-
-  return `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${intro}`)}
-    ${highlightBox("Cod comandă", order.purchaseCode, `Status: ${ORDER_STATUS_LABELS[status]}`)}
-    ${awbBlock}
-    ${trackOrderLinkHtml(order.purchaseCode)}
-  `;
+  return "";
 }
 
 /** Trimite email de status doar când statusul s-a schimbat și nu a fost deja notificat pentru acel status. */
@@ -357,46 +393,48 @@ export async function trySendOrderStatusEmail(
   order: Order,
   previousStatus: OrderStatus,
   orderEmailsEnabled: boolean
-): Promise<{ sent: boolean; status?: OrderStatus }> {
+): Promise<{ sent: boolean; status?: OrderStatus; scheduleReview?: boolean }> {
   if (!isEmailsEnabled() || !orderEmailsEnabled) return { sent: false };
-
-  if (order.status === "shipped" && !(await isAutomationEnabled("orderShipped"))) {
-    return { sent: false };
-  }
-  if (order.status === "cancelled" && !(await isAutomationEnabled("orderConfirmation"))) {
-    return { sent: false };
-  }
   if (!order.userEmail?.trim()) return { sent: false };
   if (order.status === previousStatus) return { sent: false };
   if (!NOTIFIABLE_STATUSES.includes(order.status)) return { sent: false };
   if (order.statusEmailsSent?.[order.status]) return { sent: false };
 
+  const automationKey = STATUS_AUTOMATION_KEY[order.status];
+  if (automationKey && !(await isAutomationEnabled(automationKey))) {
+    console.log(`[EMAIL] Status email skipped — automation ${automationKey} disabled for`, order.purchaseCode);
+    return { sent: false };
+  }
+
   const sent = await sendOrderStatusEmail(order, order.status);
-  return sent ? { sent: true, status: order.status } : { sent: false };
+  return sent
+    ? { sent: true, status: order.status, scheduleReview: order.status === "delivered" }
+    : { sent: false };
 }
 
 export async function sendOrderStatusEmail(order: Order, status: OrderStatus): Promise<boolean> {
-  const awb = order.awbTracking?.trim();
-  const body = buildStatusEmailBody(order, status);
-  const logType =
-    status === "shipped" ? "order_shipped" : status === "cancelled" ? "order_cancelled" : "order_status";
-  const automationKey: EmailAutomationKey | undefined =
-    status === "shipped" ? "orderShipped" : status === "cancelled" ? "orderConfirmation" : undefined;
+  const templateId = STATUS_TEMPLATE_ID[status] ?? "order_processing";
+  const automationKey = STATUS_AUTOMATION_KEY[status];
+  const extraBlocks = buildStatusExtraBlocks(order, status);
+  const { html, subject } = await buildOrderEmailHtml(templateId, order, extraBlocks);
 
   return sendEmail({
     to: order.userEmail,
-    subject: statusEmailSubject(status, order.purchaseCode, awb),
-    html: wrapEmailHtml(statusEmailTitle(status), body),
-    logType,
+    subject,
+    html,
+    logType: STATUS_LOG_TYPE[status] ?? "order_status",
     automationKey,
+    templateId,
   });
 }
 
 export async function sendTrackingEmail(order: Order, awb: string): Promise<boolean> {
   const trackingUrl = buildFanCourierTrackingUrl(awb);
+  const template = await getEmailTemplate("order_shipped");
+  const vars = orderTemplateVars(order);
 
   const body = `
-    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>Comanda ta <strong style="color:#111111;">${escapeHtml(order.purchaseCode)}</strong> a fost expediată.`)}
+    ${paragraph(`Bună, <strong style="color:#111111;">${escapeHtml(order.address.name)}</strong>!<br>${escapeHtml(applyTemplatePlaceholders(template.content, vars))}`)}
     ${highlightBox("Număr AWB", awb)}
     ${paragraph("Poți urmări coletul folosind linkul de mai jos:")}
     ${emailButton(trackingUrl, "Urmărește coletul")}
@@ -405,10 +443,53 @@ export async function sendTrackingEmail(order: Order, awb: string): Promise<bool
 
   return sendEmail({
     to: order.userEmail,
-    subject: `Comanda ${order.purchaseCode} a fost expediată — AWB ${awb}`,
-    html: wrapEmailHtml("Coletul tău este în drum", body),
+    subject: resolveTemplateSubject(template, vars),
+    html: wrapEmailHtml(
+      applyTemplatePlaceholders(template.title, vars),
+      body,
+      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
+    ),
     logType: "order_shipped",
     automationKey: "orderShipped",
+    templateId: "order_shipped",
+  });
+}
+
+export async function trySendAdminNewOrderEmail(
+  order: Order,
+  orderEmailsEnabled: boolean
+): Promise<boolean> {
+  if (!isEmailsEnabled() || !orderEmailsEnabled) return false;
+  if (!(await isAutomationEnabled("adminNewOrder"))) {
+    console.log("[EMAIL] Admin new order skipped — automation disabled for", order.purchaseCode);
+    return false;
+  }
+  return sendAdminNewOrderEmail(order);
+}
+
+export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
+  const template = await getEmailTemplate("admin_new_order");
+  const vars = orderTemplateVars(order);
+  const itemsSummary = order.items
+    .map((item) => `${item.title} (${item.variantLabel}) ×${item.quantity}`)
+    .join(", ");
+
+  const body = `
+    ${renderEmailTemplateHtml(template, vars)}
+    ${infoPanel(`
+      <p style="margin:0 0 8px;"><strong style="color:#111111;">Produse:</strong> ${escapeHtml(itemsSummary)}</p>
+      <p style="margin:0 0 8px;"><strong style="color:#111111;">Telefon:</strong> ${escapeHtml(order.address.phone || "—")}</p>
+      <p style="margin:0;"><strong style="color:#111111;">Adresă:</strong> ${escapeHtml(order.address.address)}, ${escapeHtml(order.address.city)}</p>
+    `)}
+  `;
+
+  return sendEmail({
+    to: getAdminNotificationEmail(),
+    subject: resolveTemplateSubject(template, vars),
+    html: body,
+    logType: "admin_new_order",
+    automationKey: "adminNewOrder",
+    templateId: "admin_new_order",
   });
 }
 
@@ -428,37 +509,45 @@ export async function sendNewsletterWelcomeEmail(
   discountPercent: number,
   welcomeTemplate?: string
 ): Promise<boolean> {
-  console.log("[newsletter] sendNewsletterWelcomeEmail called:", {
-    email,
-    discountCode,
-    discountPercent,
-  });
-
-  const templateText = welcomeTemplate?.trim()
-    ? formatNewsletterWelcomePreview(welcomeTemplate, discountCode, discountPercent)
-    : "Mulțumim că te-ai abonat la newsletter-ul NOVRA. Iată codul tău exclusiv pentru prima comandă:";
-
-  const body = `
-    ${paragraph(`Bună!<br>${escapeHtml(templateText)}`)}
-    ${highlightBox("Cod reducere", discountCode, `${discountPercent}% reducere la prima comandă`)}
-    ${paragraph("Introdu codul la checkout. Valabil o singură dată per email. Lansarea este foarte aproape — fii pregătit!")}
-    ${emailButton(getSiteOrigin(), "Vizitează NOVRA")}
-  `;
+  console.log("[EMAIL] Tip email: welcome");
+  console.log(`[EMAIL] Destinatar: ${email}`);
 
   const welcomeOn = await isAutomationEnabled("welcome");
   if (!welcomeOn) {
-    console.log("[email] Welcome automation disabled — skipping for", email);
+    console.log("[EMAIL] Welcome automation disabled — skipping for", email);
     return false;
   }
 
+  const template = await getEmailTemplate("welcome");
+  const customContent = welcomeTemplate?.trim()
+    ? formatNewsletterWelcomePreview(welcomeTemplate, discountCode, discountPercent)
+    : applyTemplatePlaceholders(template.content, {
+        code: discountCode,
+        percent: String(discountPercent),
+      });
+
+  const vars = { code: discountCode, percent: String(discountPercent) };
+  const body = `
+    ${paragraph(`Bună!<br>${escapeHtml(customContent)}`)}
+    ${highlightBox("Cod reducere", discountCode, `${discountPercent}% reducere la prima comandă`)}
+    ${paragraph("Introdu codul la checkout. Valabil o singură dată per email.")}
+    ${emailButton(getSiteOrigin(), template.buttonText || "Vizitează NOVRA")}
+  `;
+
   return sendEmail({
     to: email,
-    subject: `Codul tău NOVRA — ${discountPercent}% reducere la prima comandă`,
-    html: wrapEmailHtml("Bine ai venit la NOVRA", body, "Abonare confirmată la newsletter."),
+    subject: applyTemplatePlaceholders(template.subject, vars),
+    html: wrapEmailHtml(
+      applyTemplatePlaceholders(template.title, vars),
+      body,
+      applyTemplatePlaceholders(template.subtitle || template.previewText, vars)
+    ),
     logType: "welcome",
     automationKey: "welcome",
+    templateId: "welcome",
   });
 }
+
 export async function sendNewsletterBroadcastEmail(
   emails: string[],
   subject?: string,
@@ -466,12 +555,20 @@ export async function sendNewsletterBroadcastEmail(
   previewText?: string
 ): Promise<{ sent: number; failed: number }> {
   if (!isEmailsEnabled()) {
-    console.log("[email] EMAILS_ENABLED is not true — skipping newsletter broadcast");
+    console.log("[EMAIL ERROR] EMAILS_ENABLED nu este activ — skipping newsletter broadcast");
     return { sent: 0, failed: emails.length };
   }
 
-  const safeSubject = subject?.trim() || "Noutăți de la NOVRA";
-  const paragraphs = (bodyText ?? "")
+  const newsletterOn = await isAutomationEnabled("newsletter");
+  if (!newsletterOn) {
+    console.log("[EMAIL] Newsletter automation disabled — skipping broadcast");
+    return { sent: 0, failed: emails.length };
+  }
+
+  const template = await getEmailTemplate("newsletter");
+  const safeSubject = subject?.trim() || template.subject;
+  const content = bodyText?.trim() || template.content;
+  const paragraphs = content
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
@@ -480,19 +577,13 @@ export async function sendNewsletterBroadcastEmail(
 
   const body = `
     ${paragraphs || paragraph("Salut! Avem noutăți de la NOVRA.")}
-    ${emailButton(getSiteOrigin(), "Vizitează NOVRA")}
+    ${emailButton(template.buttonLink || getSiteOrigin(), template.buttonText || "Vizitează NOVRA")}
   `;
 
-  const html = wrapEmailHtml(safeSubject, body, previewText?.trim() || undefined);
+  const html = wrapEmailHtml(safeSubject, body, previewText?.trim() || template.previewText);
 
   let sent = 0;
   let failed = 0;
-
-  const newsletterOn = await isAutomationEnabled("newsletter");
-  if (!newsletterOn) {
-    console.log("[email] Newsletter automation disabled — skipping broadcast");
-    return { sent: 0, failed: emails.length };
-  }
 
   for (const email of emails) {
     const ok = await sendEmail({
@@ -501,19 +592,19 @@ export async function sendNewsletterBroadcastEmail(
       html,
       logType: "newsletter",
       automationKey: "newsletter",
+      templateId: "newsletter",
     });
     if (ok) sent += 1;
     else failed += 1;
   }
 
-  console.log("[email] Newsletter broadcast complete:", { sent, failed, total: emails.length });
   return { sent, failed };
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
   const resetOn = await isAutomationEnabled("passwordReset");
   if (!resetOn) {
-    console.log("[email] Password reset automation disabled — skipping for", email);
+    console.log("[EMAIL] Password reset automation disabled — skipping for", email);
     return false;
   }
 
@@ -530,6 +621,146 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
     html,
     logType: "password_reset",
     automationKey: "passwordReset",
+    templateId: "password_reset",
+  });
+}
+
+export async function sendContactFormEmails(input: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<{ confirmationSent: boolean; adminSent: boolean }> {
+  const vars = {
+    name: input.name,
+    email: input.email,
+    subject: input.subject,
+    message: input.message,
+  };
+
+  let confirmationSent = false;
+  let adminSent = false;
+
+  if (await isAutomationEnabled("contactConfirmation")) {
+    const template = await getEmailTemplate("contact_confirmation");
+    confirmationSent = await sendEmail({
+      to: input.email,
+      subject: resolveTemplateSubject(template, vars),
+      html: renderEmailTemplateHtml(template, vars),
+      logType: "contact_confirmation",
+      automationKey: "contactConfirmation",
+      templateId: "contact_confirmation",
+    });
+  } else {
+    console.log("[EMAIL] Contact confirmation skipped — automation disabled");
+  }
+
+  if (await isAutomationEnabled("contactAdmin")) {
+    const template = await getEmailTemplate("contact_admin");
+    adminSent = await sendEmail({
+      to: getAdminNotificationEmail(),
+      subject: resolveTemplateSubject(template, vars),
+      html: renderEmailTemplateHtml(template, vars),
+      logType: "contact_admin",
+      automationKey: "contactAdmin",
+      templateId: "contact_admin",
+    });
+  } else {
+    console.log("[EMAIL] Contact admin notification skipped — automation disabled");
+  }
+
+  return { confirmationSent, adminSent };
+}
+
+export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
+  if (!order.userEmail?.trim()) return false;
+
+  const reviewOn = await isAutomationEnabled("reviewRequest");
+  if (!reviewOn) {
+    console.log("[EMAIL] Review request skipped — automation disabled for", order.purchaseCode);
+    return false;
+  }
+
+  const template = await getEmailTemplate("review_request");
+  const vars = orderTemplateVars(order);
+
+  return sendEmail({
+    to: order.userEmail,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "review_request",
+    automationKey: "reviewRequest",
+    templateId: "review_request",
+  });
+}
+
+export async function scheduleReviewRequestAfterDelivery(order: Order): Promise<string | null> {
+  if (order.reviewEmailSent) return null;
+  if (!order.userEmail?.trim()) return null;
+  if (!(await isAutomationEnabled("reviewRequest"))) return null;
+
+  const meta = await getAutomationMeta("reviewRequest");
+  const delayMs = Math.max(0, meta.delayMinutes) * 60 * 1000;
+
+  if (delayMs === 0) {
+    const sent = await sendReviewRequestEmail(order);
+    return sent ? "sent" : null;
+  }
+
+  return new Date(Date.now() + delayMs).toISOString();
+}
+
+export async function sendGiftCardEmail(input: {
+  email: string;
+  amount: number;
+  balance: number;
+}): Promise<boolean> {
+  if (!(await isAutomationEnabled("giftCard"))) {
+    console.log("[EMAIL] Gift card email skipped — automation disabled for", input.email);
+    return false;
+  }
+
+  const template = await getEmailTemplate("gift_card");
+  const vars = {
+    amount: String(input.amount),
+    balance: String(input.balance),
+  };
+
+  return sendEmail({
+    to: input.email,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "gift_card",
+    automationKey: "giftCard",
+    templateId: "gift_card",
+  });
+}
+
+export async function sendStoreCreditEmail(input: {
+  email: string;
+  amount: number;
+  balance: number;
+  description: string;
+}): Promise<boolean> {
+  if (!(await isAutomationEnabled("storeCredit"))) {
+    console.log("[EMAIL] Store credit email skipped — automation disabled for", input.email);
+    return false;
+  }
+
+  const template = await getEmailTemplate("store_credit");
+  const vars = {
+    amount: String(Math.abs(input.amount)),
+    balance: String(input.balance),
+    description: input.description,
+  };
+
+  return sendEmail({
+    to: input.email,
+    subject: template.subject,
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "store_credit",
+    automationKey: "storeCredit",
+    templateId: "store_credit",
   });
 }
 

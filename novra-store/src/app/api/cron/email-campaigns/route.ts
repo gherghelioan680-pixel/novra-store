@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { processDueCampaigns } from "@/lib/email-campaigns-server";
+import { processDueReviewRequests } from "@/lib/review-email-server";
 
 export const runtime = "nodejs";
 
@@ -17,5 +18,6 @@ export async function GET(request: NextRequest) {
   }
 
   const result = await processDueCampaigns();
-  return Response.json({ ok: true, ...result });
+  const reviews = await processDueReviewRequests();
+  return Response.json({ ok: true, ...result, reviews });
 }

@@ -73,22 +73,20 @@ export default function Contact() {
     setStatus("sending");
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/store/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_key: "b7020925-857c-4f6e-97eb-23f4c1139e97",
           name: formData.name,
           email: formData.email,
           subject: formData.subject,
           message: formData.message,
-          from_name: "NOVRA Contact Form",
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.ok) {
         setStatus("success");
         setFormData({ name: "", email: "", subject: "", message: "" });
       } else {

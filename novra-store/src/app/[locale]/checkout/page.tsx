@@ -403,24 +403,6 @@ function CheckoutPageContent() {
       }
     }
 
-    try {
-      await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_key: "b7020925-857c-4f6e-97eb-23f4c1139e97",
-          subject: `Comandă nouă NOVRA - ${formData.name} (${finalOrder.purchaseCode})`,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formatOrderMessage(finalOrder.purchaseCode),
-          from_name: "NOVRA Checkout",
-        }),
-      });
-    } catch {
-      /* optional notification */
-    }
-
     setPlacedOrder(finalOrder);
     clearCart();
     setStatus("success");

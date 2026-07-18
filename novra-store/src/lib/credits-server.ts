@@ -2,6 +2,7 @@ import "server-only";
 
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import type { User } from "@/lib/auth";
+import { sendGiftCardEmail, sendStoreCreditEmail } from "@/lib/email";
 import {
   GIFT_CARD_AMOUNTS,
   isValidGiftCardAmount,
@@ -228,6 +229,12 @@ export async function fulfillCreditPurchase(
   };
   await writeCreditPurchases(purchases);
 
+  void sendGiftCardEmail({
+    email: purchase.userEmail,
+    amount: purchase.amount,
+    balance: getUserCredits(creditResult.user),
+  });
+
   return {
     ok: true,
     purchase: purchases[index],
@@ -279,7 +286,18 @@ export async function adminAdjustCredits(
       ? "Revocare credite (admin)"
       : "Adăugare credite (admin)";
 
-  return updateUserCreditsInternal(userEmail, delta, type, description);
+  const result = await updateUserCreditsInternal(userEmail, delta, type, description);
+
+  if (result.ok && delta > 0 && type === "admin_adjust") {
+    void sendStoreCreditEmail({
+      email: result.user.email,
+      amount: delta,
+      balance: getUserCredits(result.user),
+      description,
+    });
+  }
+
+  return result;
 }
 
 export async function grantReferralCredits(
@@ -362,6 +380,12 @@ export async function adminManualCreditPurchase(
     adminNote: reason?.trim() || purchase.adminNote,
   };
   await writeCreditPurchases(purchases);
+
+  void sendGiftCardEmail({
+    email: purchase.userEmail,
+    amount: purchase.amount,
+    balance: getUserCredits(creditResult.user),
+  });
 
   return { ok: true, purchase: purchases[index] };
 }

@@ -1,10 +1,18 @@
 export type EmailAutomationKey =
   | "welcome"
   | "orderConfirmation"
+  | "orderProcessing"
   | "orderShipped"
+  | "orderDelivered"
+  | "orderCancelled"
+  | "adminNewOrder"
   | "passwordReset"
   | "newsletter"
-  | "reviewRequest";
+  | "reviewRequest"
+  | "contactConfirmation"
+  | "contactAdmin"
+  | "giftCard"
+  | "storeCredit";
 
 export type EmailAutomationMeta = {
   enabled: boolean;

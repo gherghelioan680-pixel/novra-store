@@ -14,10 +14,18 @@ export type EmailTemplateId =
   | "welcome"
   | "newsletter"
   | "order_confirmation"
+  | "order_processing"
   | "order_shipped"
+  | "order_delivered"
+  | "order_cancelled"
   | "password_reset"
   | "contact"
-  | "order_cancelled";
+  | "contact_confirmation"
+  | "contact_admin"
+  | "admin_new_order"
+  | "gift_card"
+  | "store_credit"
+  | "review_request";
 
 export type EmailTemplateColors = {
   primary: string;
@@ -47,10 +55,18 @@ export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   welcome: "Bun venit",
   newsletter: "Newsletter",
   order_confirmation: "Confirmare comandă",
+  order_processing: "Comandă în procesare",
   order_shipped: "Comandă expediată",
+  order_delivered: "Comandă livrată",
+  order_cancelled: "Comandă anulată",
   password_reset: "Resetare parolă",
   contact: "Contact",
-  order_cancelled: "Comandă anulată",
+  contact_confirmation: "Confirmare contact (client)",
+  contact_admin: "Notificare contact (admin)",
+  admin_new_order: "Comandă nouă (admin)",
+  gift_card: "Gift Card",
+  store_credit: "NovraCredits",
+  review_request: "Cerere recenzie",
 };
 
 const DEFAULT_COLORS: EmailTemplateColors = {
@@ -64,12 +80,12 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
   const defaults: Record<EmailTemplateId, Omit<EmailTemplateConfig, "id" | "updatedAt">> = {
     welcome: {
       name: TEMPLATE_NAMES.welcome,
-      subject: "Bine ai venit la NOVRA",
+      subject: "Codul tău NOVRA — {percent}% reducere la prima comandă",
       previewText: "Codul tău exclusiv te așteaptă",
       title: "Bine ai venit la NOVRA",
       subtitle: "Abonare confirmată la newsletter.",
       content:
-        "Mulțumim că te-ai abonat la newsletter-ul NOVRA. Folosește codul de reducere la prima comandă.",
+        "Mulțumim că te-ai abonat la newsletter-ul NOVRA. Codul tău exclusiv: {code} — {percent}% reducere la prima comandă!",
       buttonText: "Vizitează NOVRA",
       buttonLink: site,
       footer: "© NOVRA — Cabluri & adaptoare premium",
@@ -91,39 +107,67 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
     },
     order_confirmation: {
       name: TEMPLATE_NAMES.order_confirmation,
-      subject: "Confirmare comandă NOVRA",
+      subject: "Confirmare comandă NOVRA — {purchaseCode}",
       previewText: "Comanda ta a fost înregistrată",
       title: "Confirmare comandă",
       subtitle: "Comanda ta a fost înregistrată cu succes.",
       content:
         "Mulțumim pentru comanda ta! Am înregistrat-o și te vom contacta pentru livrare.",
       buttonText: "Urmărește comanda",
-      buttonLink: `${site}/urmareste-comanda`,
+      buttonLink: `${site}/urmareste-comanda?code={purchaseCode}`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    order_processing: {
+      name: TEMPLATE_NAMES.order_processing,
+      subject: "Comanda {purchaseCode} este în procesare",
+      previewText: "Pregătim comanda ta",
+      title: "Comanda ta este în procesare",
+      subtitle: "Pregătim produsele pentru expediere.",
+      content:
+        "Comanda ta {purchaseCode} este acum în procesare. Pregătim produsele și te vom anunța când coletul pleacă spre tine.",
+      buttonText: "Urmărește comanda",
+      buttonLink: `${site}/urmareste-comanda?code={purchaseCode}`,
       footer: "© NOVRA — Cabluri & adaptoare premium",
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
     },
     order_shipped: {
       name: TEMPLATE_NAMES.order_shipped,
-      subject: "Comanda ta a fost expediată",
+      subject: "Comanda {purchaseCode} a fost expediată",
       previewText: "Coletul tău este în drum",
       title: "Coletul tău este în drum",
       subtitle: "Comanda ta a fost expediată.",
-      content: "Comanda ta a fost expediată și este în drum spre tine. Poți urmări coletul online.",
+      content: "Comanda ta {purchaseCode} a fost expediată și este în drum spre tine. Poți urmări coletul online.",
       buttonText: "Urmărește coletul",
-      buttonLink: `${site}/urmareste-comanda`,
+      buttonLink: `${site}/urmareste-comanda?code={purchaseCode}`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    order_delivered: {
+      name: TEMPLATE_NAMES.order_delivered,
+      subject: "Comanda {purchaseCode} a fost livrată",
+      previewText: "Comanda ta a ajuns la destinație",
+      title: "Comanda ta a fost livrată",
+      subtitle: "Sperăm că te bucuri de produsele NOVRA!",
+      content:
+        "Comanda ta {purchaseCode} a fost livrată. Sperăm că te bucuri de produsele NOVRA!",
+      buttonText: "Lasă o recenzie",
+      buttonLink: `${site}/recenzii`,
       footer: "© NOVRA — Cabluri & adaptoare premium",
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
     },
     order_cancelled: {
       name: TEMPLATE_NAMES.order_cancelled,
-      subject: "Comanda ta a fost anulată",
+      subject: "Comanda {purchaseCode} a fost anulată",
       previewText: "Comanda a fost anulată",
       title: "Comanda ta a fost anulată",
       subtitle: "Dacă ai întrebări, contactează-ne.",
       content:
-        "Comanda ta a fost anulată. Dacă ai întrebări sau crezi că este o eroare, contactează-ne la contact@novra.ro.",
+        "Comanda ta {purchaseCode} a fost anulată. Dacă ai întrebări sau crezi că este o eroare, contactează-ne la contact@novra.ro.",
       buttonText: "Contactează-ne",
       buttonLink: "mailto:contact@novra.ro",
       footer: "© NOVRA — Cabluri & adaptoare premium",
@@ -157,6 +201,90 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
     },
+    contact_confirmation: {
+      name: TEMPLATE_NAMES.contact_confirmation,
+      subject: "Am primit mesajul tău — NOVRA",
+      previewText: "Confirmare primire mesaj contact",
+      title: "Mesajul tău a fost primit",
+      subtitle: "Echipa NOVRA îți va răspunde curând.",
+      content:
+        "Mulțumim, {name}! Am primit mesajul tău cu subiectul „{subject}”. Echipa NOVRA îți va răspunde cât mai curând posibil.",
+      buttonText: "Vizitează NOVRA",
+      buttonLink: site,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    contact_admin: {
+      name: TEMPLATE_NAMES.contact_admin,
+      subject: "Mesaj contact nou — {subject}",
+      previewText: "Formular contact NOVRA",
+      title: "Mesaj contact nou",
+      subtitle: "Formular /contact",
+      content:
+        "Mesaj nou de la {name} ({email}).\n\nSubiect: {subject}\n\n{message}",
+      buttonText: "Deschide admin",
+      buttonLink: `${site}/admin`,
+      footer: "© NOVRA — Notificare automată",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    admin_new_order: {
+      name: TEMPLATE_NAMES.admin_new_order,
+      subject: "Comandă nouă NOVRA — {purchaseCode}",
+      previewText: "Notificare comandă nouă",
+      title: "Comandă nouă",
+      subtitle: "Plasată pe novra.ro",
+      content:
+        "Comandă nouă {purchaseCode} de la {customerName} ({customerEmail}). Total: {total} RON. Plată: {paymentMethod}.",
+      buttonText: "Vezi comanda în admin",
+      buttonLink: `${site}/admin/comenzi`,
+      footer: "© NOVRA — Notificare automată",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    gift_card: {
+      name: TEMPLATE_NAMES.gift_card,
+      subject: "Gift Card NOVRA — {amount} NovraCredits",
+      previewText: "Creditele tale au fost încărcate",
+      title: "Gift Card activat",
+      subtitle: "NovraCredits disponibile în cont.",
+      content:
+        "Plata Gift Card-ului de {amount} Lei a fost confirmată. Ai primit {amount} NovraCredits în contul tău NOVRA.",
+      buttonText: "Vezi creditele",
+      buttonLink: `${site}/contul-meu?section=my-novra-credits`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    store_credit: {
+      name: TEMPLATE_NAMES.store_credit,
+      subject: "NovraCredits actualizate — NOVRA",
+      previewText: "Sold credite actualizat",
+      title: "NovraCredits actualizate",
+      subtitle: "Soldul contului tău a fost modificat.",
+      content:
+        "Soldul tău de NovraCredits a fost actualizat. {description} Sold curent: {balance} NovraCredits.",
+      buttonText: "Vezi creditele",
+      buttonLink: `${site}/contul-meu?section=my-novra-credits`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    review_request: {
+      name: TEMPLATE_NAMES.review_request,
+      subject: "Cum ți se par produsele NOVRA?",
+      previewText: "Lasă-ne o recenzie",
+      title: "Ne-ar plăcea feedback-ul tău",
+      subtitle: "Comanda {purchaseCode} a fost livrată.",
+      content:
+        "Sperăm că te bucuri de produsele din comanda {purchaseCode}. Ne-ar ajuta mult dacă ne lași o recenzie — durează doar un minut!",
+      buttonText: "Lasă o recenzie",
+      buttonLink: `${site}/recenzii`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
   };
 
   const base = defaults[id];
@@ -185,9 +313,18 @@ export async function getEmailTemplate(id: EmailTemplateId): Promise<EmailTempla
   return defaultTemplate(id);
 }
 
+const ADMIN_TEMPLATE_IDS: EmailTemplateId[] = [
+  "contact_admin",
+  "admin_new_order",
+];
+
 export async function getAllEmailTemplates(): Promise<EmailTemplateConfig[]> {
   const ids = Object.keys(TEMPLATE_NAMES) as EmailTemplateId[];
-  return Promise.all(ids.filter((id) => id !== "order_cancelled").map((id) => getEmailTemplate(id)));
+  return Promise.all(
+    ids
+      .filter((id) => id !== "order_cancelled" && !ADMIN_TEMPLATE_IDS.includes(id))
+      .map((id) => getEmailTemplate(id))
+  );
 }
 
 export async function saveEmailTemplate(
@@ -209,8 +346,31 @@ export async function saveEmailTemplate(
   return next;
 }
 
-export function renderEmailTemplateHtml(config: EmailTemplateConfig): string {
-  const contentHtml = config.content
+export function applyTemplatePlaceholders(text: string, vars: Record<string, string>): string {
+  let result = text;
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
+  }
+  return result;
+}
+
+export function renderEmailTemplateHtml(
+  config: EmailTemplateConfig,
+  vars?: Record<string, string>
+): string {
+  const subjectVars = vars ?? {};
+  const resolved = {
+    ...config,
+    subject: applyTemplatePlaceholders(config.subject, subjectVars),
+    title: applyTemplatePlaceholders(config.title, subjectVars),
+    subtitle: applyTemplatePlaceholders(config.subtitle, subjectVars),
+    content: applyTemplatePlaceholders(config.content, subjectVars),
+    buttonText: applyTemplatePlaceholders(config.buttonText, subjectVars),
+    buttonLink: applyTemplatePlaceholders(config.buttonLink, subjectVars),
+    previewText: applyTemplatePlaceholders(config.previewText, subjectVars),
+  };
+
+  const contentHtml = resolved.content
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean)
@@ -218,15 +378,19 @@ export function renderEmailTemplateHtml(config: EmailTemplateConfig): string {
     .join("");
 
   const buttonBlock =
-    config.buttonText.trim() && config.buttonLink.trim()
-      ? emailButton(config.buttonLink.trim(), config.buttonText.trim())
+    resolved.buttonText.trim() && resolved.buttonLink.trim()
+      ? emailButton(resolved.buttonLink.trim(), resolved.buttonText.trim())
       : "";
 
   const body = `
-    ${contentHtml || paragraph(escapeHtml(config.content))}
+    ${contentHtml || paragraph(escapeHtml(resolved.content))}
     ${buttonBlock}
-    ${config.footer.trim() ? `<p style="margin:24px 0 0;font-family:system-ui,sans-serif;font-size:12px;color:${escapeHtml(config.colors.accent)};text-align:center;">${escapeHtml(config.footer)}</p>` : ""}
+    ${resolved.footer.trim() ? `<p style="margin:24px 0 0;font-family:system-ui,sans-serif;font-size:12px;color:${escapeHtml(resolved.colors.accent)};text-align:center;">${escapeHtml(resolved.footer)}</p>` : ""}
   `;
 
-  return wrapEmailHtml(config.title, body, config.subtitle || config.previewText);
+  return wrapEmailHtml(resolved.title, body, resolved.subtitle || resolved.previewText);
+}
+
+export function resolveTemplateSubject(config: EmailTemplateConfig, vars?: Record<string, string>): string {
+  return applyTemplatePlaceholders(config.subject, vars ?? {});
 }

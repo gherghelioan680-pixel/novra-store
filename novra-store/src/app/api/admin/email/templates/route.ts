@@ -17,6 +17,11 @@ import {
   sendOrderConfirmationEmail,
   sendOrderStatusEmail,
   sendTrackingEmail,
+  sendContactFormEmails,
+  sendReviewRequestEmail,
+  sendGiftCardEmail,
+  sendStoreCreditEmail,
+  sendAdminNewOrderEmail,
 } from "@/lib/email";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { generateNewsletterDiscountCode } from "@/lib/discount-codes";
@@ -75,7 +80,9 @@ export async function GET(request: NextRequest) {
   if (listAll) {
     const ids = Object.keys(TEMPLATE_NAMES) as EmailTemplateId[];
     const templates = await Promise.all(
-      ids.filter((id) => id !== "order_cancelled").map((id) => getEmailTemplate(id))
+      ids
+        .filter((id) => !["order_cancelled", "contact_admin", "admin_new_order"].includes(id))
+        .map((id) => getEmailTemplate(id))
     );
     return Response.json({ templates });
   }
@@ -175,6 +182,44 @@ export async function POST(request: NextRequest) {
         sample.status = "shipped";
         sample.awbTracking = "DEMO123456";
         sent = await sendTrackingEmail(sample, "DEMO123456");
+      } else if (templateId === "order_processing") {
+        const sample = buildSampleOrder();
+        sample.userEmail = to;
+        sample.address.email = to;
+        sample.status = "processing";
+        sent = await sendOrderStatusEmail(sample, "processing");
+      } else if (templateId === "order_delivered") {
+        const sample = buildSampleOrder();
+        sample.userEmail = to;
+        sample.address.email = to;
+        sample.status = "delivered";
+        sent = await sendOrderStatusEmail(sample, "delivered");
+      } else if (templateId === "review_request") {
+        const sample = buildSampleOrder();
+        sample.userEmail = to;
+        sample.address.email = to;
+        sample.status = "delivered";
+        sent = await sendReviewRequestEmail(sample);
+      } else if (templateId === "gift_card") {
+        sent = await sendGiftCardEmail({ email: to, amount: 100, balance: 150 });
+      } else if (templateId === "store_credit") {
+        sent = await sendStoreCreditEmail({
+          email: to,
+          amount: 50,
+          balance: 150,
+          description: "Ajustare admin: test Email Center",
+        });
+      } else if (templateId === "contact_confirmation") {
+        const result = await sendContactFormEmails({
+          name: "Client Demo",
+          email: to,
+          subject: "Test contact",
+          message: "Mesaj de test din Email Center.",
+        });
+        sent = result.confirmationSent;
+      } else if (templateId === "admin_new_order") {
+        const sample = buildSampleOrder();
+        sent = await sendAdminNewOrderEmail(sample);
       } else if (templateId === "contact") {
         const tpl = await getEmailTemplate("contact");
         sent = await sendEmail({

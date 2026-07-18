@@ -11,10 +11,18 @@ export const runtime = "nodejs";
 const VALID_KEYS: EmailAutomationKey[] = [
   "welcome",
   "orderConfirmation",
+  "orderProcessing",
   "orderShipped",
+  "orderDelivered",
+  "orderCancelled",
+  "adminNewOrder",
   "passwordReset",
   "newsletter",
   "reviewRequest",
+  "contactConfirmation",
+  "contactAdmin",
+  "giftCard",
+  "storeCredit",
 ];
 
 export async function GET(request: NextRequest) {

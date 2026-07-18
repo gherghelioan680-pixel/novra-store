@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getStripeClient } from "@/lib/stripe-server";
 import { normalizeOrder, type Order } from "@/lib/orders";
-import { trySendOrderConfirmationEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail, trySendAdminNewOrderEmail } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { recordAffiliateConversion } from "@/lib/affiliates-server";
@@ -82,6 +82,8 @@ export async function GET(request: NextRequest) {
       orders[index] = order;
       await writeJsonFile(ORDERS_FILE, orders);
     }
+
+    void trySendAdminNewOrderEmail(order, settings.orderEmailsEnabled);
 
     return Response.json({
       ok: true,

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import { normalizeOrder, generatePurchaseCode, type Order, type OrderStatus } from "@/lib/orders";
-import { trySendOrderConfirmationEmail, sendTrackingEmail, trySendOrderStatusEmail } from "@/lib/email";
+import { trySendOrderConfirmationEmail, sendTrackingEmail, trySendOrderStatusEmail, trySendAdminNewOrderEmail, scheduleReviewRequestAfterDelivery } from "@/lib/email";
 import { markDiscountCodeUsed } from "@/lib/discount-codes-server";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { spendCredits } from "@/lib/credits-server";
@@ -49,6 +49,45 @@ async function readOrders(): Promise<Order[]> {
 
   if (changed) {
     await writeJsonFile(ORDERS_FILE, updated);
+  }
+
+  return updated;
+}
+
+async function applyStatusEmailUpdates(
+  orders: Order[],
+  index: number,
+  previous: Order,
+  orderEmailsEnabled: boolean
+): Promise<Order> {
+  let updated = orders[index];
+  const statusResult = await trySendOrderStatusEmail(updated, previous.status, orderEmailsEnabled);
+
+  if (!statusResult.sent || !statusResult.status) {
+    return updated;
+  }
+
+  let statusEmailsSent = {
+    ...updated.statusEmailsSent,
+    [statusResult.status]: true,
+  };
+  let trackingEmailSent = updated.trackingEmailSent;
+
+  if (statusResult.status === "shipped" && updated.awbTracking) {
+    trackingEmailSent = true;
+  }
+
+  updated = { ...updated, statusEmailsSent, trackingEmailSent };
+  orders[index] = updated;
+
+  if (statusResult.scheduleReview) {
+    const reviewResult = await scheduleReviewRequestAfterDelivery(updated);
+    if (reviewResult === "sent") {
+      updated = { ...updated, reviewEmailSent: true, reviewEmailDueAt: undefined };
+    } else if (reviewResult) {
+      updated = { ...updated, reviewEmailDueAt: reviewResult };
+    }
+    orders[index] = updated;
   }
 
   return updated;
@@ -249,6 +288,7 @@ export async function POST(request: NextRequest) {
         orders[0] = { ...orders[0], confirmationEmailSent: true };
         await writeJsonFile(ORDERS_FILE, orders.slice(0, MAX_ORDERS));
       }
+      void trySendAdminNewOrderEmail(orders[0], settings.orderEmailsEnabled);
     }
 
     if (order.affiliateCode && order.paymentMethod !== "card") {
@@ -315,7 +355,7 @@ export async function PATCH(request: NextRequest) {
         updatedCount += 1;
 
         if (updates.status && updates.status !== previous.status) {
-          await trySendOrderStatusEmail(orders[index], previous.status, settings.orderEmailsEnabled);
+          await applyStatusEmailUpdates(orders, index, previous, settings.orderEmailsEnabled);
         }
       }
 
@@ -362,23 +402,10 @@ export async function PATCH(request: NextRequest) {
     let statusEmailsSent = { ...updated.statusEmailsSent };
 
     if (updates.status && updates.status !== previous.status) {
-      const statusResult = await trySendOrderStatusEmail(
-        updated,
-        previous.status,
-        settings.orderEmailsEnabled
-      );
-      if (statusResult.sent && statusResult.status) {
-        statusEmailsSent = {
-          ...statusEmailsSent,
-          [statusResult.status]: true,
-        };
-        if (statusResult.status === "shipped" && updated.awbTracking) {
-          trackingEmailSent = true;
-        }
-        updated = { ...updated, statusEmailsSent, trackingEmailSent };
-        orders[index] = updated;
-        await writeJsonFile(ORDERS_FILE, orders);
-      }
+      updated = await applyStatusEmailUpdates(orders, index, previous, settings.orderEmailsEnabled);
+      trackingEmailSent = updated.trackingEmailSent ?? trackingEmailSent;
+      statusEmailsSent = { ...updated.statusEmailsSent };
+      await writeJsonFile(ORDERS_FILE, orders);
     }
 
     if (
