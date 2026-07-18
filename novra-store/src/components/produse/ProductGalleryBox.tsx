@@ -4,6 +4,7 @@ type ProductGalleryBoxProps = {
   children: ReactNode;
   className?: string;
   aspectClassName?: string;
+  contentPadding?: string;
   overlay?: ReactNode;
 };
 
@@ -14,6 +15,7 @@ export default function ProductGalleryBox({
   children,
   className = "",
   aspectClassName = "aspect-square md:aspect-[4/5]",
+  contentPadding = "p-2 sm:p-3",
   overlay,
 }: ProductGalleryBoxProps) {
   return (
@@ -21,7 +23,7 @@ export default function ProductGalleryBox({
       className={`relative shrink-0 overflow-hidden rounded-xl ${GALLERY_BG} ${aspectClassName} ${className}`}
     >
       {overlay}
-      <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3">
+      <div className={`absolute inset-0 flex items-center justify-center ${contentPadding}`}>
         <div className="relative h-full w-full min-h-0">{children}</div>
       </div>
     </div>
