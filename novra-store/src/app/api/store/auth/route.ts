@@ -18,8 +18,12 @@ import {
   createPasswordResetToken,
   isPasswordResetConfigured,
 } from "@/lib/password-reset-server";
-import { sendPasswordResetEmail } from "@/lib/email";
+import { sendPasswordResetEmail, sendAccountConfirmationEmail, sendEmailVerificationEmail } from "@/lib/email";
 import { getStripeCheckoutOrigin } from "@/lib/stripe-server";
+import {
+  createEmailVerificationToken,
+  consumeEmailVerificationToken,
+} from "@/lib/email-verification-server";
 
 export const runtime = "nodejs";
 
@@ -215,6 +219,16 @@ export async function POST(request: NextRequest) {
       if (inviteCode) {
         await linkRefereeOnRegister(newUser as StoredUser, inviteCode);
       }
+
+      void sendAccountConfirmationEmail({
+        email,
+        name,
+        credits: SIGNUP_CREDITS,
+      });
+
+      const verifyToken = await createEmailVerificationToken(email);
+      const verifyUrl = `${getStripeCheckoutOrigin()}/contul-meu?verify=${verifyToken}`;
+      void sendEmailVerificationEmail({ email, name, verifyUrl });
 
       return Response.json({
         success: true,
@@ -461,6 +475,32 @@ export async function POST(request: NextRequest) {
       await writeJsonFile(FILE, users);
 
       return Response.json({ success: true, message: "Parola a fost resetată cu succes." });
+    }
+
+    if (action === "verify-email") {
+      const token = typeof body?.token === "string" ? body.token.trim() : "";
+      if (!token) {
+        return Response.json({ success: false, message: "Token lipsă." }, { status: 400 });
+      }
+
+      const email = await consumeEmailVerificationToken(token);
+      if (!email) {
+        return Response.json(
+          { success: false, message: "Linkul de verificare este invalid sau a expirat." },
+          { status: 400 }
+        );
+      }
+
+      const users = await readJsonFile<StoredUser[]>(FILE, []);
+      const index = findUserIndex(users, email);
+      if (index === -1) {
+        return Response.json({ success: false, message: "Utilizatorul nu a fost găsit." }, { status: 404 });
+      }
+
+      users[index].emailVerified = true;
+      await writeJsonFile(FILE, users);
+
+      return Response.json({ success: true, message: "Email verificat cu succes!" });
     }
 
     if (action === "check-email") {

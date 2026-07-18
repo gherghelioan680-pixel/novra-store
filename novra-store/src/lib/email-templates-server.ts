@@ -13,6 +13,7 @@ import {
 export type EmailTemplateId =
   | "welcome"
   | "newsletter"
+  | "subscription_confirmation"
   | "order_confirmation"
   | "order_processing"
   | "order_shipped"
@@ -23,6 +24,12 @@ export type EmailTemplateId =
   | "contact_confirmation"
   | "contact_admin"
   | "admin_new_order"
+  | "admin_order_cancelled"
+  | "return_approved"
+  | "refund"
+  | "return_request_admin"
+  | "account_confirmation"
+  | "email_verification"
   | "gift_card"
   | "store_credit"
   | "review_request";
@@ -54,6 +61,7 @@ const FILE = "email-templates.json";
 export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   welcome: "Bun venit",
   newsletter: "Newsletter",
+  subscription_confirmation: "Confirmare abonare newsletter",
   order_confirmation: "Confirmare comandă",
   order_processing: "Comandă în procesare",
   order_shipped: "Comandă expediată",
@@ -64,6 +72,12 @@ export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   contact_confirmation: "Confirmare contact (client)",
   contact_admin: "Notificare contact (admin)",
   admin_new_order: "Comandă nouă (admin)",
+  admin_order_cancelled: "Comandă anulată (admin)",
+  return_approved: "Retur aprobat",
+  refund: "Rambursare procesată",
+  return_request_admin: "Cerere retur nouă (admin)",
+  account_confirmation: "Confirmare cont",
+  email_verification: "Verificare email",
   gift_card: "Gift Card",
   store_credit: "NovraCredits",
   review_request: "Cerere recenzie",
@@ -99,6 +113,20 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       title: "Noutăți de la NOVRA",
       subtitle: "Rămâi la curent cu produsele noastre.",
       content: "Salut! Avem noutăți de la NOVRA — cabluri și adaptoare premium pentru setup-ul tău.",
+      buttonText: "Vizitează NOVRA",
+      buttonLink: site,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    subscription_confirmation: {
+      name: TEMPLATE_NAMES.subscription_confirmation,
+      subject: "Abonare newsletter confirmată — NOVRA",
+      previewText: "Te-ai abonat cu succes la newsletter-ul NOVRA",
+      title: "Abonare confirmată",
+      subtitle: "Mulțumim că te-ai abonat la newsletter-ul NOVRA.",
+      content:
+        "Bună, {name}! Abonarea ta la newsletter-ul NOVRA a fost confirmată. Vei primi noutăți despre produse, promoții și lansări.",
       buttonText: "Vizitează NOVRA",
       buttonLink: site,
       footer: "© NOVRA — Cabluri & adaptoare premium",
@@ -243,6 +271,90 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
     },
+    admin_order_cancelled: {
+      name: TEMPLATE_NAMES.admin_order_cancelled,
+      subject: "Comandă anulată — {purchaseCode}",
+      previewText: "Notificare anulare comandă",
+      title: "Comandă anulată",
+      subtitle: "Status actualizat în admin",
+      content:
+        "Comanda {purchaseCode} de la {customerName} ({customerEmail}) a fost anulată. Total: {total} RON.",
+      buttonText: "Vezi comanda în admin",
+      buttonLink: `${site}/admin/comenzi`,
+      footer: "© NOVRA — Notificare automată",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    return_approved: {
+      name: TEMPLATE_NAMES.return_approved,
+      subject: "Retur aprobat — comanda {orderCode}",
+      previewText: "Cererea ta de retur a fost aprobată",
+      title: "Retur aprobat",
+      subtitle: "Comanda {orderCode}",
+      content:
+        "Bună, {name}! Cererea ta de retur pentru comanda {orderCode} a fost aprobată. {adminNote}",
+      buttonText: "Contactează suportul",
+      buttonLink: "mailto:support@novra.ro",
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    refund: {
+      name: TEMPLATE_NAMES.refund,
+      subject: "Rambursare procesată — comanda {orderCode}",
+      previewText: "Rambursarea ta a fost procesată",
+      title: "Rambursare procesată",
+      subtitle: "Comanda {orderCode}",
+      content:
+        "Bună, {name}! Rambursarea pentru comanda {orderCode} a fost procesată. {adminNote}",
+      buttonText: "Vezi comenzile mele",
+      buttonLink: `${site}/contul-meu?section=my-orders`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    return_request_admin: {
+      name: TEMPLATE_NAMES.return_request_admin,
+      subject: "Cerere retur nouă — {orderCode}",
+      previewText: "Cerere retur de la client",
+      title: "Cerere retur nouă",
+      subtitle: "Comanda {orderCode}",
+      content:
+        "Cerere retur de la {name} ({email}) pentru comanda {orderCode}.\n\nMotiv: {reason}\n\n{description}",
+      buttonText: "Deschide returnări",
+      buttonLink: `${site}/admin/returnari`,
+      footer: "© NOVRA — Notificare automată",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    account_confirmation: {
+      name: TEMPLATE_NAMES.account_confirmation,
+      subject: "Cont NOVRA creat cu succes",
+      previewText: "Bine ai venit în contul tău NOVRA",
+      title: "Cont creat cu succes",
+      subtitle: "Bine ai venit la NOVRA!",
+      content:
+        "Bună, {name}! Contul tău NOVRA a fost creat cu succes. Ai primit {credits} NovraCredits cadou la înregistrare.",
+      buttonText: "Accesează contul",
+      buttonLink: `${site}/contul-meu`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
+    email_verification: {
+      name: TEMPLATE_NAMES.email_verification,
+      subject: "Verifică adresa de email — NOVRA",
+      previewText: "Confirmă adresa de email a contului tău",
+      title: "Verifică emailul",
+      subtitle: "Linkul expiră în 24 de ore.",
+      content:
+        "Bună, {name}! Te rugăm să confirmi adresa de email apăsând butonul de mai jos pentru a-ți securiza contul NOVRA.",
+      buttonText: "Verifică emailul",
+      buttonLink: `${site}/contul-meu?verify=example`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
     gift_card: {
       name: TEMPLATE_NAMES.gift_card,
       subject: "Gift Card NOVRA — {amount} NovraCredits",
@@ -316,6 +428,8 @@ export async function getEmailTemplate(id: EmailTemplateId): Promise<EmailTempla
 const ADMIN_TEMPLATE_IDS: EmailTemplateId[] = [
   "contact_admin",
   "admin_new_order",
+  "admin_order_cancelled",
+  "return_request_admin",
 ];
 
 export async function getAllEmailTemplates(): Promise<EmailTemplateConfig[]> {

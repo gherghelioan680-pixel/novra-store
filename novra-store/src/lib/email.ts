@@ -31,6 +31,15 @@ import {
   resolveTemplateSubject,
   type EmailTemplateId,
 } from "./email-templates-server";
+import {
+  type EmailRole,
+  getContactNotificationEmail,
+  getOrdersNotificationEmail,
+  getSupportNotificationEmail,
+  resolveFromAddress,
+  resolveFromRole,
+} from "./email-config";
+import type { ReturnRequest } from "./returns-types";
 
 const NOTIFIABLE_STATUSES: OrderStatus[] = ["processing", "shipped", "delivered", "cancelled"];
 
@@ -65,6 +74,7 @@ export type SendEmailInput = {
   logType?: string;
   automationKey?: EmailAutomationKey;
   templateId?: EmailTemplateId;
+  fromRole?: EmailRole;
 };
 
 export type SendEmailResult = {
@@ -87,17 +97,51 @@ export function isSmtpConfigured(): boolean {
   );
 }
 
-function getFromAddress(): string | null {
-  const from = process.env.SMTP_FROM?.trim();
-  return from || null;
+function getFromAddress(role?: EmailRole): string | null {
+  return resolveFromAddress(role);
 }
 
+/** @deprecated Use getOrdersNotificationEmail / getContactNotificationEmail / getSupportNotificationEmail */
 export function getAdminNotificationEmail(): string | null {
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  if (adminEmail) return adminEmail;
-
-  console.warn("[ADMIN] ADMIN_EMAIL nu este setat — notificările admin nu pot fi trimise.");
+  const orders = getOrdersNotificationEmail();
+  if (orders) return orders;
+  console.warn("[ADMIN] SMTP_ORDERS_EMAIL / ADMIN_EMAIL nu este setat — notificările admin nu pot fi trimise.");
   return null;
+}
+
+async function verifySmtpTransport(transport: Transporter): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await transport.verify();
+    return { ok: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Verificare SMTP eșuată.";
+    transporter = null;
+    return { ok: false, error: errorMessage };
+  }
+}
+
+function logEmailResult(input: {
+  template: string;
+  recipient: string;
+  smtp: string;
+  status: "sent" | "failed";
+  messageId?: string;
+  error?: string;
+}): void {
+  const parts = [
+    `template: ${input.template}`,
+    `recipient: ${input.recipient}`,
+    `smtp: ${input.smtp}`,
+    `status: ${input.status}`,
+    `messageId: ${input.messageId ?? "—"}`,
+    `error: ${input.error ?? "—"}`,
+  ];
+  const line = `[EMAIL] ${parts.join(" | ")}`;
+  if (input.status === "sent") {
+    console.log(line);
+  } else {
+    console.error(line);
+  }
 }
 
 function getTransporter(): Transporter | null {
@@ -140,29 +184,69 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
 
   const logType = input.logType ?? "general";
   const recipientLabel = normalizedRecipients.join(", ");
-  const templateLabel = input.templateId ?? "custom";
-
-  console.log(`[EMAIL] Tip: ${logType} | Destinatar: ${recipientLabel} | Template: ${templateLabel}`);
+  const templateLabel = input.templateId ?? logType ?? "custom";
+  const fromRole = resolveFromRole({
+    logType,
+    templateId: input.templateId,
+    fromRole: input.fromRole,
+  });
+  const from = getFromAddress(fromRole);
 
   if (normalizedRecipients.length === 0) {
-    console.warn("[ERROR] Niciun destinatar email.");
+    logEmailResult({
+      template: templateLabel,
+      recipient: "—",
+      smtp: from ?? "—",
+      status: "failed",
+      error: "Niciun destinatar.",
+    });
     return { ok: false, error: "Niciun destinatar." };
   }
 
   if (!isEmailsEnabled()) {
-    console.warn("[ERROR] EMAILS_ENABLED nu este activ.");
+    logEmailResult({
+      template: templateLabel,
+      recipient: recipientLabel,
+      smtp: from ?? "—",
+      status: "failed",
+      error: "EMAILS_ENABLED nu este activ.",
+    });
     return { ok: false, error: "EMAILS_ENABLED nu este activ." };
   }
 
   const transport = getTransporter();
-  const from = getFromAddress();
 
   if (!transport || !from) {
+    logEmailResult({
+      template: templateLabel,
+      recipient: recipientLabel,
+      smtp: "—",
+      status: "failed",
+      error: "SMTP neconfigurat.",
+    });
     console.warn("[SMTP] Neconfigurat — setează SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.");
     return { ok: false, error: "SMTP neconfigurat." };
   }
 
-  console.log(`[SMTP] Trimitere către ${recipientLabel}...`);
+  const verifyResult = await verifySmtpTransport(transport);
+  if (!verifyResult.ok) {
+    logEmailResult({
+      template: templateLabel,
+      recipient: recipientLabel,
+      smtp: from,
+      status: "failed",
+      error: verifyResult.error,
+    });
+    void appendEmailLog({
+      to: recipientLabel,
+      subject: input.subject,
+      type: logType,
+      status: "failed",
+      sentAt: new Date().toISOString(),
+      error: verifyResult.error,
+    });
+    return { ok: false, error: verifyResult.error };
+  }
 
   try {
     const info = await transport.sendMail({
@@ -173,7 +257,14 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
       text: input.text ?? htmlToPlainText(input.html),
     });
 
-    console.log(`[SUCCESS] Email trimis (${logType}) → ${recipientLabel}`);
+    logEmailResult({
+      template: templateLabel,
+      recipient: recipientLabel,
+      smtp: from,
+      status: "sent",
+      messageId: info.messageId,
+    });
+
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -190,7 +281,14 @@ export async function sendEmailDetailed(input: SendEmailInput): Promise<SendEmai
     return { ok: true, messageId: info.messageId };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Eroare necunoscută la trimitere.";
-    console.error(`[ERROR] Trimitere eșuată (${logType}) → ${recipientLabel}: ${errorMessage}`);
+    transporter = null;
+    logEmailResult({
+      template: templateLabel,
+      recipient: recipientLabel,
+      smtp: from,
+      status: "failed",
+      error: errorMessage,
+    });
     void appendEmailLog({
       to: recipientLabel,
       subject: input.subject,
@@ -399,6 +497,11 @@ export async function trySendOrderStatusEmail(
   }
 
   const sent = await sendOrderStatusEmail(order, order.status);
+
+  if (sent && order.status === "cancelled") {
+    void trySendAdminOrderCancelledEmail(order, orderEmailsEnabled);
+  }
+
   return sent
     ? { sent: true, status: order.status, scheduleReview: order.status === "delivered" }
     : { sent: false };
@@ -460,8 +563,7 @@ export async function trySendAdminNewOrderEmail(
 }
 
 export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
-  const adminEmail = getAdminNotificationEmail();
-  if (!adminEmail) return false;
+  const adminEmail = getOrdersNotificationEmail();
 
   const template = await getEmailTemplate("admin_new_order");
   const vars = orderTemplateVars(order);
@@ -487,6 +589,37 @@ export async function sendAdminNewOrderEmail(order: Order): Promise<boolean> {
     logType: "admin_new_order",
     automationKey: "adminNewOrder",
     templateId: "admin_new_order",
+    fromRole: "noreply",
+  });
+}
+
+export async function trySendAdminOrderCancelledEmail(
+  order: Order,
+  orderEmailsEnabled: boolean
+): Promise<boolean> {
+  if (!isEmailsEnabled() || !orderEmailsEnabled) return false;
+  if (!(await isAutomationEnabled("adminOrderCancelled"))) {
+    console.log("[EMAIL] Admin order cancelled skipped — automation disabled for", order.purchaseCode);
+    return false;
+  }
+  return sendAdminOrderCancelledEmail(order);
+}
+
+export async function sendAdminOrderCancelledEmail(order: Order): Promise<boolean> {
+  const adminEmail = getOrdersNotificationEmail();
+  const template = await getEmailTemplate("admin_order_cancelled");
+  const vars = orderTemplateVars(order);
+
+  console.log(`[ADMIN] Notificare comandă anulată ${order.purchaseCode} → ${adminEmail}`);
+
+  return sendEmail({
+    to: adminEmail,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "admin_order_cancelled",
+    automationKey: "adminOrderCancelled",
+    templateId: "admin_order_cancelled",
+    fromRole: "noreply",
   });
 }
 
@@ -648,27 +781,25 @@ export async function sendContactFormEmails(input: {
       logType: "contact_confirmation",
       automationKey: "contactConfirmation",
       templateId: "contact_confirmation",
+      fromRole: "contact",
     });
   } else {
     console.log("[EMAIL] Contact confirmation skipped — automation disabled");
   }
 
   if (await isAutomationEnabled("contactAdmin")) {
-    const adminEmail = getAdminNotificationEmail();
-    if (!adminEmail) {
-      console.warn("[ADMIN] Notificare contact omisă — ADMIN_EMAIL lipsă.");
-    } else {
-      console.log(`[ADMIN] Notificare contact → ${adminEmail}`);
-      const template = await getEmailTemplate("contact_admin");
-      adminSent = await sendEmail({
-        to: adminEmail,
-        subject: resolveTemplateSubject(template, vars),
-        html: renderEmailTemplateHtml(template, vars),
-        logType: "contact_admin",
-        automationKey: "contactAdmin",
-        templateId: "contact_admin",
-      });
-    }
+    const adminEmail = getContactNotificationEmail();
+    console.log(`[ADMIN] Notificare contact → ${adminEmail}`);
+    const template = await getEmailTemplate("contact_admin");
+    adminSent = await sendEmail({
+      to: adminEmail,
+      subject: resolveTemplateSubject(template, vars),
+      html: renderEmailTemplateHtml(template, vars),
+      logType: "contact_admin",
+      automationKey: "contactAdmin",
+      templateId: "contact_admin",
+      fromRole: "noreply",
+    });
   } else {
     console.log("[EMAIL] Contact admin notification skipped — automation disabled");
   }
@@ -684,15 +815,47 @@ export async function sendReviewSubmissionEmails(input: {
 }): Promise<{ confirmationSent: boolean; adminSent: boolean }> {
   const subject = "Recenzie NOVRA";
   const message = `Rating: ${input.rating}\n\n${input.message}`;
-
-  console.log(`[EMAIL] Trimitere recenzie de la ${input.name} (${input.email})`);
-
-  return sendContactFormEmails({
+  const vars = {
     name: input.name,
     email: input.email,
     subject,
     message,
-  });
+  };
+
+  console.log(`[EMAIL] Trimitere recenzie de la ${input.name} (${input.email})`);
+
+  let confirmationSent = false;
+  let adminSent = false;
+
+  if (await isAutomationEnabled("contactConfirmation")) {
+    const template = await getEmailTemplate("contact_confirmation");
+    confirmationSent = await sendEmail({
+      to: input.email,
+      subject: resolveTemplateSubject(template, vars),
+      html: renderEmailTemplateHtml(template, vars),
+      logType: "contact_confirmation",
+      automationKey: "contactConfirmation",
+      templateId: "contact_confirmation",
+      fromRole: "contact",
+    });
+  }
+
+  if (await isAutomationEnabled("contactAdmin")) {
+    const supportEmail = getSupportNotificationEmail();
+    console.log(`[ADMIN] Notificare recenzie → ${supportEmail}`);
+    const template = await getEmailTemplate("contact_admin");
+    adminSent = await sendEmail({
+      to: supportEmail,
+      subject: resolveTemplateSubject(template, vars),
+      html: renderEmailTemplateHtml(template, vars),
+      logType: "contact_admin",
+      automationKey: "contactAdmin",
+      templateId: "contact_admin",
+      fromRole: "noreply",
+    });
+  }
+
+  return { confirmationSent, adminSent };
 }
 
 export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
@@ -827,5 +990,189 @@ export async function sendAbandonedCartReminderEmail(input: {
     subject: "Ai produse în coș — finalizează comanda NOVRA",
     html: wrapEmailHtml("Ai uitat ceva în coș?", body, "Produsele tale te așteaptă în checkout."),
     logType: "abandoned_cart",
+    fromRole: "noreply",
   });
+}
+
+export async function sendSubscriptionConfirmationEmail(
+  email: string,
+  name?: string
+): Promise<boolean> {
+  if (!(await isAutomationEnabled("subscriptionConfirmation"))) {
+    console.log("[EMAIL] Subscription confirmation skipped — automation disabled for", email);
+    return false;
+  }
+
+  const template = await getEmailTemplate("subscription_confirmation");
+  const vars = { name: name?.trim() || "abonat NOVRA", email };
+
+  return sendEmail({
+    to: email,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "subscription_confirmation",
+    automationKey: "subscriptionConfirmation",
+    templateId: "subscription_confirmation",
+    fromRole: "newsletter",
+  });
+}
+
+export async function sendAccountConfirmationEmail(input: {
+  email: string;
+  name: string;
+  credits?: number;
+}): Promise<boolean> {
+  if (!(await isAutomationEnabled("accountConfirmation"))) {
+    console.log("[EMAIL] Account confirmation skipped — automation disabled for", input.email);
+    return false;
+  }
+
+  const template = await getEmailTemplate("account_confirmation");
+  const vars = {
+    name: input.name,
+    email: input.email,
+    credits: String(input.credits ?? 50),
+  };
+
+  return sendEmail({
+    to: input.email,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "account_confirmation",
+    automationKey: "accountConfirmation",
+    templateId: "account_confirmation",
+    fromRole: "noreply",
+  });
+}
+
+export async function sendEmailVerificationEmail(input: {
+  email: string;
+  name: string;
+  verifyUrl: string;
+}): Promise<boolean> {
+  if (!(await isAutomationEnabled("emailVerification"))) {
+    console.log("[EMAIL] Email verification skipped — automation disabled for", input.email);
+    return false;
+  }
+
+  const template = await getEmailTemplate("email_verification");
+  const config = {
+    ...template,
+    buttonLink: input.verifyUrl,
+  };
+  const vars = { name: input.name, email: input.email };
+
+  return sendEmail({
+    to: input.email,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(config, vars),
+    logType: "email_verification",
+    automationKey: "emailVerification",
+    templateId: "email_verification",
+    fromRole: "noreply",
+  });
+}
+
+export async function sendReturnRequestAdminEmail(returnRequest: ReturnRequest): Promise<boolean> {
+  if (!(await isAutomationEnabled("returnRequestAdmin"))) {
+    console.log("[EMAIL] Return request admin skipped — automation disabled for", returnRequest.orderCode);
+    return false;
+  }
+
+  const template = await getEmailTemplate("return_request_admin");
+  const vars = {
+    orderCode: returnRequest.orderCode,
+    name: returnRequest.userName ?? returnRequest.userEmail,
+    email: returnRequest.userEmail,
+    reason: returnRequest.reason,
+    description: returnRequest.description,
+  };
+  const supportEmail = getSupportNotificationEmail();
+
+  console.log(`[ADMIN] Cerere retur nouă ${returnRequest.orderCode} → ${supportEmail}`);
+
+  return sendEmail({
+    to: supportEmail,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "return_request_admin",
+    automationKey: "returnRequestAdmin",
+    templateId: "return_request_admin",
+    fromRole: "noreply",
+  });
+}
+
+export async function sendReturnApprovedEmail(returnRequest: ReturnRequest): Promise<boolean> {
+  if (!(await isAutomationEnabled("returnApproved"))) {
+    console.log("[EMAIL] Return approved skipped — automation disabled for", returnRequest.orderCode);
+    return false;
+  }
+
+  const template = await getEmailTemplate("return_approved");
+  const adminNote = returnRequest.adminNote?.trim()
+    ? returnRequest.adminNote.trim()
+    : "Urmează instrucțiunile primite de la echipa NOVRA.";
+  const vars = {
+    orderCode: returnRequest.orderCode,
+    name: returnRequest.userName ?? returnRequest.userEmail,
+    email: returnRequest.userEmail,
+    adminNote,
+  };
+
+  return sendEmail({
+    to: returnRequest.userEmail,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "return_approved",
+    automationKey: "returnApproved",
+    templateId: "return_approved",
+    fromRole: "noreply",
+  });
+}
+
+export async function sendRefundEmail(returnRequest: ReturnRequest): Promise<boolean> {
+  if (!(await isAutomationEnabled("refund"))) {
+    console.log("[EMAIL] Refund email skipped — automation disabled for", returnRequest.orderCode);
+    return false;
+  }
+
+  const template = await getEmailTemplate("refund");
+  const adminNote = returnRequest.adminNote?.trim()
+    ? returnRequest.adminNote.trim()
+    : "Rambursarea va apărea în contul tău bancar în 3–10 zile lucrătoare.";
+  const vars = {
+    orderCode: returnRequest.orderCode,
+    name: returnRequest.userName ?? returnRequest.userEmail,
+    email: returnRequest.userEmail,
+    adminNote,
+  };
+
+  return sendEmail({
+    to: returnRequest.userEmail,
+    subject: resolveTemplateSubject(template, vars),
+    html: renderEmailTemplateHtml(template, vars),
+    logType: "refund",
+    automationKey: "refund",
+    templateId: "refund",
+    fromRole: "noreply",
+  });
+}
+
+export async function trySendReturnStatusEmails(
+  returnRequest: ReturnRequest,
+  previousStatus: ReturnRequest["status"]
+): Promise<{ approved?: boolean; refund?: boolean; admin?: boolean }> {
+  const result: { approved?: boolean; refund?: boolean; admin?: boolean } = {};
+
+  if (returnRequest.status === previousStatus) return result;
+
+  if (returnRequest.status === "approved" && previousStatus !== "approved") {
+    result.approved = await sendReturnApprovedEmail(returnRequest);
+  }
+
+  if (returnRequest.status === "completed" && previousStatus !== "completed") {
+    result.refund = await sendRefundEmail(returnRequest);
+  }
+
+  return result;
 }

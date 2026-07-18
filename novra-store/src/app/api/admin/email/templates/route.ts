@@ -22,6 +22,12 @@ import {
   sendGiftCardEmail,
   sendStoreCreditEmail,
   sendAdminNewOrderEmail,
+  sendAdminOrderCancelledEmail,
+  sendSubscriptionConfirmationEmail,
+  sendAccountConfirmationEmail,
+  sendEmailVerificationEmail,
+  sendReturnApprovedEmail,
+  sendRefundEmail,
 } from "@/lib/email";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
 import { generateNewsletterDiscountCode } from "@/lib/discount-codes";
@@ -81,7 +87,7 @@ export async function GET(request: NextRequest) {
     const ids = Object.keys(TEMPLATE_NAMES) as EmailTemplateId[];
     const templates = await Promise.all(
       ids
-        .filter((id) => !["order_cancelled", "contact_admin", "admin_new_order"].includes(id))
+        .filter((id) => !["order_cancelled", "contact_admin", "admin_new_order", "admin_order_cancelled", "return_request_admin"].includes(id))
         .map((id) => getEmailTemplate(id))
     );
     return Response.json({ templates });
@@ -220,6 +226,46 @@ export async function POST(request: NextRequest) {
       } else if (templateId === "admin_new_order") {
         const sample = buildSampleOrder();
         sent = await sendAdminNewOrderEmail(sample);
+      } else if (templateId === "admin_order_cancelled") {
+        const sample = buildSampleOrder();
+        sample.status = "cancelled";
+        sent = await sendAdminOrderCancelledEmail(sample);
+      } else if (templateId === "subscription_confirmation") {
+        sent = await sendSubscriptionConfirmationEmail(to, "Client Demo");
+      } else if (templateId === "account_confirmation") {
+        sent = await sendAccountConfirmationEmail({ email: to, name: "Client Demo", credits: 50 });
+      } else if (templateId === "email_verification") {
+        sent = await sendEmailVerificationEmail({
+          email: to,
+          name: "Client Demo",
+          verifyUrl: `${getSiteOrigin()}/contul-meu?verify=test`,
+        });
+      } else if (templateId === "return_approved") {
+        sent = await sendReturnApprovedEmail({
+          id: "ret-demo",
+          orderCode: "NOVRA-DEMO",
+          userEmail: to,
+          userName: "Client Demo",
+          reason: "Produs defect",
+          description: "Demo retur",
+          status: "approved",
+          adminNote: "Retur aprobat — trimite coletul la adresa indicată.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      } else if (templateId === "refund") {
+        sent = await sendRefundEmail({
+          id: "ret-demo",
+          orderCode: "NOVRA-DEMO",
+          userEmail: to,
+          userName: "Client Demo",
+          reason: "Produs defect",
+          description: "Demo retur",
+          status: "completed",
+          adminNote: "Rambursarea a fost procesată.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
       } else if (templateId === "contact") {
         const tpl = await getEmailTemplate("contact");
         sent = await sendEmail({

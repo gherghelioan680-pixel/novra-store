@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import nodemailer from "nodemailer";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import { isEmailConfigured, isSmtpConfigured, sendEmailDetailed } from "@/lib/email";
+import { getRoleEmailEnvVars } from "@/lib/email-config";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 import { getSmtpTestState, recordSmtpTest, getRequiredSmtpEnvVars } from "@/lib/smtp-test-server";
 import { paragraph, wrapEmailHtml } from "@/lib/email-templates";
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
     lastEmailSent: testState.lastEmailSent,
     configCheck: testState.configCheck,
     requiredEnvVars: getRequiredSmtpEnvVars(),
+    roleEmails: getRoleEmailEnvVars(),
   });
 }
 

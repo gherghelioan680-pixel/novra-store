@@ -10,7 +10,7 @@ import {
 } from "@/lib/discount-codes-server";
 import { formatDiscountSuccessMessage } from "@/lib/discount-codes";
 import { getServerSiteSettings } from "@/lib/site-settings-server";
-import { sendNewsletterWelcomeEmail } from "@/lib/email";
+import { sendNewsletterWelcomeEmail, sendSubscriptionConfirmationEmail } from "@/lib/email";
 import { isAutomationEnabled } from "@/lib/email-automations-server";
 import { isEmailsEnabled } from "@/lib/emails-enabled";
 
@@ -155,6 +155,12 @@ export async function POST(request: NextRequest) {
         }
       });
       }
+    } else if (sendWelcome) {
+      void sendSubscriptionConfirmationEmail(email, next.name).then((sent) => {
+        if (sent) {
+          console.log("[newsletter] Subscription confirmation sent for:", email);
+        }
+      });
     } else {
       console.log("[newsletter] Welcome email skipped:", {
         email,

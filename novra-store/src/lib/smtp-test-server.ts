@@ -78,7 +78,19 @@ export async function getSmtpTestState(): Promise<SmtpTestState> {
 }
 
 export function getRequiredSmtpEnvVars(): string[] {
-  return ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "EMAILS_ENABLED"];
+  return [
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASS",
+    "SMTP_FROM",
+    "EMAILS_ENABLED",
+    "SMTP_CONTACT_EMAIL",
+    "SMTP_NEWSLETTER_EMAIL",
+    "SMTP_NOREPLY_EMAIL",
+    "SMTP_ORDERS_EMAIL",
+    "SMTP_SUPPORT_EMAIL",
+  ];
 }
 
 export function isSmtpFullyConfigured(): boolean {

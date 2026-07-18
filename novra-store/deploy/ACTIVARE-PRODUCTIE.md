@@ -35,7 +35,12 @@ Deschideți **Vercel → Project → Settings → Environment Variables**. Adău
 | `SMTP_PORT` | `465` (SSL) sau `587` (TLS/STARTTLS). |
 | `SMTP_USER` | Utilizator SMTP (ex. `contact@novra.ro`). |
 | `SMTP_PASS` | Parola contului SMTP. |
-| `SMTP_FROM` | Expeditor afișat (ex. `NOVRA <contact@novra.ro>`). |
+| `SMTP_FROM` | Expeditor fallback (ex. `NOVRA <noreply@novra.ro>`). |
+| `SMTP_CONTACT_EMAIL` | Contact + confirmare contact client (implicit `contact@novra.ro`). |
+| `SMTP_NEWSLETTER_EMAIL` | Campanii și welcome newsletter (implicit `newsletter@novra.ro`). |
+| `SMTP_NOREPLY_EMAIL` | Emailuri automate clienți (implicit `noreply@novra.ro`). |
+| `SMTP_ORDERS_EMAIL` | Notificări admin comenzi (implicit `orders@novra.ro`; fallback: `ADMIN_EMAIL`). |
+| `SMTP_SUPPORT_EMAIL` | Retururi, garanție, suport (implicit `support@novra.ro`). |
 | `ABANDONED_CART_HOURS` | Ore până la primul reminder coș abandonat (implicit `2`). |
 | `ABANDONED_CART_MAX_HOURS` | Fereastră maximă reminder coș abandonat (implicit `24`). |
 
@@ -58,7 +63,12 @@ SMTP_HOST=mail.novra.ro
 SMTP_PORT=465
 SMTP_USER=contact@novra.ro
 SMTP_PASS=
-SMTP_FROM=NOVRA <contact@novra.ro>
+SMTP_FROM=NOVRA <noreply@novra.ro>
+SMTP_CONTACT_EMAIL=contact@novra.ro
+SMTP_NEWSLETTER_EMAIL=newsletter@novra.ro
+SMTP_NOREPLY_EMAIL=noreply@novra.ro
+SMTP_ORDERS_EMAIL=orders@novra.ro
+SMTP_SUPPORT_EMAIL=support@novra.ro
 ```
 
 ---
@@ -167,11 +177,16 @@ curl -I https://novra.ro/admin/login
    - `SMTP_PORT` = `465` (SSL) sau `587` (TLS)
    - `SMTP_USER` = adresa completă (ex. `contact@novra.ro`)
    - `SMTP_PASS` = parola contului
-   - `SMTP_FROM` = `NOVRA <contact@novra.ro>`
+   - `SMTP_FROM` = `NOVRA <noreply@novra.ro>`
+   - `SMTP_CONTACT_EMAIL` = `contact@novra.ro`
+   - `SMTP_NEWSLETTER_EMAIL` = `newsletter@novra.ro`
+   - `SMTP_NOREPLY_EMAIL` = `noreply@novra.ro`
+   - `SMTP_ORDERS_EMAIL` = `orders@novra.ro`
+   - `SMTP_SUPPORT_EMAIL` = `support@novra.ro`
 3. Redeploy proiectul după salvarea variabilelor.
 4. În admin → Setări, activați **Email confirmare comandă** dacă doriți confirmări automate.
 
-**Formulare contact și recenzii:** paginile `/contact` și `/recenzii` trimit emailuri via SMTP Hostico (Nodemailer) — necesită `EMAILS_ENABLED=true` și variabilele SMTP configurate. Notificările admin merg la `ADMIN_EMAIL`.
+**Formulare contact și recenzii:** paginile `/contact` și `/recenzii` trimit emailuri via SMTP Hostico (Nodemailer). Notificările contact merg la `SMTP_CONTACT_EMAIL`; recenziile la `SMTP_SUPPORT_EMAIL`. Comenzile noi/anulate → `SMTP_ORDERS_EMAIL`.
 
 **Notă:** Programul de afiliere **nu** trimite emailuri clienților — doar comision în admin.
 

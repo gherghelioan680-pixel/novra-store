@@ -60,6 +60,8 @@ export type User = {
   createdAt: string;
   /** Cont blocat de admin — nu poate autentifica sau plasa comenzi. */
   banned?: boolean;
+  /** Email verificat prin link de confirmare. */
+  emailVerified?: boolean;
   /** Last browsing locale synced from the public site. */
   preferredLocale?: AppLocale;
 };

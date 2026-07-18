@@ -6,13 +6,20 @@ export type EmailAutomationKey =
   | "orderDelivered"
   | "orderCancelled"
   | "adminNewOrder"
+  | "adminOrderCancelled"
   | "passwordReset"
   | "newsletter"
   | "reviewRequest"
   | "contactConfirmation"
   | "contactAdmin"
   | "giftCard"
-  | "storeCredit";
+  | "storeCredit"
+  | "returnApproved"
+  | "refund"
+  | "returnRequestAdmin"
+  | "accountConfirmation"
+  | "emailVerification"
+  | "subscriptionConfirmation";
 
 export type EmailAutomationMeta = {
   enabled: boolean;

@@ -8,6 +8,10 @@ import {
   updateReturnStatus,
 } from "@/lib/returns-server";
 import type { ReturnStatus } from "@/lib/returns-types";
+import {
+  sendReturnRequestAdminEmail,
+  trySendReturnStatusEmails,
+} from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -82,6 +86,8 @@ export async function POST(request: NextRequest) {
       description,
     });
 
+    void sendReturnRequestAdminEmail(entry);
+
     return Response.json({ success: true, returnRequest: entry });
   } catch {
     return Response.json({ success: false, message: "Cerere invalidă." }, { status: 400 });
@@ -106,10 +112,18 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ success: false, message: "Status invalid." }, { status: 400 });
     }
 
+    const returns = await readReturns();
+    const existing = returns.find((item) => item.id === id);
+    if (!existing) {
+      return Response.json({ success: false, message: "Cererea nu a fost găsită." }, { status: 404 });
+    }
+
     const updated = await updateReturnStatus(id, status, adminNote);
     if (!updated) {
       return Response.json({ success: false, message: "Cererea nu a fost găsită." }, { status: 404 });
     }
+
+    void trySendReturnStatusEmails(updated, existing.status);
 
     return Response.json({ success: true, returnRequest: updated });
   } catch {

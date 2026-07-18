@@ -24,6 +24,7 @@ const ORDER_EMAIL_KEYS: EmailAutomationKey[] = [
   "orderDelivered",
   "orderCancelled",
   "adminNewOrder",
+  "adminOrderCancelled",
 ];
 
 const DEFAULT_AUTOMATIONS: EmailAutomations = {
@@ -41,6 +42,13 @@ const DEFAULT_AUTOMATIONS: EmailAutomations = {
   contactAdmin: { ...DEFAULT_META, enabled: true },
   giftCard: { ...DEFAULT_META, enabled: true },
   storeCredit: { ...DEFAULT_META, enabled: true },
+  adminOrderCancelled: { ...DEFAULT_META, enabled: false },
+  returnApproved: { ...DEFAULT_META, enabled: true },
+  refund: { ...DEFAULT_META, enabled: true },
+  returnRequestAdmin: { ...DEFAULT_META, enabled: true },
+  accountConfirmation: { ...DEFAULT_META, enabled: true },
+  emailVerification: { ...DEFAULT_META, enabled: true },
+  subscriptionConfirmation: { ...DEFAULT_META, enabled: true },
 };
 
 type StoredAutomation = Partial<EmailAutomationMeta> & { enabled?: boolean };
@@ -106,6 +114,9 @@ export async function getEmailAutomations(): Promise<EmailAutomations> {
   }
   if (stored.adminNewOrder === undefined) {
     result.adminNewOrder.enabled = siteSettings.orderEmailsEnabled;
+  }
+  if (stored.adminOrderCancelled === undefined) {
+    result.adminOrderCancelled.enabled = siteSettings.orderEmailsEnabled;
   }
 
   return result;

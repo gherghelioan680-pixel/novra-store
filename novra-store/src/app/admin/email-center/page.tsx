@@ -129,6 +129,7 @@ type EmailTemplateDef = {
 const EMAIL_TEMPLATES: EmailTemplateDef[] = [
   { id: "welcome", name: "Bun venit" },
   { id: "newsletter", name: "Newsletter" },
+  { id: "subscription_confirmation", name: "Confirmare abonare" },
   { id: "order_confirmation", name: "Confirmare comandă" },
   { id: "order_processing", name: "Comandă în procesare" },
   { id: "order_shipped", name: "Comandă expediată" },
@@ -140,6 +141,10 @@ const EMAIL_TEMPLATES: EmailTemplateDef[] = [
   { id: "gift_card", name: "Gift Card" },
   { id: "store_credit", name: "NovraCredits" },
   { id: "review_request", name: "Cerere recenzie" },
+  { id: "return_approved", name: "Retur aprobat" },
+  { id: "refund", name: "Rambursare" },
+  { id: "account_confirmation", name: "Confirmare cont" },
+  { id: "email_verification", name: "Verificare email" },
 ];
 
 const AUTOMATION_LABELS: { key: EmailAutomationKey; label: string }[] = [
@@ -157,6 +162,13 @@ const AUTOMATION_LABELS: { key: EmailAutomationKey; label: string }[] = [
   { key: "contactAdmin", label: "Notificare contact (admin)" },
   { key: "giftCard", label: "Gift Card" },
   { key: "storeCredit", label: "NovraCredits" },
+  { key: "adminOrderCancelled", label: "Comandă anulată (admin)" },
+  { key: "returnApproved", label: "Retur aprobat" },
+  { key: "refund", label: "Rambursare" },
+  { key: "returnRequestAdmin", label: "Cerere retur (admin)" },
+  { key: "accountConfirmation", label: "Confirmare cont" },
+  { key: "emailVerification", label: "Verificare email" },
+  { key: "subscriptionConfirmation", label: "Confirmare abonare" },
 ];
 
 type CampaignForm = {
@@ -403,6 +415,13 @@ export default function AdminEmailCenterPage() {
       smtp_test: "Test SMTP",
       general: "General",
       abandoned_cart: "Coș abandonat",
+      subscription_confirmation: "Confirmare abonare",
+      return_approved: "Retur aprobat",
+      refund: "Rambursare",
+      return_request_admin: "Cerere retur (admin)",
+      account_confirmation: "Confirmare cont",
+      email_verification: "Verificare email",
+      admin_order_cancelled: "Comandă anulată (admin)",
     };
     return map[type] ?? type;
   };

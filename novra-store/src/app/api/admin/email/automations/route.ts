@@ -23,6 +23,13 @@ const VALID_KEYS: EmailAutomationKey[] = [
   "contactAdmin",
   "giftCard",
   "storeCredit",
+  "adminOrderCancelled",
+  "returnApproved",
+  "refund",
+  "returnRequestAdmin",
+  "accountConfirmation",
+  "emailVerification",
+  "subscriptionConfirmation",
 ];
 
 export async function GET(request: NextRequest) {
