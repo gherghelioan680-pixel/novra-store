@@ -17,8 +17,8 @@ export default function EmailPreferencesView({ user, onSave }: EmailPreferencesV
     recommendations: user.preferences?.recommendations ?? false,
   });
 
-  const handleSave = () => {
-    const result = updateCurrentUserProfile({ preferences: prefs });
+  const handleSave = async () => {
+    const result = await updateCurrentUserProfile({ preferences: prefs });
     if (result.success && result.user) {
       onSave(result.user);
     }

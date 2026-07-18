@@ -3,13 +3,13 @@ import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { normalizeOrder, type Order } from "@/lib/orders";
 import type { User } from "@/lib/auth";
 import { hashPassword } from "@/lib/password-server";
+import { grantRegistrationCredits } from "@/lib/credits-server";
+import { REGISTRATION_CREDITS } from "@/lib/credits-rewards";
 
 export const runtime = "nodejs";
 
 const USERS_FILE = "users.json";
 const ORDERS_FILE = "orders.json";
-
-const SIGNUP_CREDITS = 50;
 
 type StoredUser = User & { adminNotes?: string };
 
@@ -53,12 +53,14 @@ function buildUserFromOrder(order: Order, password: string): StoredUser {
     orders: [order.id],
     addresses: [],
     paymentMethods: [],
-    novraCredits: SIGNUP_CREDITS,
-    signupBonusClaimed: true,
+    novraCredits: 0,
+    signupBonusClaimed: false,
+    registrationCreditsGranted: false,
+    profileCreditsGranted: false,
     profileCompleted: false,
     subscribedToNewsletter: false,
     loyalty: {
-      points: SIGNUP_CREDITS,
+      points: 0,
       discount: "0%",
     },
     preferences: {
@@ -134,10 +136,14 @@ export async function POST(request: NextRequest) {
     await writeJsonFile(USERS_FILE, users);
     await writeJsonFile(ORDERS_FILE, orders);
 
+    const signupReward = await grantRegistrationCredits(newUser.email);
+    const creditedUser =
+      signupReward.ok && signupReward.user ? signupReward.user : newUser;
+
     return Response.json({
       success: true,
-      message: "Cont creat cu succes. Datele comenzii au fost salvate în contul tău.",
-      user: stripPassword(newUser),
+      message: `Cont creat cu succes. Datele comenzii au fost salvate în contul tău. Ai primit ${REGISTRATION_CREDITS} NovraCredits.`,
+      user: stripPassword(creditedUser as StoredUser),
     });
   } catch (error) {
     if (error instanceof Error && error.name === "StorageUnavailableError") {

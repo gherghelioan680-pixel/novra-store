@@ -44,8 +44,8 @@ export default function OverviewView({ user, onNavigate, onUserUpdate }: Overvie
   const locale = useLocale();
   const [subscribeOpen, setSubscribeOpen] = useState(false);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const profileComplete = isProfileComplete(user);
-  const signupDone = user.signupBonusClaimed ?? true;
+  const profileComplete = user.profileCreditsGranted ?? user.profileCompleted ?? isProfileComplete(user);
+  const signupDone = user.registrationCreditsGranted ?? user.signupBonusClaimed ?? false;
 
   useEffect(() => {
     const refresh = async () => {

@@ -2,6 +2,7 @@ import { addNewsletterSubscriber } from "./newsletter";
 import { apiFetch, getApiHeaders } from "./api-client";
 import { dispatchStoreUpdate } from "./store";
 import { getInviteRef } from "./referral-attribution";
+import { PROFILE_COMPLETION_CREDITS, REGISTRATION_CREDITS } from "./credits-rewards";
 import type { AppLocale } from "@/i18n/routing";
 
 export type ShippingAddress = {
@@ -43,6 +44,8 @@ export type User = {
   novraCredits?: number;
   profileCompleted?: boolean;
   signupBonusClaimed?: boolean;
+  registrationCreditsGranted?: boolean;
+  profileCreditsGranted?: boolean;
   subscribedToNewsletter?: boolean;
   /** Cod unic program recomandă prieten. */
   friendReferralCode?: string;
@@ -71,9 +74,6 @@ export type SafeUser = Omit<User, "password"> & { adminNotes?: string };
 const USERS_KEY = "novra-users";
 const CURRENT_USER_KEY = "novra-current-user";
 const SESSION_KEY = "novra-session";
-
-const SIGNUP_CREDITS = 50;
-const PROFILE_COMPLETE_CREDITS = 100;
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -197,27 +197,7 @@ export function getDisplayFirstName(user: User | null | undefined): string {
   return parts[0] || "";
 }
 
-export function isProfileComplete(user: User): boolean {
-  return Boolean(
-    user.firstName?.trim() &&
-      user.lastName?.trim() &&
-      user.dateOfBirth?.trim() &&
-      user.phone?.trim() &&
-      user.country?.trim()
-  );
-}
-
-function applyProfileCompletionBonus(user: User): User {
-  if (user.profileCompleted || !isProfileComplete(user)) {
-    return user;
-  }
-
-  return {
-    ...user,
-    profileCompleted: true,
-    novraCredits: getNovraCredits(user) + PROFILE_COMPLETE_CREDITS,
-  };
-}
+export { REGISTRATION_CREDITS, PROFILE_COMPLETION_CREDITS, isProfileComplete } from "./credits-rewards";
 
 export function getStoredUsers(): User[] {
   if (!isBrowser()) return [];
@@ -336,7 +316,7 @@ export async function registerUser(name: string, email: string, password: string
 
     return {
       success: true,
-      message: data.message ?? "Cont creat cu succes! Ai primit 50 NovraCredits.",
+      message: data.message ?? `Cont creat cu succes! Ai primit ${REGISTRATION_CREDITS} NovraCredits.`,
       user: newUser,
     };
   } catch {
@@ -521,7 +501,7 @@ export async function loadAdminUsers(): Promise<SafeUser[]> {
   return users.filter((user) => user.role === "admin");
 }
 
-export function updateCurrentUserProfile(updates: Partial<User>) {
+export async function updateCurrentUserProfile(updates: Partial<User>) {
   if (!isBrowser()) {
     return { success: false, message: "Acțiunea nu poate fi efectuată în acest moment." };
   }
@@ -539,6 +519,8 @@ export function updateCurrentUserProfile(updates: Partial<User>) {
     return { success: false, message: "Utilizatorul nu a fost găsit." };
   }
 
+  const beforeCredits = getNovraCredits(users[userIndex]);
+
   const mergedUser: User = {
     ...users[userIndex],
     ...updates,
@@ -554,21 +536,29 @@ export function updateCurrentUserProfile(updates: Partial<User>) {
     mergedUser.name = [mergedUser.firstName, mergedUser.lastName].filter(Boolean).join(" ").trim() || mergedUser.name;
   }
 
-  const updatedUser = applyProfileCompletionBonus(mergedUser);
-  const earnedCredits = getNovraCredits(updatedUser) - getNovraCredits(users[userIndex]);
-
-  users[userIndex] = updatedUser;
+  users[userIndex] = mergedUser;
   const savedUsers = saveUsers(users);
   if (!savedUsers.ok) {
     return { success: false, message: savedUsers.message };
   }
 
-  const savedSession = setCurrentUser(updatedUser);
+  const savedSession = setCurrentUser(mergedUser);
   if (!savedSession.ok) {
     return { success: false, message: savedSession.message };
   }
 
-  void syncUserToServer(updatedUser);
+  const syncResult = await syncUserToServer(mergedUser);
+  let updatedUser = mergedUser;
+
+  if (syncResult.ok && syncResult.user) {
+    updatedUser = mergeServerUserWithPassword(syncResult.user, mergedUser.password);
+    users[userIndex] = updatedUser;
+    saveUsers(users);
+    setCurrentUser(updatedUser);
+    dispatchStoreUpdate({ scope: "users" });
+  }
+
+  const earnedCredits = getNovraCredits(updatedUser) - beforeCredits;
 
   const message =
     earnedCredits > 0
@@ -593,7 +583,7 @@ export async function subscribeUserToNewsletter(email: string) {
     return { success: false, message: "Introdu o adresă de email validă." };
   }
 
-  const result = updateCurrentUserProfile({
+  const result = await updateCurrentUserProfile({
     subscribedToNewsletter: true,
     preferences: {
       offers: true,
@@ -612,7 +602,7 @@ export async function subscribeUserToNewsletter(email: string) {
   return result;
 }
 
-export function updateShippingAddress(data: Omit<ShippingAddress, "country"> & { country?: string }) {
+export async function updateShippingAddress(data: Omit<ShippingAddress, "country"> & { country?: string }) {
   const fullName = data.fullName.trim();
   const addressLine = data.addressLine.trim();
   const city = data.city.trim();
@@ -712,8 +702,10 @@ export function deleteAccount() {
   return { success: true, message: "Contul a fost șters cu succes." };
 }
 
-export async function syncUserToServer(user: User): Promise<boolean> {
-  if (!isBrowser()) return false;
+export async function syncUserToServer(
+  user: User
+): Promise<{ ok: boolean; user?: SafeUser; profileCreditsGranted?: number }> {
+  if (!isBrowser()) return { ok: false };
 
   try {
     const response = await fetch("/api/store/users", {
@@ -721,9 +713,17 @@ export async function syncUserToServer(user: User): Promise<boolean> {
       headers: getApiHeaders(),
       body: JSON.stringify({ user }),
     });
-    return response.ok;
+    if (!response.ok) {
+      return { ok: false };
+    }
+
+    const data = (await response.json()) as {
+      user?: SafeUser;
+      profileCreditsGranted?: number;
+    };
+    return { ok: true, user: data.user, profileCreditsGranted: data.profileCreditsGranted };
   } catch {
-    return false;
+    return { ok: false };
   }
 }
 

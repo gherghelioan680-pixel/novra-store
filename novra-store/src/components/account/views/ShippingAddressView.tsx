@@ -57,16 +57,16 @@ export default function ShippingAddressView({ user, onSave, onCancel }: Shipping
     onCancel();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const result = updateShippingAddress(form);
+    const result = await updateShippingAddress(form);
 
     if (result.success && result.user) {
       onSave(result.user, t("addressSaved"));
     } else {
-      setError(t("fillAllFields"));
+      setError(result.message ?? t("fillAllFields"));
     }
   };
 

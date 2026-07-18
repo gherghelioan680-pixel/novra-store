@@ -1,8 +1,13 @@
 import "server-only";
 
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
+import { isProfileComplete } from "@/lib/credits-rewards";
 import type { User } from "@/lib/auth";
 import { sendGiftCardEmail, sendStoreCreditEmail } from "@/lib/email";
+import {
+  PROFILE_COMPLETION_CREDITS,
+  REGISTRATION_CREDITS,
+} from "@/lib/credits-rewards";
 import {
   GIFT_CARD_AMOUNTS,
   isValidGiftCardAmount,
@@ -307,6 +312,161 @@ export async function grantReferralCredits(
   referenceId?: string
 ): Promise<{ ok: true; user: StoredUser; transaction: CreditTransaction } | { ok: false; message: string }> {
   return updateUserCreditsInternal(userEmail, amount, "referral_reward", description, referenceId);
+}
+
+function hasRegistrationCreditsGranted(user: StoredUser): boolean {
+  return Boolean(user.registrationCreditsGranted || user.signupBonusClaimed);
+}
+
+function hasProfileCreditsGranted(user: StoredUser): boolean {
+  return Boolean(user.profileCreditsGranted || user.profileCompleted);
+}
+
+async function setUserRewardFlags(
+  userEmail: string,
+  flags: Partial<
+    Pick<
+      StoredUser,
+      | "registrationCreditsGranted"
+      | "signupBonusClaimed"
+      | "profileCreditsGranted"
+      | "profileCompleted"
+    >
+  >
+): Promise<StoredUser | null> {
+  const email = normalizeEmail(userEmail);
+  const users = await readJsonFile<StoredUser[]>(USERS_FILE, []);
+  const index = users.findIndex((u) => normalizeEmail(u.email) === email);
+  if (index === -1) return null;
+
+  users[index] = { ...users[index], ...flags };
+  await writeJsonFile(USERS_FILE, users);
+  return users[index];
+}
+
+export async function grantRegistrationCredits(
+  userEmail: string
+): Promise<
+  | { ok: true; granted: boolean; user: StoredUser; transaction?: CreditTransaction }
+  | { ok: false; message: string }
+> {
+  const email = normalizeEmail(userEmail);
+  const users = await readJsonFile<StoredUser[]>(USERS_FILE, []);
+  const index = users.findIndex((u) => normalizeEmail(u.email) === email);
+  if (index === -1) {
+    return { ok: false, message: "Utilizatorul nu a fost găsit." };
+  }
+
+  const current = users[index];
+  if (hasRegistrationCreditsGranted(current)) {
+    return { ok: true, granted: false, user: current };
+  }
+
+  const creditResult = await updateUserCreditsInternal(
+    email,
+    REGISTRATION_CREDITS,
+    "signup_bonus",
+    "Bonus înregistrare cont"
+  );
+  if (!creditResult.ok) {
+    return { ok: false, message: creditResult.message };
+  }
+
+  const updated = await setUserRewardFlags(email, {
+    registrationCreditsGranted: true,
+    signupBonusClaimed: true,
+  });
+  if (!updated) {
+    return { ok: false, message: "Utilizatorul nu a fost găsit." };
+  }
+
+  void sendStoreCreditEmail({
+    email: updated.email,
+    amount: REGISTRATION_CREDITS,
+    balance: getUserCredits(updated),
+    description: "Bonus înregistrare cont",
+  });
+
+  return {
+    ok: true,
+    granted: true,
+    user: updated,
+    transaction: creditResult.transaction,
+  };
+}
+
+export async function grantProfileCompletionCredits(
+  userEmail: string
+): Promise<
+  | { ok: true; granted: boolean; user: StoredUser; transaction?: CreditTransaction }
+  | { ok: false; message: string }
+> {
+  const email = normalizeEmail(userEmail);
+  const users = await readJsonFile<StoredUser[]>(USERS_FILE, []);
+  const index = users.findIndex((u) => normalizeEmail(u.email) === email);
+  if (index === -1) {
+    return { ok: false, message: "Utilizatorul nu a fost găsit." };
+  }
+
+  const current = users[index];
+  if (hasProfileCreditsGranted(current)) {
+    return { ok: true, granted: false, user: current };
+  }
+
+  if (!isProfileComplete(current)) {
+    return { ok: true, granted: false, user: current };
+  }
+
+  const creditResult = await updateUserCreditsInternal(
+    email,
+    PROFILE_COMPLETION_CREDITS,
+    "profile_bonus",
+    "Bonus completare profil"
+  );
+  if (!creditResult.ok) {
+    return { ok: false, message: creditResult.message };
+  }
+
+  const updated = await setUserRewardFlags(email, {
+    profileCreditsGranted: true,
+    profileCompleted: true,
+  });
+  if (!updated) {
+    return { ok: false, message: "Utilizatorul nu a fost găsit." };
+  }
+
+  void sendStoreCreditEmail({
+    email: updated.email,
+    amount: PROFILE_COMPLETION_CREDITS,
+    balance: getUserCredits(updated),
+    description: "Bonus completare profil",
+  });
+
+  return {
+    ok: true,
+    granted: true,
+    user: updated,
+    transaction: creditResult.transaction,
+  };
+}
+
+export async function maybeGrantProfileCompletionCredits(
+  user: StoredUser
+): Promise<
+  | { ok: true; granted: boolean; user: StoredUser; creditsGranted: number }
+  | { ok: false; message: string }
+> {
+  const result = await grantProfileCompletionCredits(user.email);
+  if (!result.ok) {
+    return result;
+  }
+
+  return {
+    ok: true,
+    granted: result.granted,
+    user: result.user,
+    creditsGranted: result.granted ? PROFILE_COMPLETION_CREDITS : 0,
+  };
 }
 
 export async function adminRevokeCreditPurchase(

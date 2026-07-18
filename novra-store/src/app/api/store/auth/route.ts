@@ -20,6 +20,8 @@ import {
 } from "@/lib/password-reset-server";
 import { sendPasswordResetEmail, sendAccountConfirmationEmail, sendEmailVerificationEmail } from "@/lib/email";
 import { getStripeCheckoutOrigin } from "@/lib/stripe-server";
+import { grantRegistrationCredits } from "@/lib/credits-server";
+import { REGISTRATION_CREDITS } from "@/lib/credits-rewards";
 import {
   createEmailVerificationToken,
   consumeEmailVerificationToken,
@@ -30,8 +32,6 @@ export const runtime = "nodejs";
 const FILE = "users.json";
 
 type StoredUser = User & { adminNotes?: string };
-
-const SIGNUP_CREDITS = 50;
 
 function stripPassword(user: StoredUser): Omit<StoredUser, "password"> {
   const { password, ...safe } = user;
@@ -143,11 +143,13 @@ function buildRegisterUser(name: string, email: string, passwordHash: string): S
     orders: [],
     addresses: [],
     paymentMethods: [],
-    novraCredits: SIGNUP_CREDITS,
-    signupBonusClaimed: true,
+    novraCredits: 0,
+    signupBonusClaimed: false,
+    registrationCreditsGranted: false,
+    profileCreditsGranted: false,
     profileCompleted: false,
     subscribedToNewsletter: false,
-    loyalty: { points: SIGNUP_CREDITS, discount: "0%" },
+    loyalty: { points: 0, discount: "0%" },
     preferences: { offers: true, orders: true, recommendations: false },
     role: "customer",
     createdAt: new Date().toISOString(),
@@ -215,15 +217,19 @@ export async function POST(request: NextRequest) {
       users.push(newUser);
       await writeJsonFile(FILE, users);
 
-      await ensureUserReferralCode(newUser as StoredUser);
+      const signupReward = await grantRegistrationCredits(newUser.email);
+      const creditedUser =
+        signupReward.ok && signupReward.user ? signupReward.user : newUser;
+
+      await ensureUserReferralCode(creditedUser as StoredUser);
       if (inviteCode) {
-        await linkRefereeOnRegister(newUser as StoredUser, inviteCode);
+        await linkRefereeOnRegister(creditedUser as StoredUser, inviteCode);
       }
 
       void sendAccountConfirmationEmail({
         email,
         name,
-        credits: SIGNUP_CREDITS,
+        credits: REGISTRATION_CREDITS,
       });
 
       const verifyToken = await createEmailVerificationToken(email);
@@ -232,8 +238,8 @@ export async function POST(request: NextRequest) {
 
       return Response.json({
         success: true,
-        message: "Cont creat cu succes! Ai primit 50 NovraCredits.",
-        user: stripPassword(newUser),
+        message: `Cont creat cu succes! Ai primit ${REGISTRATION_CREDITS} NovraCredits.`,
+        user: stripPassword(creditedUser as StoredUser),
       });
     }
 

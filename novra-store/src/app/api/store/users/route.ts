@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
 import type { User } from "@/lib/auth";
-import { adminAdjustCredits } from "@/lib/credits-server";
+import { adminAdjustCredits, maybeGrantProfileCompletionCredits } from "@/lib/credits-server";
 import { hashPassword, isPasswordHashed } from "@/lib/password-server";
 
 export const runtime = "nodejs";
@@ -78,8 +78,24 @@ export async function POST(request: NextRequest) {
       };
     }
 
+    const savedIndex = index === -1 ? users.length - 1 : index;
     await writeJsonFile(FILE, users);
-    return Response.json({ ok: true, user: stripPassword(users[index === -1 ? users.length - 1 : index]) });
+
+    const profileReward = await maybeGrantProfileCompletionCredits(users[savedIndex]);
+    if (!profileReward.ok) {
+      return Response.json({ error: profileReward.message }, { status: 500 });
+    }
+
+    users[savedIndex] = profileReward.user;
+    if (profileReward.granted) {
+      await writeJsonFile(FILE, users);
+    }
+
+    return Response.json({
+      ok: true,
+      user: stripPassword(users[savedIndex]),
+      profileCreditsGranted: profileReward.creditsGranted,
+    });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }

@@ -22,10 +22,10 @@ export default function MyProfileView({ user, onSave, onCancel }: MyProfileViewP
     country: user.country || "Romania",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const beforeCredits = getNovraCredits(user);
-    const result = updateCurrentUserProfile({
+    const result = await updateCurrentUserProfile({
       firstName: form.firstName,
       lastName: form.lastName,
       dateOfBirth: form.dateOfBirth,
