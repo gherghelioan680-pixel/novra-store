@@ -10,6 +10,7 @@ export type EmailAutomationKey =
   | "passwordReset"
   | "newsletter"
   | "reviewRequest"
+  | "reviewApproved"
   | "contactConfirmation"
   | "contactAdmin"
   | "giftCard"

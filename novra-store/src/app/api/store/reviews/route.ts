@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { isAdminRequest, unauthorizedResponse } from "@/lib/server-auth";
+import { sendReviewApprovedEmail } from "@/lib/email";
 import {
   deleteReviewById,
   normalizeReview,
@@ -84,9 +85,18 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ success: false, message: "Nicio modificare specificată." }, { status: 400 });
     }
 
+    const reviewsBefore = await readReviews();
+    const previous = reviewsBefore.find((item) => item.id === id);
+
     const updated = await updateReviewById(id, updates);
     if (!updated) {
       return Response.json({ success: false, message: "Recenzia nu a fost găsită." }, { status: 404 });
+    }
+
+    if (updated.status === "approved" && previous?.status !== "approved" && updated.email) {
+      void sendReviewApprovedEmail(updated).catch((error) => {
+        console.error("[REVIEWS] Approval email failed:", error);
+      });
     }
 
     return Response.json({ success: true, review: updated });

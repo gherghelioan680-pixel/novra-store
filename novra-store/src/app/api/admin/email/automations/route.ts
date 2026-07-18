@@ -19,6 +19,7 @@ const VALID_KEYS: EmailAutomationKey[] = [
   "passwordReset",
   "newsletter",
   "reviewRequest",
+  "reviewApproved",
   "contactConfirmation",
   "contactAdmin",
   "giftCard",

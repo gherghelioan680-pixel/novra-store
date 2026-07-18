@@ -39,6 +39,7 @@ const DEFAULT_AUTOMATIONS: EmailAutomations = {
   passwordReset: { ...DEFAULT_META },
   newsletter: { ...DEFAULT_META },
   reviewRequest: { ...DEFAULT_META, delayMinutes: 1440 },
+  reviewApproved: { ...DEFAULT_META },
   contactConfirmation: { ...DEFAULT_META },
   contactAdmin: { ...DEFAULT_META },
   giftCard: { ...DEFAULT_META },

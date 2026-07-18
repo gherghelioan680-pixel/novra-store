@@ -36,9 +36,10 @@ export default function Recenzii() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setStatus("sending");
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const rating = String(formData.get("rating") ?? "").trim();
@@ -55,7 +56,7 @@ export default function Recenzii() {
 
       if (response.ok && data.ok) {
         setStatus("success");
-        e.currentTarget.reset();
+        form.reset();
       } else {
         setStatus("error");
       }

@@ -21,6 +21,7 @@ import {
   sendTrackingEmail,
   sendContactFormEmails,
   sendReviewRequestEmail,
+  sendReviewApprovedEmail,
   sendGiftCardEmail,
   sendStoreCreditEmail,
   sendAdminNewOrderEmail,
@@ -160,6 +161,15 @@ export async function POST(request: NextRequest) {
       } else if (templateId === "review_request") {
         const sample = buildSampleOrderForTemplate("review_request", to);
         sent = await sendReviewRequestEmail(sample);
+      } else if (templateId === "review_approved") {
+        sent = await sendReviewApprovedEmail({
+          name: "Andrei Popescu",
+          email: to,
+          title: "Produs excelent!",
+          rating: 5,
+          product: "Cabluri USB-C NOVRA",
+          date: new Date().toLocaleDateString("ro-RO"),
+        });
       } else if (templateId === "gift_card") {
         sent = await sendGiftCardEmail({ email: to, amount: 100, balance: 150 });
       } else if (templateId === "store_credit") {

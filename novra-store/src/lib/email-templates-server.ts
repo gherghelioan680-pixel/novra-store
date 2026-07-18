@@ -34,7 +34,8 @@ export type EmailTemplateId =
   | "email_verification"
   | "gift_card"
   | "store_credit"
-  | "review_request";
+  | "review_request"
+  | "review_approved";
 
 export type EmailTemplateColors = {
   primary: string;
@@ -83,6 +84,7 @@ export const TEMPLATE_NAMES: Record<EmailTemplateId, string> = {
   gift_card: "Gift Card",
   store_credit: "NovraCredits",
   review_request: "Cerere recenzie",
+  review_approved: "Recenzie aprobată",
 };
 
 const DEFAULT_COLORS: EmailTemplateColors = {
@@ -399,6 +401,20 @@ function defaultTemplate(id: EmailTemplateId): EmailTemplateConfig {
       colors: DEFAULT_COLORS,
       logoUrl: getLogoUrl(),
     },
+    review_approved: {
+      name: TEMPLATE_NAMES.review_approved,
+      subject: "Recenzia ta a fost publicată pe NOVRA",
+      previewText: "Recenzia ta este acum live pe site",
+      title: "Recenzia ta a fost publicată",
+      subtitle: "Mulțumim pentru feedback!",
+      content:
+        "Bună, {name}! Recenzia ta ({rating} stele) a fost aprobată și este acum vizibilă pe site. Mulțumim că ne ajuți să creștem împreună!",
+      buttonText: "Vezi recenziile",
+      buttonLink: `${site}/recenzii`,
+      footer: "© NOVRA — Cabluri & adaptoare premium",
+      colors: DEFAULT_COLORS,
+      logoUrl: getLogoUrl(),
+    },
   };
 
   const base = defaults[id];
@@ -633,6 +649,11 @@ export function getSampleTemplateVariables(templateId: EmailTemplateId): Record<
     base.balance = "150";
     base.creditAmount = "50";
     base.creditBalance = "150";
+  }
+  if (templateId === "review_approved") {
+    base.title = "Produs excelent!";
+    base.rating = "5";
+    base.product = "Cabluri USB-C NOVRA";
   }
 
   return base;

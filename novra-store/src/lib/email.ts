@@ -371,6 +371,7 @@ export type TemplateVariableContext =
   | { email: string; name: string; verifyUrl: string }
   | { email: string; name: string; credits?: number }
   | { name: string; email: string; subject: string; message: string }
+  | { name: string; email: string; title?: string; rating: number | string; product?: string; date: string }
   | { email: string; amount: number; balance: number; giftCardCode?: string }
   | { email: string; amount: number; balance: number; description: string }
   | { returnRequest: ReturnRequest }
@@ -558,6 +559,33 @@ export function buildTemplateVariables(
         message: context.message,
         ticketNumber: `TKT-${Date.now().toString(36).toUpperCase()}`,
         date: new Date().toLocaleDateString("ro-RO"),
+      }),
+    };
+  }
+
+  if (
+    templateId === "review_approved" &&
+    "name" in context &&
+    "rating" in context &&
+    "date" in context
+  ) {
+    const ctx = context as {
+      name: string;
+      email: string;
+      title?: string;
+      rating: number | string;
+      product?: string;
+      date: string;
+    };
+    return {
+      vars: withVariableAliases({
+        name: ctx.name,
+        email: ctx.email,
+        title: ctx.title?.trim() || "Recenzie NOVRA",
+        rating: String(ctx.rating),
+        product: ctx.product?.trim() || "NOVRA",
+        date: ctx.date,
+        reviewUrl,
       }),
     };
   }
@@ -1156,6 +1184,42 @@ export async function sendReviewRequestEmail(order: Order): Promise<boolean> {
     appendHtml,
     logType: "review_request",
     automationKey: "reviewRequest",
+  });
+}
+
+export async function sendReviewApprovedEmail(review: {
+  name: string;
+  email?: string;
+  title?: string;
+  rating: number;
+  product?: string;
+  date: string;
+}): Promise<boolean> {
+  const recipient = review.email?.trim().toLowerCase();
+  if (!recipient) {
+    console.log("[REVIEWS] Approval email skipped — no client email for", review.name);
+    return false;
+  }
+
+  if (!(await isAutomationEnabled("reviewApproved"))) {
+    console.log("[REVIEWS] Approval email skipped — automation disabled for", recipient);
+    return false;
+  }
+
+  console.log(`[REVIEWS] Sending approval email → ${recipient} (review by ${review.name})`);
+  const { vars } = buildTemplateVariables("review_approved", {
+    name: review.name,
+    email: recipient,
+    title: review.title,
+    rating: review.rating,
+    product: review.product,
+    date: review.date,
+  });
+
+  return sendTemplatedEmail("review_approved", recipient, vars, {
+    logType: "review_approved",
+    automationKey: "reviewApproved",
+    fromRole: "noreply",
   });
 }
 
