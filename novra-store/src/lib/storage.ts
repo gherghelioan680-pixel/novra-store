@@ -5,6 +5,7 @@ import path from "path";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const KV_KEY_PREFIX = "novra:";
+const memoryStore = new Map<string, unknown>();
 
 export class StorageUnavailableError extends Error {
   constructor(message = "Persistent storage is not configured.") {
@@ -20,9 +21,22 @@ function kvEnv(): { url: string | undefined; token: string | undefined } {
   };
 }
 
+function isPlaceholderKvValue(value: string | undefined): boolean {
+  if (!value) return true;
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.includes("your-redis") ||
+    normalized.includes("your-redis-instance") ||
+    normalized.includes("replace-me") ||
+    normalized.includes("changeme") ||
+    normalized === "placeholder" ||
+    normalized.startsWith("your-")
+  );
+}
+
 function isKvConfigured(): boolean {
   const { url, token } = kvEnv();
-  return Boolean(url && token);
+  return Boolean(url && token && !isPlaceholderKvValue(url) && !isPlaceholderKvValue(token));
 }
 
 function isServerlessRuntime(): boolean {
@@ -34,14 +48,10 @@ function isServerlessRuntime(): boolean {
   );
 }
 
-function requireKvOnServerless(): void {
+function warnMissingKvOnServerless(operation: "read" | "write", filename: string): void {
   if (isServerlessRuntime() && !isKvConfigured()) {
-    const { url, token } = kvEnv();
-    const missing: string[] = [];
-    if (!url) missing.push("KV_REST_API_URL or UPSTASH_REDIS_REST_URL");
-    if (!token) missing.push("KV_REST_API_TOKEN or UPSTASH_REDIS_REST_TOKEN");
-    throw new StorageUnavailableError(
-      `Persistent storage requires Upstash Redis on Vercel. Missing: ${missing.join(", ")}.`
+    console.warn(
+      `[STORAGE] ${operation} ${filename} without Upstash Redis — using in-memory fallback only.`
     );
   }
 }
@@ -117,24 +127,63 @@ async function writeToKv<T>(filename: string, data: T): Promise<void> {
 }
 
 export async function storageGet<T>(filename: string): Promise<T | null> {
-  requireKvOnServerless();
-
-  if (isKvConfigured()) {
-    return readFromKv<T>(filename);
+  if (memoryStore.has(filename)) {
+    return memoryStore.get(filename) as T;
   }
 
-  return readFromFilesystem<T>(filename);
+  if (isKvConfigured()) {
+    try {
+      const stored = await readFromKv<T>(filename);
+      if (stored !== null) {
+        memoryStore.set(filename, stored);
+      }
+      return stored;
+    } catch (error) {
+      console.error(`[STORAGE] KV read failed for ${filename}:`, error);
+    }
+  } else if (isServerlessRuntime()) {
+    warnMissingKvOnServerless("read", filename);
+  }
+
+  if (!isServerlessRuntime()) {
+    try {
+      const stored = await readFromFilesystem<T>(filename);
+      if (stored !== null) {
+        memoryStore.set(filename, stored);
+      }
+      return stored;
+    } catch (error) {
+      console.error(`[STORAGE] Filesystem read failed for ${filename}:`, error);
+    }
+  }
+
+  return null;
 }
 
 export async function storageSet<T>(filename: string, data: T): Promise<void> {
-  requireKvOnServerless();
+  memoryStore.set(filename, data);
 
   if (isKvConfigured()) {
-    await writeToKv(filename, data);
-    return;
+    try {
+      await writeToKv(filename, data);
+      return;
+    } catch (error) {
+      console.error(`[STORAGE] KV write failed for ${filename}:`, error);
+    }
+  } else if (isServerlessRuntime()) {
+    warnMissingKvOnServerless("write", filename);
   }
 
-  await writeToFilesystem(filename, data);
+  if (!isServerlessRuntime()) {
+    try {
+      await writeToFilesystem(filename, data);
+      return;
+    } catch (error) {
+      console.error(`[STORAGE] Filesystem write failed for ${filename}:`, error);
+    }
+  }
+
+  console.warn(`[STORAGE] Saved ${filename} in memory only — configure Upstash Redis for durable storage.`);
 }
 
 export function usesKvStorage(): boolean {

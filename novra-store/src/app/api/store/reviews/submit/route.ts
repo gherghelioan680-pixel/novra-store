@@ -12,7 +12,11 @@ export async function POST(request: NextRequest) {
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const ratingRaw = body?.rating ?? "";
     const rating =
-      typeof ratingRaw === "string" ? ratingRaw.trim() : String(ratingRaw ?? "").trim();
+      typeof ratingRaw === "number"
+        ? String(ratingRaw)
+        : typeof ratingRaw === "string"
+          ? ratingRaw.trim()
+          : "";
     const message =
       typeof body?.message === "string"
         ? body.message.trim()
@@ -32,8 +36,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!name || !email || !rating || !message) {
-      console.warn("[REVIEWS] validation failed: missing fields");
+      console.warn("[REVIEWS] validation failed: missing fields", {
+        name: Boolean(name),
+        email: Boolean(email),
+        rating,
+        messageLength: message.length,
+      });
       return Response.json({ ok: false, message: "Completează toate câmpurile." }, { status: 400 });
+    }
+
+    const parsedRating = parseReviewRating(rating);
+    if (!Number.isFinite(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+      console.warn("[REVIEWS] validation failed: invalid rating", { rating, parsedRating });
+      return Response.json({ ok: false, message: "Selectează un rating valid." }, { status: 400 });
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -43,7 +58,7 @@ export async function POST(request: NextRequest) {
     const review = await createPendingReview({
       name,
       email,
-      rating: parseReviewRating(rating),
+      rating: parsedRating,
       comment: message,
       title,
       product,
@@ -79,6 +94,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[REVIEWS] Submit failed:", error);
-    return Response.json({ ok: false, message: "Eroare la trimiterea recenziei." }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return Response.json(
+      {
+        ok: false,
+        message: "Eroare la trimiterea recenziei.",
+        ...(process.env.NODE_ENV !== "production" ? { detail } : {}),
+      },
+      { status: 500 }
+    );
   }
 }

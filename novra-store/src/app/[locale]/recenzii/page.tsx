@@ -194,11 +194,11 @@ export default function Recenzii() {
                 name="rating"
                 className="w-full bg-novra-card/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors font-light"
               >
-                <option value="5 Stele ★★★★★">{t("rating5")}</option>
-                <option value="4 Stele ★★★★☆">{t("rating4")}</option>
-                <option value="3 Stele ★★★☆☆">{t("rating3")}</option>
-                <option value="2 Stele ★★☆☆☆">{t("rating2")}</option>
-                <option value="1 Stea  ★☆☆☆☆">{t("rating1")}</option>
+                <option value="5">{t("rating5")}</option>
+                <option value="4">{t("rating4")}</option>
+                <option value="3">{t("rating3")}</option>
+                <option value="2">{t("rating2")}</option>
+                <option value="1">{t("rating1")}</option>
               </select>
             </div>
 
