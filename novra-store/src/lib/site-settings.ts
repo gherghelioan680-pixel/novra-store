@@ -111,7 +111,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   marketingTickerMessages: DEFAULT_MARKETING_TICKER_MESSAGES,
   comingSoon: DEFAULT_COMING_SOON,
   cardPaymentEnabled: false,
-  orderEmailsEnabled: false,
+  orderEmailsEnabled: true,
   newsletterDiscountPercent: 10,
   newsletterAutoGenerateCodes: true,
   newsletterWelcomeMessage: DEFAULT_NEWSLETTER_WELCOME_MESSAGE,

@@ -9,9 +9,10 @@ export type { EmailAutomationKey, EmailAutomationMeta, EmailAutomations };
 
 const FILE = "email-automations.json";
 const SETTINGS_FILE = "settings.json";
+const DEFAULTS_MIGRATION_VERSION = 2;
 
 const DEFAULT_META: EmailAutomationMeta = {
-  enabled: false,
+  enabled: true,
   delayMinutes: 0,
   lastRunAt: null,
   sentCount: 0,
@@ -28,30 +29,34 @@ const ORDER_EMAIL_KEYS: EmailAutomationKey[] = [
 ];
 
 const DEFAULT_AUTOMATIONS: EmailAutomations = {
-  welcome: { ...DEFAULT_META, enabled: true },
-  orderConfirmation: { ...DEFAULT_META, enabled: false },
-  orderProcessing: { ...DEFAULT_META, enabled: false },
-  orderShipped: { ...DEFAULT_META, enabled: false },
-  orderDelivered: { ...DEFAULT_META, enabled: false },
-  orderCancelled: { ...DEFAULT_META, enabled: false },
-  adminNewOrder: { ...DEFAULT_META, enabled: false },
-  passwordReset: { ...DEFAULT_META, enabled: true },
-  newsletter: { ...DEFAULT_META, enabled: true },
-  reviewRequest: { ...DEFAULT_META, enabled: false, delayMinutes: 1440 },
-  contactConfirmation: { ...DEFAULT_META, enabled: true },
-  contactAdmin: { ...DEFAULT_META, enabled: true },
-  giftCard: { ...DEFAULT_META, enabled: true },
-  storeCredit: { ...DEFAULT_META, enabled: true },
-  adminOrderCancelled: { ...DEFAULT_META, enabled: false },
-  returnApproved: { ...DEFAULT_META, enabled: true },
-  refund: { ...DEFAULT_META, enabled: true },
-  returnRequestAdmin: { ...DEFAULT_META, enabled: true },
-  accountConfirmation: { ...DEFAULT_META, enabled: true },
-  emailVerification: { ...DEFAULT_META, enabled: true },
-  subscriptionConfirmation: { ...DEFAULT_META, enabled: true },
+  welcome: { ...DEFAULT_META },
+  orderConfirmation: { ...DEFAULT_META },
+  orderProcessing: { ...DEFAULT_META },
+  orderShipped: { ...DEFAULT_META },
+  orderDelivered: { ...DEFAULT_META },
+  orderCancelled: { ...DEFAULT_META },
+  adminNewOrder: { ...DEFAULT_META },
+  passwordReset: { ...DEFAULT_META },
+  newsletter: { ...DEFAULT_META },
+  reviewRequest: { ...DEFAULT_META, delayMinutes: 1440 },
+  contactConfirmation: { ...DEFAULT_META },
+  contactAdmin: { ...DEFAULT_META },
+  giftCard: { ...DEFAULT_META },
+  storeCredit: { ...DEFAULT_META },
+  adminOrderCancelled: { ...DEFAULT_META },
+  returnApproved: { ...DEFAULT_META },
+  refund: { ...DEFAULT_META },
+  returnRequestAdmin: { ...DEFAULT_META },
+  accountConfirmation: { ...DEFAULT_META },
+  emailVerification: { ...DEFAULT_META },
+  subscriptionConfirmation: { ...DEFAULT_META },
 };
 
 type StoredAutomation = Partial<EmailAutomationMeta> & { enabled?: boolean };
+
+type StoredAutomationsFile = Partial<Record<EmailAutomationKey, StoredAutomation | boolean>> & {
+  _defaultsVersion?: number;
+};
 
 function isOrderEmailKey(key: EmailAutomationKey): boolean {
   return ORDER_EMAIL_KEYS.includes(key);
@@ -67,13 +72,22 @@ function normalizeMeta(
   if (typeof stored === "boolean") {
     return {
       ...defaults,
-      enabled: stored,
+      enabled: isOrderEmailKey(key) ? orderEmailsEnabled : stored,
     };
   }
 
   if (stored && typeof stored === "object") {
+    const enabled =
+      typeof stored.enabled === "boolean"
+        ? isOrderEmailKey(key)
+          ? orderEmailsEnabled
+          : stored.enabled
+        : isOrderEmailKey(key)
+          ? orderEmailsEnabled
+          : defaults.enabled;
+
     return {
-      enabled: typeof stored.enabled === "boolean" ? stored.enabled : defaults.enabled,
+      enabled,
       delayMinutes:
         typeof stored.delayMinutes === "number" && stored.delayMinutes >= 0
           ? stored.delayMinutes
@@ -90,40 +104,62 @@ function normalizeMeta(
   return defaults;
 }
 
+async function ensureEmailAutomationsDefaults(): Promise<void> {
+  const stored = await readJsonFile<StoredAutomationsFile>(FILE, {});
+
+  if (stored._defaultsVersion === DEFAULTS_MIGRATION_VERSION) {
+    return;
+  }
+
+  const siteSettings = await getServerSiteSettings();
+  const orderEmailsEnabled = siteSettings.orderEmailsEnabled !== false;
+
+  const next: StoredAutomationsFile = {
+    ...stored,
+    _defaultsVersion: DEFAULTS_MIGRATION_VERSION,
+  };
+
+  for (const key of Object.keys(DEFAULT_AUTOMATIONS) as EmailAutomationKey[]) {
+    const current = normalizeMeta(key, stored[key], orderEmailsEnabled);
+    next[key] = {
+      ...current,
+      enabled: isOrderEmailKey(key) ? orderEmailsEnabled : true,
+    };
+  }
+
+  await writeJsonFile(FILE, next);
+
+  if (!siteSettings.orderEmailsEnabled) {
+    const currentSettings = await readJsonFile<Partial<typeof DEFAULT_SETTINGS>>(
+      SETTINGS_FILE,
+      DEFAULT_SETTINGS
+    );
+    await writeJsonFile(
+      SETTINGS_FILE,
+      mergeSettings({ ...currentSettings, orderEmailsEnabled: true })
+    );
+  }
+}
+
 export async function getEmailAutomations(): Promise<EmailAutomations> {
-  const stored = await readJsonFile<Partial<Record<EmailAutomationKey, StoredAutomation | boolean>>>(FILE, {});
+  await ensureEmailAutomationsDefaults();
+
+  const stored = await readJsonFile<StoredAutomationsFile>(FILE, {});
   const siteSettings = await getServerSiteSettings();
 
   const result = {} as EmailAutomations;
   for (const key of Object.keys(DEFAULT_AUTOMATIONS) as EmailAutomationKey[]) {
     result[key] = normalizeMeta(key, stored[key], siteSettings.orderEmailsEnabled);
-  }
-
-  result.orderConfirmation.enabled = siteSettings.orderEmailsEnabled;
-  if (stored.orderShipped === undefined && typeof stored.orderConfirmation !== "object") {
-    result.orderShipped.enabled = siteSettings.orderEmailsEnabled;
-  }
-  if (stored.orderProcessing === undefined) {
-    result.orderProcessing.enabled = siteSettings.orderEmailsEnabled;
-  }
-  if (stored.orderDelivered === undefined) {
-    result.orderDelivered.enabled = siteSettings.orderEmailsEnabled;
-  }
-  if (stored.orderCancelled === undefined) {
-    result.orderCancelled.enabled = siteSettings.orderEmailsEnabled;
-  }
-  if (stored.adminNewOrder === undefined) {
-    result.adminNewOrder.enabled = siteSettings.orderEmailsEnabled;
-  }
-  if (stored.adminOrderCancelled === undefined) {
-    result.adminOrderCancelled.enabled = siteSettings.orderEmailsEnabled;
+    if (isOrderEmailKey(key)) {
+      result[key].enabled = siteSettings.orderEmailsEnabled;
+    }
   }
 
   return result;
 }
 
 export async function isAutomationEnabled(key: EmailAutomationKey): Promise<boolean> {
-  if (key === "orderConfirmation") {
+  if (isOrderEmailKey(key)) {
     const siteSettings = await getServerSiteSettings();
     return siteSettings.orderEmailsEnabled;
   }
@@ -138,7 +174,7 @@ export async function getAutomationMeta(key: EmailAutomationKey): Promise<EmailA
 }
 
 export async function recordAutomationRun(key: EmailAutomationKey): Promise<void> {
-  const stored = await readJsonFile<Partial<Record<EmailAutomationKey, StoredAutomation>>>(FILE, {});
+  const stored = await readJsonFile<StoredAutomationsFile>(FILE, {});
   const current = normalizeMeta(key, stored[key], (await getServerSiteSettings()).orderEmailsEnabled);
   stored[key] = {
     ...current,
@@ -151,7 +187,7 @@ export async function recordAutomationRun(key: EmailAutomationKey): Promise<void
 export async function saveEmailAutomations(
   updates: Partial<Record<EmailAutomationKey, Partial<EmailAutomationMeta> | boolean>>
 ): Promise<EmailAutomations> {
-  const stored = await readJsonFile<Partial<Record<EmailAutomationKey, StoredAutomation>>>(FILE, {});
+  const stored = await readJsonFile<StoredAutomationsFile>(FILE, {});
   const siteSettings = await getServerSiteSettings();
 
   for (const [rawKey, value] of Object.entries(updates)) {
@@ -207,6 +243,7 @@ export async function saveEmailAutomations(
     }
   }
 
+  stored._defaultsVersion = DEFAULTS_MIGRATION_VERSION;
   await writeJsonFile(FILE, stored);
   return getEmailAutomations();
 }
