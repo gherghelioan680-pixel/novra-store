@@ -99,10 +99,10 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
 
   return (
     <div
-      className="min-h-screen bg-novra-bg text-white"
+      className="min-h-0 flex-1 overflow-y-auto bg-novra-bg text-white md:min-h-screen"
       style={{ paddingBottom: accountMobileBottomPadding("1.5rem") }}
     >
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-12 sm:px-6">
+      <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-12 sm:min-h-screen sm:px-6">
         <div className="mb-8 flex justify-center">
           <AccountLogo />
         </div>

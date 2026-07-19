@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { Menu, MessageCircle, ShoppingCart, User } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/context/CartContext";
@@ -20,11 +21,13 @@ const MOBILE_NAV_TOGGLE_ID = "mobile-nav-toggle";
 
 export default function Navbar() {
   const t = useTranslations("nav");
+  const pathname = usePathname();
   const { whatsappNumber } = useSiteSettings();
   const { totalItems } = useCart();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   const menuToggleRef = useRef<HTMLInputElement>(null);
+  const isAccountPage = pathname?.includes("/contul-meu") ?? false;
 
   const navLinks = [
     { href: "/", label: t("home") },
@@ -34,15 +37,21 @@ export default function Navbar() {
     { href: "/urmareste-comanda", label: t("trackOrder") },
   ];
 
-  const mobileMenuLinks = [
-    { href: "/", label: t("home") },
-    { href: "/produse", label: t("products") },
-    { href: "/promotii", label: t("promotions") },
-    { href: "/blog", label: t("guides") },
-    { href: "/urmareste-comanda", label: t("trackOrder") },
-    { href: "/cos", label: t("cart"), showCartCount: true },
-    { href: "/contul-meu", label: t("myAccount"), icon: "user" as const },
-  ];
+  const mobileMenuLinks = useMemo(
+    () =>
+      [
+        { href: "/", label: t("home") },
+        { href: "/produse", label: t("products") },
+        { href: "/promotii", label: t("promotions") },
+        { href: "/blog", label: t("guides") },
+        { href: "/urmareste-comanda", label: t("trackOrder") },
+        ...(isAccountPage
+          ? []
+          : [{ href: "/cos", label: t("cart"), showCartCount: true as const }]),
+        { href: "/contul-meu", label: t("myAccount"), icon: "user" as const },
+      ] as const,
+    [isAccountPage, t]
+  );
 
   useEffect(() => {
     const syncUser = () => setCurrentUser(getCurrentUser());
@@ -97,9 +106,18 @@ export default function Navbar() {
         <MarketingTicker />
         <CountdownBanner />
 
-        <nav className="relative z-[9991] w-full bg-novra-bg/95 border-b border-white/10">
+        <nav
+          className={`relative z-[9991] w-full border-b border-white/10 ${
+            isAccountPage ? "bg-novra-bg" : "bg-novra-bg/95"
+          }`}
+        >
           <div className="site-container py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 min-w-0">
-            <Link href="/" className="flex items-center shrink-0 min-w-0">
+            <Link
+              href="/"
+              className={`relative flex shrink-0 items-center min-w-0 bg-novra-bg pr-2 ${
+                isAccountPage ? "z-[10003]" : "z-[1]"
+              }`}
+            >
               <Image
                 src="/logo.png"
                 alt="NOVRA Logo"
@@ -122,13 +140,21 @@ export default function Navbar() {
               ))}
             </div>
 
-            <div className="relative z-[10001] flex gap-2 sm:gap-4 items-center shrink-0">
-              <CurrencySwitcher />
-              <LanguageSwitcher />
+            <div
+              className={`relative flex shrink-0 items-center gap-2 sm:gap-4 ${
+                isAccountPage ? "z-[10000] max-md:gap-1" : "z-[10001]"
+              }`}
+            >
+              <div className={isAccountPage ? "hidden md:contents" : "contents"}>
+                <CurrencySwitcher />
+                <LanguageSwitcher />
+              </div>
 
               <Link
                 href="/contul-meu"
-                className="relative min-w-11 min-h-11 flex items-center justify-center gap-2 p-1 text-sm text-gray-300 transition-all duration-300 hover:-translate-y-0.5 hover:text-[#8b8cff] touch-manipulation md:min-w-0 md:min-h-0 md:p-0"
+                className={`relative min-w-11 min-h-11 flex items-center justify-center gap-2 p-1 text-sm text-gray-300 transition-all duration-300 hover:-translate-y-0.5 hover:text-[#8b8cff] touch-manipulation md:min-w-0 md:min-h-0 md:p-0 ${
+                  isAccountPage ? "max-md:hidden" : ""
+                }`}
                 aria-label={currentUser ? t("myAccount") : t("login")}
               >
                 {currentUser?.name ? (
@@ -161,13 +187,15 @@ export default function Navbar() {
                 href={buildWhatsAppUrl(whatsappNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative min-w-11 min-h-11 flex items-center justify-center p-1 transition-all duration-300 hover:-translate-y-0.5 hover:text-green-500 touch-manipulation"
+                className={`relative min-w-11 min-h-11 flex items-center justify-center p-1 transition-all duration-300 hover:-translate-y-0.5 hover:text-green-500 touch-manipulation ${
+                  isAccountPage ? "max-md:hidden" : ""
+                }`}
                 aria-label={t("whatsappAria")}
               >
                 <MessageCircle size={20} />
               </a>
 
-              <div className="relative z-[10001] md:hidden">
+              <div className={`relative z-[10001] ${isAccountPage ? "hidden" : "md:hidden"}`}>
                 <input
                   ref={menuToggleRef}
                   type="checkbox"

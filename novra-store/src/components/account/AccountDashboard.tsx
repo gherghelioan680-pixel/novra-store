@@ -105,10 +105,10 @@ function AccountDashboardContent() {
 
   if (!isLoggedIn) {
     return (
-      <>
+      <div className="relative z-0 max-md:flex max-md:h-[calc(100dvh-var(--header-height,148px))] max-md:min-h-0 max-md:flex-col max-md:overflow-hidden">
         <AuthPanel onAuthSuccess={handleAuthSuccess} />
         <AccountMobileBottomNav />
-      </>
+      </div>
     );
   }
 
@@ -190,9 +190,9 @@ function AccountDashboardContent() {
   const showHeader = activeSection === "overview";
 
   return (
-    <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
+    <div className="relative z-0 min-h-screen bg-novra-bg text-white selection:bg-purple-500/30 max-md:flex max-md:h-[calc(100dvh-var(--header-height,148px))] max-md:min-h-0 max-md:flex-col max-md:overflow-hidden">
       <AccountLocaleSync />
-      <div className="flex min-h-screen">
+      <div className="flex min-h-0 flex-1 max-md:overflow-hidden md:min-h-screen">
         <AccountSidebar
           activeSection={activeSection}
           onNavigate={setActiveSection}
@@ -200,7 +200,7 @@ function AccountDashboardContent() {
         />
 
         <main
-          className="flex-1 overflow-y-auto overflow-x-hidden md:pb-8"
+          className="relative z-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden md:pb-8"
           style={{ paddingBottom: accountMobileBottomPadding("1rem") }}
         >
           <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-10 max-md:pt-3">
