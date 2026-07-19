@@ -9,6 +9,8 @@ import { createStoreRefreshEffect } from "@/lib/store";
 import type { AccountSection } from "./types";
 import AuthPanel from "./AuthPanel";
 import AccountSidebar from "./AccountSidebar";
+import AccountMobileBottomNav, { accountMobileBottomPadding } from "./AccountMobileBottomNav";
+import AccountMobileSectionNav from "./AccountMobileSectionNav";
 import AccountHeader from "./AccountHeader";
 import OverviewView from "./views/OverviewView";
 import MyProfileView from "./views/MyProfileView";
@@ -52,7 +54,6 @@ function AccountDashboardContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeSection, setActiveSection] = useState<AccountSection>("overview");
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -103,7 +104,12 @@ function AccountDashboardContent() {
   };
 
   if (!isLoggedIn) {
-    return <AuthPanel onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <>
+        <AuthPanel onAuthSuccess={handleAuthSuccess} />
+        <AccountMobileBottomNav />
+      </>
+    );
   }
 
   if (!currentUser) return null;
@@ -191,13 +197,19 @@ function AccountDashboardContent() {
           activeSection={activeSection}
           onNavigate={setActiveSection}
           onLogout={handleLogout}
-          mobileOpen={mobileOpen}
-          onMobileToggle={() => setMobileOpen((o) => !o)}
-          onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
-          <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+        <main
+          className="flex-1 overflow-y-auto overflow-x-hidden md:pb-8"
+          style={{ paddingBottom: accountMobileBottomPadding("1rem") }}
+        >
+          <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-10 max-md:pt-3">
+            <AccountMobileSectionNav
+              activeSection={activeSection}
+              onNavigate={setActiveSection}
+              onLogout={handleLogout}
+            />
+
             {showHeader && (
               <AccountHeader
                 user={currentUser}
@@ -221,13 +233,16 @@ function AccountDashboardContent() {
         </main>
       </div>
 
+      <AccountMobileBottomNav />
+
       <AnimatePresence>
         {toast && (
           <motion.div
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed max-md:bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:bottom-8 left-1/2 z-50 -translate-x-1/2 max-w-[calc(100vw-2rem)] rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl"
+            className="fixed left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl md:bottom-8"
+            style={{ bottom: accountMobileBottomPadding("0.75rem") }}
           >
             {toast}
           </motion.div>

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { loginUser, registerUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import AccountLogo from "./AccountLogo";
+import { accountMobileBottomPadding } from "./AccountMobileBottomNav";
 
 type AuthPanelProps = {
   onAuthSuccess: (user: User, message: string) => void;
@@ -97,7 +98,10 @@ export default function AuthPanel({ onAuthSuccess }: AuthPanelProps) {
   };
 
   return (
-    <div className="min-h-screen bg-novra-bg text-white">
+    <div
+      className="min-h-screen bg-novra-bg text-white"
+      style={{ paddingBottom: accountMobileBottomPadding("1.5rem") }}
+    >
       <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-12 sm:px-6">
         <div className="mb-8 flex justify-center">
           <AccountLogo />
