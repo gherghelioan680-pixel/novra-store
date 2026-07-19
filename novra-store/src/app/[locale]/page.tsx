@@ -5,7 +5,7 @@ import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
 import ProductGalleryBox from "@/components/produse/ProductGalleryBox";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, RefreshCcw, Gem, ShieldCheck, CheckCircle2, ShoppingBag, Package, ArrowRight, Mail, Sparkles, Gift, Star, Quote } from "lucide-react";
+import { Zap, RefreshCcw, Gem, ShieldCheck, CheckCircle2, ShoppingBag, Package, ArrowRight, Mail, Gift, Star, Quote } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -29,6 +29,10 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useReviews } from "@/hooks/useReviews";
 import CampaignHomeBanner from "@/components/CampaignHomeBanner";
 import HomeExploreLinks from "@/components/HomeExploreLinks";
+import StatsBar from "@/components/home/StatsBar";
+import WhyNovraSection from "@/components/home/WhyNovraSection";
+import BrandStoryBlock from "@/components/home/BrandStoryBlock";
+import ScrollReveal from "@/components/home/ScrollReveal";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
@@ -294,6 +298,8 @@ export default function Home() {
         </motion.div>
       </section>
 
+      <StatsBar />
+
       {/* Beneficii */}
       <motion.section
         initial={false}
@@ -331,6 +337,10 @@ export default function Home() {
           </div>
         </div>
       </motion.section>
+
+      <WhyNovraSection />
+
+      <BrandStoryBlock />
 
       {/* Produse */}
       <motion.section
@@ -449,75 +459,6 @@ export default function Home() {
                   ))}
                 </div>
               </ProductGalleryBox>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Despre NOVRA */}
-      <motion.section
-        id="despre"
-        initial={false}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className="py-16 sm:py-24 border-t border-novra-border site-container"
-      >
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="order-2 lg:order-1">
-            <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
-              <Sparkles size={14} aria-hidden />
-              {th("aboutBadge")}
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6 leading-[1.1]">
-              {th("aboutTitle")}{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-600">
-                {th("aboutTitleHighlight")}
-              </span>
-            </h2>
-            <p className="text-gray-300 text-base sm:text-lg leading-relaxed font-light mb-6">
-              {th("aboutDesc")}
-            </p>
-            <ul className="space-y-3 mb-8">
-              {[
-                { icon: Zap, text: th("aboutFeature1") },
-                { icon: Gem, text: th("aboutFeature2") },
-                { icon: ShieldCheck, text: th("aboutFeature3") },
-              ].map((item) => (
-                <li key={item.text} className="flex items-center gap-3 text-sm text-gray-300">
-                  <span className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/25 flex items-center justify-center shrink-0">
-                    <item.icon size={15} className="text-purple-400" aria-hidden />
-                  </span>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/despre-noi"
-                className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-semibold transition duration-300 text-sm sm:text-base"
-              >
-                {th("discoverStory")}
-                <ArrowRight size={16} aria-hidden />
-              </Link>
-            </div>
-          </div>
-          <div className="order-1 lg:order-2 relative h-72 sm:h-96 lg:h-[480px] rounded-3xl overflow-hidden border border-purple-500/15 bg-gradient-to-b from-purple-950/50 to-novra-card/40 shadow-2xl shadow-purple-950/25">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(139,92,246,0.14),transparent_65%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(15,5,25,0.5)_100%)]" />
-            <div className="absolute inset-0">
-              <ProductImage
-                src="/products/bundle/novra-bundle-preview.png"
-                category="accesorii"
-                alt={th("aboutImageAlt")}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-contain object-center scale-[1.05] sm:scale-[1.1] drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-              />
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-novra-bg/80 backdrop-blur-md border border-purple-500/15">
-              <p className="text-xs text-purple-300 font-semibold uppercase tracking-widest mb-1">{th("customersCount")}</p>
-              <p className="text-sm text-white font-medium">{th("brandTagline")}</p>
             </div>
           </div>
         </div>
@@ -826,12 +767,9 @@ function ProductCard({
   };
 
   return (
-    <motion.div
-      initial={false}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      viewport={{ once: true }}
-      className="group relative bg-novra-card/40 border border-white/8 rounded-2xl p-5 sm:p-6 hover:border-purple-500/40 hover:bg-novra-card/60 transition-all duration-500 overflow-hidden"
+    <ScrollReveal variant="scale-up" delay={index * 100} className="h-full">
+    <div
+      className="group relative h-full bg-novra-card/40 border border-white/8 rounded-2xl p-5 sm:p-6 hover:border-purple-500/40 hover:bg-novra-card/60 transition-all duration-500 overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
       <div className="h-48 sm:h-56 rounded-xl mb-4 sm:mb-5 overflow-hidden relative border border-white/5 bg-gradient-to-br from-purple-500/5 to-transparent">
@@ -921,6 +859,7 @@ function ProductCard({
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
+    </ScrollReveal>
   );
 }

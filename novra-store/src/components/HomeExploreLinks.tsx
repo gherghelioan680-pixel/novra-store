@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Megaphone, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, FlaskConical, MapPin, Megaphone, ShieldCheck, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 const LINKS = [
   { href: "/promotii", icon: Megaphone, titleKey: "explorePromotionsTitle", descKey: "explorePromotionsDesc" },
   { href: "/recenzii", icon: Star, titleKey: "exploreReviewsTitle", descKey: "exploreReviewsDesc" },
+  { href: "/novra-lab", icon: FlaskConical, titleKey: "exploreLabTitle", descKey: "exploreLabDesc" },
   { href: "/harta-livrari", icon: MapPin, titleKey: "exploreDeliveryTitle", descKey: "exploreDeliveryDesc" },
   {
     href: "/verificare-autenticitate",
@@ -36,7 +37,7 @@ export default function HomeExploreLinks() {
         <p className="text-gray-400 text-sm sm:text-base mt-2 max-w-xl">{t("exploreSubtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
         {LINKS.map((item, i) => {
           const Icon = item.icon;
           return (

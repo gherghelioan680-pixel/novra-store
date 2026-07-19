@@ -10,6 +10,7 @@ const STATIC_PATHS = [
   "/",
   "/produse",
   "/despre-noi",
+  "/novra-lab",
   "/contact",
   "/blog",
   "/faq",

@@ -114,6 +114,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/novra-lab" className="hover:text-purple-400 transition">
+                  {t("novraLab")}
+                </Link>
+              </li>
+              <li>
                 <Link href="/livrare-si-plata" className="hover:text-purple-400 transition">
                   {t("shipping")}
                 </Link>
