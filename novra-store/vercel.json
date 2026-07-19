@@ -1,12 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.novra.ro" }],
-      "destination": "https://novra.ro/:path*",
-      "statusCode": 308
-    }
-  ],
   "crons": [
     {
       "path": "/api/cron/abandoned-carts",
