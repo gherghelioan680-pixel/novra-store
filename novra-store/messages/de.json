@@ -136,7 +136,11 @@
     "seconds": "Sek",
     "activeCampaign": "Aktive Aktion",
     "discountNote": "Der {percent}% Rabatt wird automatisch an der Kasse angewendet, wenn Sie die Website über diese Aktion aufrufen.",
-    "metadataTitle": "Aktion — NOVRA"
+    "metadataTitle": "Aktion — NOVRA",
+    "backToPromotions": "Zurück zu Aktionen",
+    "useCodeAtCheckout": "Code an der Kasse verwenden:",
+    "includedProducts": "Im Angebot enthaltene Produkte",
+    "viewProduct": "Produkt ansehen"
   },
   "countdown": {
     "days": "Tage",
@@ -1167,38 +1171,27 @@
     "whatsappMessage": "Hallo! Ich habe eine Garantie-/Rückgabeanfrage."
   },
   "promotions": {
-    "backHome": "Zurück zur Startseite",
+    "metadataTitle": "NOVRA Aktionen",
+    "metadataDescription": "Limitierte Angebote, aktive Kampagnen und Rabattcodes im NOVRA Store.",
     "badge": "Sonderaktionen",
-    "title": "NOVRA Angebote, bereit zum Mitnehmen",
-    "subtitle": "Entdecken Sie limitierte Pakete und Angebote für ein besseres, schnelleres Setup.",
-    "filterBy": "Filtern nach:",
-    "filterAll": "Alle Aktionen",
-    "filterKits": "Kits",
-    "filterCables": "Kabel",
-    "promoPrice": "Aktionspreis",
+    "title": "NOVRA Aktionen",
+    "subtitle": "Aktive Kampagnen, exklusive Rabatte und Promo-Codes — alles an einem Ort, synchron mit dem Shop.",
+    "limitedOffer": "Limitiertes Angebot",
+    "featuredCampaign": "Empfohlene Kampagne",
+    "expiresIn": "Endet in",
     "viewOffer": "Angebot ansehen",
-    "items": [
-      {
-        "id": "bundle-pro",
-        "title": "PowerBundle 100W",
-        "subtitle": "Combo: Ladegerät + Kabel",
-        "category": "kituri",
-        "discount": "25% Rabatt",
-        "oldPrice": "75.00 RON",
-        "newPrice": "56.25 RON",
-        "description": "Das komplette Kit für Ihr Setup. Enthält 65W GaN-Ladegerät und 100W geflochtenes Kabel."
-      },
-      {
-        "id": "promo-lightning",
-        "title": "Dual Apple Pack",
-        "subtitle": "Paket mit 2 Lightning-Kabeln",
-        "category": "cabluri",
-        "discount": "15% Rabatt",
-        "oldPrice": "19.00 RON",
-        "newPrice": "16.15 RON",
-        "description": "Nie ohne Akku. Zwei ultra-langlebige Kabel für Ihr iPhone."
-      }
-    ]
+    "activeCampaigns": "Aktive Kampagnen",
+    "activeCampaignsHint": "Automat aus dem Admin aktualisiert — nur live Kampagnen erscheinen hier.",
+    "emptyTitle": "Derzeit keine aktiven Kampagnen",
+    "emptyDescription": "Schauen Sie bald wieder vorbei — wir bereiten neue Angebote vor. Entdecken Sie in der Zwischenzeit den NOVRA-Katalog.",
+    "emptyCta": "Produkte ansehen",
+    "couponBadge": "Rabattcodes",
+    "couponTitle": "Aktive Promo-Codes",
+    "couponSubtitle": "Code kopieren und an der Kasse einlösen für sofortigen Rabatt.",
+    "couponLabel": "Aktiver Code",
+    "couponDiscount": "Rabatt",
+    "couponFreeShipping": "kostenloser Versand",
+    "useAtCheckout": "An der Kasse verwenden"
   },
   "legalTerms": {
     "badge": "Rechtliche Vereinbarung",

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { loadActiveCampaigns } from "@/lib/campaigns";
-import { CAMPAIGN_THEME_STYLES, type LandingCampaign } from "@/lib/campaigns-types";
+import { CAMPAIGN_THEME_STYLES, sortActiveCampaigns, type LandingCampaign } from "@/lib/campaigns-types";
 import { createStoreRefreshEffect } from "@/lib/store";
 
 export default function CampaignHomeBanner() {
@@ -14,7 +14,7 @@ export default function CampaignHomeBanner() {
 
   useEffect(() => {
     const refresh = async () => {
-      const active = await loadActiveCampaigns();
+      const active = sortActiveCampaigns(await loadActiveCampaigns());
       setCampaign(active[0] ?? null);
     };
     return createStoreRefreshEffect(refresh, { scopes: ["campaigns"] });

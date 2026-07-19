@@ -136,7 +136,11 @@
     "seconds": "sec",
     "activeCampaign": "Campanie activă",
     "discountNote": "Reducerea de {percent}% se aplică automat la checkout dacă accesezi site-ul din această campanie.",
-    "metadataTitle": "Campanie — NOVRA"
+    "metadataTitle": "Campanie — NOVRA",
+    "backToPromotions": "Înapoi la promoții",
+    "useCodeAtCheckout": "Folosește codul la checkout:",
+    "includedProducts": "Produse incluse în ofertă",
+    "viewProduct": "Vezi produsul"
   },
   "countdown": {
     "days": "zile",
@@ -1167,38 +1171,27 @@
     "whatsappMessage": "Salut! Am o solicitare legată de garanție/retur."
   },
   "promotions": {
-    "backHome": "Înapoi acasă",
+    "metadataTitle": "Promoții NOVRA",
+    "metadataDescription": "Oferte limitate, campanii active și coduri de reducere NOVRA Store.",
     "badge": "Promoții speciale",
-    "title": "Oferta NOVRA, gata de luat",
-    "subtitle": "Descoperă pachetele și ofertele limitate, pregătite pentru un setup mai bun, mai rapid și mai eficient.",
-    "filterBy": "Filtrează după:",
-    "filterAll": "Toate promoțiile",
-    "filterKits": "Kituri",
-    "filterCables": "Cabluri",
-    "promoPrice": "Preț promoțional",
-    "viewOffer": "Vezi Oferta",
-    "items": [
-      {
-        "id": "bundle-pro",
-        "title": "PowerBundle 100W",
-        "subtitle": "Combo: Încărcător + Cablu",
-        "category": "kituri",
-        "discount": "Reducere 25%",
-        "oldPrice": "75.00 RON",
-        "newPrice": "56.25 RON",
-        "description": "Kit-ul complet pentru setup-ul tău. Include încărcător GaN 65W și cablu 100W împletit."
-      },
-      {
-        "id": "promo-lightning",
-        "title": "Dual Apple Pack",
-        "subtitle": "Pachet 2 Cabluri Lightning",
-        "category": "cabluri",
-        "discount": "Reducere 15%",
-        "oldPrice": "19.00 RON",
-        "newPrice": "16.15 RON",
-        "description": "Nu rămâne niciodată fără baterie. Două cabluri ultra-durabile pentru iPhone-ul tău."
-      }
-    ]
+    "title": "Promoții NOVRA",
+    "subtitle": "Campanii active, reduceri exclusive și coduri promoționale — totul într-un singur loc, sincronizat cu magazinul.",
+    "limitedOffer": "Ofertă limitată",
+    "featuredCampaign": "Campanie recomandată",
+    "expiresIn": "Expiră în",
+    "viewOffer": "Vezi oferta",
+    "activeCampaigns": "Campanii active",
+    "activeCampaignsHint": "Actualizate automat din admin — doar campaniile live apar aici.",
+    "emptyTitle": "Nicio campanie activă momentan",
+    "emptyDescription": "Revino curând — pregătim oferte noi. Între timp, explorează catalogul complet de produse NOVRA.",
+    "emptyCta": "Vezi produsele",
+    "couponBadge": "Coduri reducere",
+    "couponTitle": "Coduri promoționale active",
+    "couponSubtitle": "Copiază un cod și aplică-l la checkout pentru reducere instant.",
+    "couponLabel": "Cod activ",
+    "couponDiscount": "reducere",
+    "couponFreeShipping": "livrare gratuită",
+    "useAtCheckout": "Folosește la checkout"
   },
   "legalTerms": {
     "badge": "Acord legal",

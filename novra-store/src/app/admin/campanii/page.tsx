@@ -38,6 +38,10 @@ const emptyForm = (): Partial<LandingCampaign> & { slug: string } => ({
   theme: "purple",
   ctaText: "Vezi ofertele",
   ctaLink: "/produse",
+  featuredImage: "",
+  discountCode: "",
+  featured: false,
+  linkedProducts: [],
 });
 
 function toDatetimeLocal(iso: string): string {
@@ -179,6 +183,43 @@ export default function AdminCampaniiPage() {
             </div>
             <Field label="CTA text" value={editing.ctaText ?? ""} onChange={(v) => setEditing({ ...editing, ctaText: v })} />
             <Field label="CTA link" value={editing.ctaLink ?? ""} onChange={(v) => setEditing({ ...editing, ctaLink: v })} />
+            <Field
+              label="Imagine hero (URL)"
+              value={editing.featuredImage ?? ""}
+              onChange={(v) => setEditing({ ...editing, featuredImage: v })}
+            />
+            <Field
+              label="Cod reducere (checkout)"
+              value={editing.discountCode ?? ""}
+              onChange={(v) => setEditing({ ...editing, discountCode: v.toUpperCase() })}
+            />
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-500 mb-1">Produse incluse (ID-uri, separate prin virgulă)</label>
+              <input
+                type="text"
+                value={(editing.linkedProducts ?? []).join(", ")}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    linkedProducts: e.target.value
+                      .split(",")
+                      .map((id) => id.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="usb-c-100w, bundle-travel-pack"
+                className="w-full rounded-xl border border-white/10 bg-novra-bg/50 px-4 py-2.5 text-sm text-white"
+              />
+            </div>
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={editing.featured ?? false}
+                onChange={(e) => setEditing({ ...editing, featured: e.target.checked })}
+                className="h-4 w-4 rounded"
+              />
+              <span className="text-sm text-gray-300">Campanie evidențiată (prioritar pe /promotii)</span>
+            </label>
             <label className="flex items-center gap-3 sm:col-span-2">
               <input
                 type="checkbox"
@@ -227,6 +268,14 @@ export default function AdminCampaniiPage() {
                     {isCampaignCurrentlyActive(c) ? "Live" : c.active ? "Programată" : "Inactivă"}
                   </span>
                   <span className="text-xs text-purple-300">−{c.discountPercent}%</span>
+                  {c.featured && (
+                    <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-purple-200">
+                      Featured
+                    </span>
+                  )}
+                  {c.discountCode && (
+                    <span className="text-xs text-gray-500 font-mono">{c.discountCode}</span>
+                  )}
                 </div>
                 <p className="mt-1 text-xs text-gray-500 font-mono">/campanii/{c.slug}</p>
               </div>

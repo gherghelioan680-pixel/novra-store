@@ -1,6 +1,7 @@
 import {
   CAMPAIGN_ATTRIBUTION_DAYS,
   CAMPAIGN_COOKIE,
+  CAMPAIGN_DISCOUNT_CODE_KEY,
   CAMPAIGN_STORAGE_KEY,
   CAMPAIGN_TIMESTAMP_KEY,
   normalizeCampaignSlug,
@@ -16,7 +17,7 @@ function isAttributionValid(timestampMs: number): boolean {
   return Date.now() - timestampMs <= ATTRIBUTION_MS;
 }
 
-export function storeCampaignRef(slug: string): void {
+export function storeCampaignRef(slug: string, discountCode?: string): void {
   if (!isBrowser()) return;
 
   const normalized = normalizeCampaignSlug(slug);
@@ -29,6 +30,9 @@ export function storeCampaignRef(slug: string): void {
     window.localStorage.setItem(CAMPAIGN_STORAGE_KEY, normalized);
     window.localStorage.setItem(CAMPAIGN_TIMESTAMP_KEY, String(now));
     document.cookie = `${CAMPAIGN_COOKIE}=${encodeURIComponent(normalized)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    if (discountCode?.trim()) {
+      window.localStorage.setItem(CAMPAIGN_DISCOUNT_CODE_KEY, discountCode.trim().toUpperCase());
+    }
   } catch {
     /* ignore */
   }
@@ -75,9 +79,21 @@ export function clearCampaignRef(): void {
   try {
     window.localStorage.removeItem(CAMPAIGN_STORAGE_KEY);
     window.localStorage.removeItem(CAMPAIGN_TIMESTAMP_KEY);
+    window.localStorage.removeItem(CAMPAIGN_DISCOUNT_CODE_KEY);
     document.cookie = `${CAMPAIGN_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
   } catch {
     /* ignore */
+  }
+}
+
+export function getCampaignDiscountCode(): string | null {
+  if (!isBrowser()) return null;
+
+  try {
+    const code = window.localStorage.getItem(CAMPAIGN_DISCOUNT_CODE_KEY);
+    return code?.trim() ? code.trim().toUpperCase() : null;
+  } catch {
+    return null;
   }
 }
 

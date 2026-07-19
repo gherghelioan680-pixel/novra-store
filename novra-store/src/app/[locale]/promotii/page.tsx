@@ -1,46 +1,40 @@
-"use client";
-
-import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles, Timer, Zap } from "lucide-react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { ArrowLeft, Megaphone, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CampaignPromoCard from "@/components/promotions/CampaignPromoCard";
+import PromoCodesSection from "@/components/promotions/PromoCodesSection";
+import { getActiveCampaignsServer } from "@/lib/campaigns-server";
+import { getPublicPromoCodesServer } from "@/lib/discount-codes-server";
 
-type PromoItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  discount: string;
-  oldPrice: string;
-  newPrice: string;
-  description: string;
-  gradient: string;
+type PageProps = {
+  params: Promise<{ locale: string }>;
 };
 
-export default function Promotii() {
-  const t = useTranslations("promotions");
-  const [activeFilter, setActiveFilter] = useState("toate");
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "promotions" });
 
-  const promotions = useMemo(() => {
-    const items = t.raw("items") as Omit<PromoItem, "gradient">[];
-    const gradients = ["from-purple-600/20 to-blue-600/20", "from-amber-500/20 to-orange-600/20"];
-    return items.map((item, i) => ({ ...item, gradient: gradients[i % gradients.length] }));
-  }, [t]);
+  return {
+    title: t("metadataTitle"),
+    description: t("metadataDescription"),
+  };
+}
 
-  const filters = useMemo(
-    () => [
-      { id: "toate", label: t("filterAll") },
-      { id: "kituri", label: t("filterKits") },
-      { id: "cabluri", label: t("filterCables") },
-    ],
-    [t]
-  );
+export default async function PromotiiPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("promotions");
+  const tc = await getTranslations("common");
 
-  const filteredPromotions =
-    activeFilter === "toate" ? promotions : promotions.filter((promo) => promo.category === activeFilter);
+  const [campaigns, promoCodes] = await Promise.all([
+    getActiveCampaignsServer(),
+    getPublicPromoCodesServer(),
+  ]);
+
+  const [featuredCampaign, ...restCampaigns] = campaigns;
 
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
@@ -49,87 +43,77 @@ export default function Promotii() {
       <main className="pb-page site-container">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group"
+          className="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-purple-400 uppercase tracking-widest mb-8 transition-colors group touch-manipulation"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          {t("backHome")}
+          {tc("backHome")}
         </Link>
 
-        <div className="relative border-b border-white/10 pb-12 mb-12">
-          <div className="max-w-2xl">
-            <span className="text-purple-500 text-xs font-semibold tracking-[0.3em] uppercase block mb-3">
+        <section className="relative mb-14 overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-purple-950/60 via-novra-card/50 to-novra-bg p-8 sm:p-12">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(139,92,246,0.18),transparent_65%)]" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-purple-950/50 to-transparent" />
+          <div className="relative mx-auto max-w-3xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-600/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-purple-300 mb-5">
+              <Sparkles size={14} />
               {t("badge")}
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tighter mb-4">{t("title")}</h1>
-            <p className="text-gray-400 text-base font-light leading-relaxed">{t("subtitle")}</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4">
+              {t("title")}
+            </h1>
+            <p className="text-gray-400 text-base sm:text-lg font-light leading-relaxed max-w-2xl mx-auto">
+              {t("subtitle")}
+            </p>
           </div>
-        </div>
+        </section>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12 bg-novra-card/30 border border-white/8 p-4 rounded-2xl">
-          <div className="flex items-center gap-2 text-xs text-gray-400 font-medium uppercase tracking-wider px-2">
-            <Sparkles size={14} className="text-purple-500" />
-            <span>{t("filterBy")}</span>
+        <PromoCodesSection codes={promoCodes} />
+
+        {campaigns.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-white/10 bg-novra-card/20 px-6 py-20 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-500/20 bg-purple-600/10">
+              <Megaphone size={24} className="text-purple-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-white mb-2">{t("emptyTitle")}</h2>
+            <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">{t("emptyDescription")}</p>
+            <Link
+              href="/produse"
+              className="inline-flex items-center justify-center min-h-11 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition"
+            >
+              {t("emptyCta")}
+            </Link>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {filters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all duration-300 cursor-pointer ${
-                  activeFilter === filter.id
-                    ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-600/20"
-                    : "bg-transparent text-gray-400 border-white/8 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        ) : (
+          <section>
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{t("activeCampaigns")}</h2>
+                <p className="mt-1 text-sm text-gray-500">{t("activeCampaignsHint")}</p>
+              </div>
+              <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-600/10 px-3 py-1 text-xs font-medium text-purple-300">
+                {campaigns.length}
+              </span>
+            </div>
 
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredPromotions.map((promo) => (
-              <motion.div
-                layout
-                initial={false}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.35 }}
-                key={promo.id}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className={`group bg-gradient-to-br ${promo.gradient} border border-white/10 rounded-3xl p-8 relative overflow-hidden`}
-              >
-                <div className="absolute top-4 right-4 bg-novra-bg/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-bold text-purple-400 flex items-center gap-1.5">
-                  <Timer size={14} />
-                  {promo.discount}
-                </div>
-
-                <div className="h-36 rounded-2xl border border-white/10 bg-novra-card/40 mb-6 flex items-center justify-center">
-                  <Zap className="text-purple-400" size={32} />
-                </div>
-
-                <h3 className="text-2xl font-bold mb-1">{promo.title}</h3>
-                <p className="text-white/60 text-sm mb-4">{promo.subtitle}</p>
-                <p className="text-gray-300 text-sm mb-8 max-w-sm">{promo.description}</p>
-
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">
-                      {t("promoPrice")}
-                    </span>
-                    <span className="text-2xl font-bold">{promo.newPrice}</span>
-                  </div>
-                  <span className="text-sm text-gray-500 line-through mb-1">{promo.oldPrice}</span>
-                </div>
-
-                <button className="mt-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-white text-black px-6 py-3 rounded-xl hover:bg-purple-500 hover:text-white transition-colors">
-                  {t("viewOffer")} <ArrowRight size={14} />
-                </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCampaign && (
+                <CampaignPromoCard
+                  campaign={featuredCampaign}
+                  locale={locale}
+                  featured
+                  index={0}
+                />
+              )}
+              {restCampaigns.map((campaign, index) => (
+                <CampaignPromoCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  locale={locale}
+                  index={index + 1}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

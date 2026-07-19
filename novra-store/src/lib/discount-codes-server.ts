@@ -328,3 +328,33 @@ export async function markDiscountCodeUsed(
   };
   await writeDiscountCodes(codes);
 }
+
+export type PublicPromoCode = {
+  code: string;
+  type: DiscountCodeType;
+  value: number;
+  freeShipping: boolean;
+  expiresAt?: string;
+};
+
+export async function getPublicPromoCodesServer(): Promise<PublicPromoCode[]> {
+  const codes = await readDiscountCodes();
+  const now = Date.now();
+
+  return codes
+    .filter((code) => {
+      if (!code.active) return false;
+      if (code.email) return false;
+      if (isCodeExhausted(code)) return false;
+      if (code.expiresAt && new Date(code.expiresAt).getTime() < now) return false;
+      return true;
+    })
+    .map((code) => ({
+      code: code.code,
+      type: code.type,
+      value: code.value,
+      freeShipping: discountIncludesFreeShipping(code),
+      expiresAt: code.expiresAt,
+    }))
+    .sort((a, b) => b.value - a.value);
+}

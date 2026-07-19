@@ -92,6 +92,10 @@ export async function upsertCampaign(
     theme: input.theme ?? existing?.theme ?? "purple",
     ctaText: input.ctaText?.trim() || existing?.ctaText || "Vezi ofertele",
     ctaLink: input.ctaLink?.trim() || existing?.ctaLink || "/produse",
+    featuredImage: input.featuredImage?.trim() || existing?.featuredImage || undefined,
+    discountCode: input.discountCode?.trim().toUpperCase() || existing?.discountCode || undefined,
+    featured: input.featured ?? existing?.featured ?? false,
+    linkedProducts: input.linkedProducts ?? existing?.linkedProducts ?? undefined,
     createdAt: existing?.createdAt ?? ts,
     updatedAt: ts,
   };

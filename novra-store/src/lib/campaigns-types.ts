@@ -13,6 +13,14 @@ export type LandingCampaign = {
   theme: CampaignTheme;
   ctaText: string;
   ctaLink: string;
+  /** URL imagine hero (opțional) */
+  featuredImage?: string;
+  /** Cod cupon de aplicat automat la checkout */
+  discountCode?: string;
+  /** Afișare prioritară în listă */
+  featured?: boolean;
+  /** ID-uri produse incluse în campanie */
+  linkedProducts?: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -21,6 +29,7 @@ export const CAMPAIGN_STORAGE_FILE = "campaigns.json";
 export const CAMPAIGN_COOKIE = "novra_campaign";
 export const CAMPAIGN_STORAGE_KEY = "novra-campaign-slug";
 export const CAMPAIGN_TIMESTAMP_KEY = "novra-campaign-ts";
+export const CAMPAIGN_DISCOUNT_CODE_KEY = "novra-campaign-discount-code";
 export const CAMPAIGN_ATTRIBUTION_DAYS = 30;
 
 export const CAMPAIGN_THEME_STYLES: Record<
@@ -117,5 +126,14 @@ export function isCampaignCurrentlyActive(campaign: LandingCampaign, now = Date.
 }
 
 export function getActiveCampaigns(campaigns: LandingCampaign[], now = Date.now()): LandingCampaign[] {
-  return campaigns.filter((c) => isCampaignCurrentlyActive(c, now));
+  return sortActiveCampaigns(campaigns.filter((c) => isCampaignCurrentlyActive(c, now)));
+}
+
+export function sortActiveCampaigns(campaigns: LandingCampaign[]): LandingCampaign[] {
+  return [...campaigns].sort((a, b) => {
+    const aFeatured = a.featured ? 1 : 0;
+    const bFeatured = b.featured ? 1 : 0;
+    if (bFeatured !== aFeatured) return bFeatured - aFeatured;
+    return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+  });
 }

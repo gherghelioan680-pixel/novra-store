@@ -136,7 +136,11 @@
     "seconds": "sec",
     "activeCampaign": "Active campaign",
     "discountNote": "The {percent}% discount is applied automatically at checkout when you access the site from this campaign.",
-    "metadataTitle": "Campaign — NOVRA"
+    "metadataTitle": "Campaign — NOVRA",
+    "backToPromotions": "Back to promotions",
+    "useCodeAtCheckout": "Use this code at checkout:",
+    "includedProducts": "Products included in this offer",
+    "viewProduct": "View product"
   },
   "countdown": {
     "days": "days",
@@ -1167,38 +1171,27 @@
     "whatsappMessage": "Hi! I have a warranty/return request."
   },
   "promotions": {
-    "backHome": "Back to home",
+    "metadataTitle": "NOVRA Promotions",
+    "metadataDescription": "Limited offers, active campaigns and discount codes at NOVRA Store.",
     "badge": "Special promotions",
-    "title": "NOVRA deals, ready to grab",
-    "subtitle": "Discover limited packs and offers built for a better, faster, more efficient setup.",
-    "filterBy": "Filter by:",
-    "filterAll": "All promotions",
-    "filterKits": "Kits",
-    "filterCables": "Cables",
-    "promoPrice": "Promo price",
+    "title": "NOVRA Promotions",
+    "subtitle": "Active campaigns, exclusive discounts and promo codes — all in one place, synced with the store.",
+    "limitedOffer": "Limited offer",
+    "featuredCampaign": "Featured campaign",
+    "expiresIn": "Expires in",
     "viewOffer": "View offer",
-    "items": [
-      {
-        "id": "bundle-pro",
-        "title": "PowerBundle 100W",
-        "subtitle": "Combo: Charger + Cable",
-        "category": "kituri",
-        "discount": "25% off",
-        "oldPrice": "75.00 RON",
-        "newPrice": "56.25 RON",
-        "description": "The complete kit for your setup. Includes 65W GaN charger and 100W braided cable."
-      },
-      {
-        "id": "promo-lightning",
-        "title": "Dual Apple Pack",
-        "subtitle": "2 Lightning Cables Pack",
-        "category": "cabluri",
-        "discount": "15% off",
-        "oldPrice": "19.00 RON",
-        "newPrice": "16.15 RON",
-        "description": "Never run out of battery. Two ultra-durable cables for your iPhone."
-      }
-    ]
+    "activeCampaigns": "Active campaigns",
+    "activeCampaignsHint": "Updated automatically from admin — only live campaigns appear here.",
+    "emptyTitle": "No active campaigns right now",
+    "emptyDescription": "Check back soon — we're preparing new offers. In the meantime, browse the full NOVRA catalog.",
+    "emptyCta": "Browse products",
+    "couponBadge": "Discount codes",
+    "couponTitle": "Active promo codes",
+    "couponSubtitle": "Copy a code and apply it at checkout for an instant discount.",
+    "couponLabel": "Active code",
+    "couponDiscount": "off",
+    "couponFreeShipping": "free shipping",
+    "useAtCheckout": "Use at checkout"
   },
   "legalTerms": {
     "badge": "Legal agreement",

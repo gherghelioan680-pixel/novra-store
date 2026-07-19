@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { saveOrder, generatePurchaseCode, loadOrders, type Order } from "@/lib/orders";
 import { getAffiliateRef } from "@/lib/affiliate-attribution";
-import { getCampaignRef } from "@/lib/campaign-attribution";
+import { getCampaignRef, getCampaignDiscountCode } from "@/lib/campaign-attribution";
 import { loadCampaignBySlug } from "@/lib/campaigns";
 import { loadProductOverrides, validateCartStock } from "@/lib/catalog";
 import CopyButton from "@/components/CopyButton";
@@ -94,6 +94,7 @@ function CheckoutPageContent() {
     percent: number;
     title: string;
   } | null>(null);
+  const autoAppliedCodeRef = useRef(false);
 
   const currentUser = authenticatedUser ?? getCurrentUser();
   const userCredits = getNovraCredits(currentUser);
@@ -117,6 +118,25 @@ function CheckoutPageContent() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (autoAppliedCodeRef.current) return;
+    const pendingCode = getCampaignDiscountCode();
+    const urlCode = searchParams.get("code")?.trim().toUpperCase();
+    const codeToApply = urlCode || pendingCode;
+    if (!codeToApply) return;
+
+    autoAppliedCodeRef.current = true;
+    void (async () => {
+      const userEmail = (getCurrentUser()?.email ?? formData.email).trim().toLowerCase();
+      const result = await validateDiscountCode(codeToApply, userEmail || undefined);
+      if (result.ok) {
+        setAppliedDiscount(result.discount);
+        setDiscountInput(result.discount.code);
+        setDiscountSuccess(t("codeApplied"));
+      }
+    })();
+  }, [searchParams, formData.email, t]);
 
   useEffect(() => {
     void fetch("/api/store/stripe/config")
