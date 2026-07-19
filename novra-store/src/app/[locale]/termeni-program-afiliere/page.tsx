@@ -1,19 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Link2, Wallet, Cookie, Scale, Mail, Sparkles, CheckCircle, Ban, Banknote, Shield } from "lucide-react";
-import { fadeUp } from "@/lib/motion";
+import { Link2, Wallet, Cookie, Scale, Mail, CheckCircle, Ban, Banknote, Shield } from "lucide-react";
+import LegalPageLayout from "@/components/legal/LegalPageLayout";
+import LegalPageSections, { type LegalSectionData } from "@/components/legal/LegalPageSections";
+import LegalSectionCard from "@/components/legal/LegalSectionCard";
 import {
   AFFILIATE_ATTRIBUTION_DAYS,
   DEFAULT_AFFILIATE_COMMISSION_RATE,
   MIN_AFFILIATE_PAYOUT_AMOUNT,
 } from "@/lib/affiliates-types";
-import LegalPageSections, { type LegalSectionData } from "@/components/legal/LegalPageSections";
+import { buildLegalTocItems, legalSectionId } from "@/lib/legal-section-id";
 
 const SECTION_ICONS = [Link2, CheckCircle, Cookie, Wallet, Banknote, Shield, Ban, Scale];
 
@@ -38,47 +36,40 @@ export default function TermeniProgramAfiliere() {
     return raw.map(interpolateAffiliateSection);
   }, [t]);
 
+  const tocItems = useMemo(
+    () =>
+      buildLegalTocItems(sectionData, 1, [
+        { id: legalSectionId(9), title: t("contactTitle"), number: 9 },
+      ]),
+    [sectionData, t],
+  );
+
   return (
-    <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
-      <Navbar />
+    <LegalPageLayout
+      badge={t("badge")}
+      title={t("title")}
+      titleHighlight={t("titleHighlight")}
+      lastUpdated={t("lastUpdated")}
+      heroIcon={Link2}
+      breadcrumbLabel={`${t("title")} ${t("titleHighlight")}`}
+      tocItems={tocItems}
+      contactEmail="support@novra.ro"
+    >
+      <LegalPageSections sections={sectionData} icons={SECTION_ICONS} />
 
-      <main className="site-container-narrow pb-page">
-        <section className="relative overflow-hidden pt-8 sm:pt-12 pb-12 sm:pb-16 mb-8">
-          <div className="absolute -top-8 right-0 w-48 h-48 bg-purple-500/8 blur-[80px] rounded-full pointer-events-none" />
-          <motion.div {...fadeUp}>
-            <span className="inline-flex items-center gap-2 text-purple-400 font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm mb-4">
-              <Sparkles size={14} aria-hidden />
-              {t("badge")}
-            </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-4">
-              {t("title")}{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-                {t("titleHighlight")}
-              </span>
-            </h1>
-            <p className="text-gray-400 text-sm font-light">{t("lastUpdated")}</p>
-          </motion.div>
-        </section>
-
-        <div className="space-y-4 sm:space-y-5">
-          <LegalPageSections sections={sectionData} icons={SECTION_ICONS} />
-
-          <motion.section
-            {...fadeUp}
-            className="p-6 sm:p-8 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-transparent"
-          >
-            <h2 className="text-lg font-semibold text-white mb-4">{t("contactTitle")}</h2>
-            <div className="flex items-center gap-2 text-sm">
-              <Mail size={14} className="text-purple-500" aria-hidden />
-              <a href="mailto:support@novra.ro" className="text-purple-400 hover:underline">
-                support@novra.ro
-              </a>
-            </div>
-          </motion.section>
+      <LegalSectionCard
+        id={legalSectionId(9)}
+        sectionNum={9}
+        title={t("contactTitle")}
+        icon={Mail}
+        variant="highlight"
+      >
+        <div className="flex items-center gap-2 text-sm">
+          <a href="mailto:support@novra.ro" className="text-purple-400 hover:underline print:text-purple-700">
+            support@novra.ro
+          </a>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </LegalSectionCard>
+    </LegalPageLayout>
   );
 }

@@ -1208,6 +1208,14 @@
     "couponFreeShipping": "free shipping",
     "useAtCheckout": "Use at checkout"
   },
+  "legalLayout": {
+    "breadcrumbLegal": "Legal",
+    "tocTitle": "Contents",
+    "tocToggle": "Section navigation",
+    "print": "Print",
+    "contactFooter": "For legal inquiries:",
+    "readingProgress": "Reading progress"
+  },
   "legalTerms": {
     "badge": "Legal agreement",
     "title": "Terms &",

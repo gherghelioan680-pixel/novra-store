@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { LEGAL_LINKS, renderRichText } from "@/lib/render-rich-text";
+import { legalSectionId } from "@/lib/legal-section-id";
+import LegalSectionCard from "@/components/legal/LegalSectionCard";
 
 export type LegalSectionData = {
   title: string;
@@ -24,38 +25,27 @@ export default function LegalPageSections({ sections, icons, startIndex = 1 }: L
         const sectionNum = startIndex + i;
 
         return (
-          <motion.section
+          <LegalSectionCard
             key={section.title}
-            initial={false}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: i * 0.05 }}
-            viewport={{ once: true }}
-            className="p-6 sm:p-8 rounded-2xl border border-white/8 bg-novra-card/40 hover:border-purple-500/20 transition-colors"
+            id={legalSectionId(sectionNum)}
+            sectionNum={sectionNum}
+            title={section.title}
+            icon={Icon}
           >
-            <div className="flex items-start gap-4 mb-4">
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/25 flex items-center justify-center">
-                <Icon size={18} className="text-purple-400" aria-hidden />
-              </div>
-              <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight pt-1.5">
-                {sectionNum}. {section.title}
-              </h2>
-            </div>
-            <div className="text-gray-300 font-light leading-relaxed text-sm sm:text-base sm:pl-14 space-y-3">
-              {section.paragraphs?.map((paragraph) => (
-                <p key={paragraph}>{renderRichText(paragraph, LEGAL_LINKS)}</p>
-              ))}
-              {section.list && section.list.length > 0 && (
-                <ul className="space-y-2 text-gray-400">
-                  {section.list.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-purple-500 shrink-0 mt-2.5" />
-                      <span>{renderRichText(item, LEGAL_LINKS)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </motion.section>
+            {section.paragraphs?.map((paragraph) => (
+              <p key={paragraph}>{renderRichText(paragraph, LEGAL_LINKS)}</p>
+            ))}
+            {section.list && section.list.length > 0 && (
+              <ul className="space-y-2 text-gray-400 print:text-gray-700">
+                {section.list.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5">
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500/80 print:bg-gray-500" />
+                    <span>{renderRichText(item, LEGAL_LINKS)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </LegalSectionCard>
         );
       })}
     </>

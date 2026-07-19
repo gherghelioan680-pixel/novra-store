@@ -1208,6 +1208,14 @@
     "couponFreeShipping": "livrare gratuită",
     "useAtCheckout": "Folosește la checkout"
   },
+  "legalLayout": {
+    "breadcrumbLegal": "Legal",
+    "tocTitle": "Cuprins",
+    "tocToggle": "Navigare secțiuni",
+    "print": "Printează",
+    "contactFooter": "Pentru întrebări legale:",
+    "readingProgress": "Progres lectură"
+  },
   "legalTerms": {
     "badge": "Acord legal",
     "title": "Termeni și",

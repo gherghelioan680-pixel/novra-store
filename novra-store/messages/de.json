@@ -1208,6 +1208,14 @@
     "couponFreeShipping": "kostenloser Versand",
     "useAtCheckout": "An der Kasse verwenden"
   },
+  "legalLayout": {
+    "breadcrumbLegal": "Rechtliches",
+    "tocTitle": "Inhalt",
+    "tocToggle": "Abschnittsnavigation",
+    "print": "Drucken",
+    "contactFooter": "Für rechtliche Anfragen:",
+    "readingProgress": "Lesefortschritt"
+  },
   "legalTerms": {
     "badge": "Rechtliche Vereinbarung",
     "title": "AGB",

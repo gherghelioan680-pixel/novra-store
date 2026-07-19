@@ -221,3 +221,19 @@
     );
   }
 }
+
+@media print {
+  .legal-no-print {
+    display: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
