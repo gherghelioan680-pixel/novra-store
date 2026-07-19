@@ -5,9 +5,15 @@ import { getServerSiteSettings } from "@/lib/site-settings-server";
 import type { Order, OrderStatus } from "@/lib/orders";
 import { ROMANIAN_COUNTIES } from "@/lib/romanian-counties";
 import { getCountyCode, resolveCountyName } from "@/lib/romania-county-codes";
-import type { DeliveryCountyStat, DeliveryMapData, DeliveryMapPublicPayload } from "@/lib/delivery-map";
+import {
+  createEmptyDeliveryMapPayload,
+  type DeliveryCountyStat,
+  type DeliveryMapData,
+  type DeliveryMapPublicPayload,
+} from "@/lib/delivery-map";
 
 const FILE = "delivery-map.json";
+const ORDERS_FILE = "orders.json";
 
 function createDefaultCounties(): DeliveryCountyStat[] {
   return ROMANIAN_COUNTIES.map((countyName) => ({
@@ -51,7 +57,45 @@ export async function readDeliveryMap(): Promise<DeliveryMapData> {
     counties: createDefaultCounties(),
     updatedAt: new Date().toISOString(),
   });
+
+  if ((raw?.counties?.length ?? 0) === 0) {
+    return rebuildDeliveryMapFromOrders();
+  }
+
   return normalizeDeliveryMap(raw);
+}
+
+export async function rebuildDeliveryMapFromOrders(): Promise<DeliveryMapData> {
+  const orders = await readJsonFile<Order[]>(ORDERS_FILE, []);
+  const data = normalizeDeliveryMap({
+    counties: [],
+    updatedAt: new Date().toISOString(),
+  });
+
+  for (const order of orders) {
+    const countyName = order.address?.county ?? order.customer?.county;
+    if (!countyName?.trim()) continue;
+
+    const index = findCountyIndex(data.counties, countyName);
+    if (index === -1) continue;
+
+    data.counties[index] = {
+      ...data.counties[index],
+      orderCount: data.counties[index].orderCount + 1,
+    };
+
+    if (order.status === "delivered") {
+      const deliveredAt = order.updatedAt ?? order.createdAt;
+      const previous = data.counties[index].lastDeliveryAt;
+      if (!previous || deliveredAt > previous) {
+        data.counties[index].lastDeliveryAt = deliveredAt;
+      }
+    }
+  }
+
+  data.updatedAt = new Date().toISOString();
+  await writeDeliveryMap(data);
+  return data;
 }
 
 export async function writeDeliveryMap(data: DeliveryMapData): Promise<void> {
@@ -59,17 +103,23 @@ export async function writeDeliveryMap(data: DeliveryMapData): Promise<void> {
 }
 
 export async function getPublicDeliveryMap(): Promise<DeliveryMapPublicPayload> {
-  const settings = await getServerSiteSettings();
-  const data = await readDeliveryMap();
-  const visible = data.counties.filter((county) => !county.excluded);
-  const totalOrders = visible.reduce((sum, county) => sum + county.orderCount, 0);
+  try {
+    const settings = await getServerSiteSettings();
+    const enabled = settings.deliveryMapPublicEnabled !== false;
+    const data = await readDeliveryMap();
+    const visible = data.counties.filter((county) => !county.excluded);
+    const totalOrders = visible.reduce((sum, county) => sum + county.orderCount, 0);
 
-  return {
-    enabled: settings.deliveryMapPublicEnabled !== false,
-    counties: visible,
-    totalOrders,
-    updatedAt: data.updatedAt,
-  };
+    return {
+      enabled,
+      counties: visible,
+      totalOrders,
+      updatedAt: data.updatedAt,
+    };
+  } catch (error) {
+    console.error("[delivery-map] getPublicDeliveryMap failed:", error);
+    return createEmptyDeliveryMapPayload(true);
+  }
 }
 
 function findCountyIndex(counties: DeliveryCountyStat[], countyName: string): number {

@@ -156,6 +156,8 @@ function mergeSettings(partial: Partial<SiteSettings>): SiteSettings {
     partial.campaignDiscountText ?? merged.campaignDiscountText
   );
 
+  merged.deliveryMapPublicEnabled = partial.deliveryMapPublicEnabled !== false;
+
   merged.campaignDiscountText = merged.limitedOffer.subtitle
     ? `${merged.limitedOffer.title} — ${merged.limitedOffer.subtitle}`
     : merged.limitedOffer.title;

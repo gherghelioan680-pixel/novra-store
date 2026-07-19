@@ -8,7 +8,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RomaniaDeliveryMap from "@/components/delivery/RomaniaDeliveryMap";
 import { fadeUp } from "@/lib/motion";
-import type { DeliveryMapPublicPayload } from "@/lib/delivery-map";
+import { createEmptyDeliveryMapPayload, type DeliveryMapPublicPayload } from "@/lib/delivery-map";
+
+const EMPTY_MAP = createEmptyDeliveryMapPayload();
 
 export default function HartaLivrariPage() {
   const t = useTranslations("deliveryMap");
@@ -19,9 +21,14 @@ export default function HartaLivrariPage() {
     let cancelled = false;
     void fetch("/api/store/delivery-map")
       .then((response) => (response.ok ? response.json() : null))
-      .then((payload: DeliveryMapPublicPayload | null) => {
+      .then((payload: (DeliveryMapPublicPayload & { publicEnabled?: boolean }) | null) => {
         if (!cancelled) {
-          setData(payload);
+          if (payload) {
+            setData({
+              ...payload,
+              enabled: payload.enabled ?? payload.publicEnabled !== false,
+            });
+          }
           setLoading(false);
         }
       })
@@ -33,13 +40,16 @@ export default function HartaLivrariPage() {
     };
   }, []);
 
+  const mapDisabled = data?.enabled === false;
+  const mapData = data ?? EMPTY_MAP;
+
   const topCounties = useMemo(() => {
-    if (!data?.counties) return [];
-    return [...data.counties]
+    if (!mapData.counties) return [];
+    return [...mapData.counties]
       .filter((county) => county.orderCount > 0)
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 8);
-  }, [data]);
+  }, [mapData]);
 
   return (
     <div className="min-h-screen bg-novra-bg text-white selection:bg-purple-500/30">
@@ -67,7 +77,7 @@ export default function HartaLivrariPage() {
 
         {loading ? (
           <p className="text-gray-500 text-sm">{t("loading")}</p>
-        ) : !data?.enabled ? (
+        ) : mapDisabled ? (
           <motion.div
             {...fadeUp}
             className="rounded-3xl border border-white/10 bg-novra-card/40 p-8 text-center text-gray-400"
@@ -83,7 +93,7 @@ export default function HartaLivrariPage() {
                 </span>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-widest">{t("totalOrders")}</p>
-                  <p className="text-sm font-semibold text-white">{data.totalOrders}</p>
+                  <p className="text-sm font-semibold text-white">{mapData.totalOrders}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 sm:p-5 rounded-2xl border border-white/8 bg-novra-card/40">
@@ -93,7 +103,7 @@ export default function HartaLivrariPage() {
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-widest">{t("activeCounties")}</p>
                   <p className="text-sm font-semibold text-white">
-                    {data.counties.filter((county) => county.orderCount > 0).length}
+                    {mapData.counties.filter((county) => county.orderCount > 0).length}
                   </p>
                 </div>
               </div>
@@ -101,7 +111,7 @@ export default function HartaLivrariPage() {
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-widest">{t("updatedAt")}</p>
                   <p className="text-sm font-semibold text-white">
-                    {new Date(data.updatedAt).toLocaleDateString(undefined, {
+                    {new Date(mapData.updatedAt).toLocaleDateString(undefined, {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
@@ -113,7 +123,7 @@ export default function HartaLivrariPage() {
 
             <motion.div {...fadeUp}>
               <RomaniaDeliveryMap
-                counties={data.counties}
+                counties={mapData.counties}
                 labels={{ orders: t("orders"), noData: t("noData") }}
               />
             </motion.div>

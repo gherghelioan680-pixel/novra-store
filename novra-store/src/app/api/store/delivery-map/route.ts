@@ -10,24 +10,36 @@ import {
 } from "@/lib/delivery-map-server";
 import { readJsonFile, writeJsonFile } from "@/lib/server-data";
 import { DEFAULT_SETTINGS, mergeSettings, type SiteSettings } from "@/lib/site-settings";
+import { createEmptyDeliveryMapPayload } from "@/lib/delivery-map";
 
 export const runtime = "nodejs";
 
 const SETTINGS_FILE = "settings.json";
 
 export async function GET(request: NextRequest) {
-  if (isAdminRequest(request)) {
-    const [map, settings] = await Promise.all([readDeliveryMap(), getPublicDeliveryMap()]);
-    return Response.json({
-      ...map,
-      publicEnabled: settings.enabled,
+  try {
+    const payload = await getPublicDeliveryMap();
+
+    if (isAdminRequest(request)) {
+      const map = await readDeliveryMap();
+      return Response.json({
+        ...map,
+        enabled: payload.enabled,
+        publicEnabled: payload.enabled,
+        totalOrders: payload.totalOrders,
+      });
+    }
+
+    return Response.json(payload, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+    });
+  } catch (error) {
+    console.error("[delivery-map] GET failed:", error);
+    const fallback = createEmptyDeliveryMapPayload(true);
+    return Response.json(fallback, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
     });
   }
-
-  const payload = await getPublicDeliveryMap();
-  return Response.json(payload, {
-    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
-  });
 }
 
 export async function PATCH(request: NextRequest) {
