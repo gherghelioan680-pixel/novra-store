@@ -9,7 +9,10 @@ import { createStoreRefreshEffect } from "@/lib/store";
 import type { AccountSection } from "./types";
 import AuthPanel from "./AuthPanel";
 import AccountSidebar from "./AccountSidebar";
-import AccountMobileBottomNav, { accountMobileBottomPadding } from "./AccountMobileBottomNav";
+import AccountMobileBottomNav, {
+  accountMobileBottomOffsetClass,
+  accountMobileBottomPaddingClass,
+} from "./AccountMobileBottomNav";
 import AccountMobileSectionNav from "./AccountMobileSectionNav";
 import AccountHeader from "./AccountHeader";
 import OverviewView from "./views/OverviewView";
@@ -200,8 +203,7 @@ function AccountDashboardContent() {
         />
 
         <main
-          className="relative z-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden md:pb-8"
-          style={{ paddingBottom: accountMobileBottomPadding("1rem") }}
+          className={`relative z-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden md:pb-8 ${accountMobileBottomPaddingClass("1rem")}`}
         >
           <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-10 max-md:pt-3">
             <AccountMobileSectionNav
@@ -241,8 +243,7 @@ function AccountDashboardContent() {
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl md:bottom-8"
-            style={{ bottom: accountMobileBottomPadding("0.75rem") }}
+            className={`fixed left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-purple-500/30 bg-novra-card px-5 py-3 text-sm text-purple-200 shadow-xl md:bottom-8 ${accountMobileBottomOffsetClass("0.75rem")}`}
           >
             {toast}
           </motion.div>

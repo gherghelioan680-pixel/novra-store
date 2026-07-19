@@ -6,8 +6,18 @@ import { Link } from "@/i18n/navigation";
 
 const BOTTOM_NAV_HEIGHT = "3.75rem";
 
-export function accountMobileBottomPadding(extra = "0px") {
-  return `calc(${BOTTOM_NAV_HEIGHT} + env(safe-area-inset-bottom, 0px) + ${extra})`;
+function mobileBottomOffset(extra = "0px") {
+  return `calc(${BOTTOM_NAV_HEIGHT}+env(safe-area-inset-bottom,0px)+${extra})`;
+}
+
+/** Mobile-only bottom offset for fixed/sticky UI above AccountMobileBottomNav. */
+export function accountMobileBottomPaddingClass(extra = "0px") {
+  return `max-md:pb-[${mobileBottomOffset(extra)}]`;
+}
+
+/** Mobile-only bottom position for fixed elements above AccountMobileBottomNav. */
+export function accountMobileBottomOffsetClass(extra = "0px") {
+  return `max-md:bottom-[${mobileBottomOffset(extra)}]`;
 }
 
 export default function AccountMobileBottomNav() {
@@ -22,7 +32,7 @@ export default function AccountMobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[200] flex border-t border-purple-500/25 bg-novra-bg-alt/98 backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-[200] hidden max-md:flex border-t border-purple-500/25 bg-novra-bg-alt/98 backdrop-blur-md"
       aria-label={tNav("mobileNavAria")}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
