@@ -2,7 +2,7 @@ import "server-only";
 
 import Stripe from "stripe";
 
-const PRODUCTION_SITE_ORIGIN = "https://novra.ro";
+const PRODUCTION_SITE_ORIGIN = "https://www.novra.ro";
 
 export function getStripeSecretKey(): string | undefined {
   return process.env.STRIPE_SECRET_KEY;

@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import { defaultLocale, locales, type AppLocale } from "@/i18n/routing";
 
-export const SITE_URL = "https://novra.ro";
+/** Canonical origin (Vercel redirects apex novra.ro → www.novra.ro). */
+function resolveSiteUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (configured === "https://novra.ro" || configured === "http://novra.ro") {
+    return "https://www.novra.ro";
+  }
+  return configured || "https://www.novra.ro";
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const DEFAULT_TITLE = "NOVRA | Precision. Performance. Power.";
 export const DEFAULT_DESCRIPTION =

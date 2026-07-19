@@ -27,6 +27,19 @@ const STATIC_PATHS = [
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
 
+function safeLastModified(value?: string | Date): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim()) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return new Date();
+}
+
 function sitemapEntry(
   path: string,
   options?: {
@@ -37,7 +50,7 @@ function sitemapEntry(
 ): MetadataRoute.Sitemap[number] {
   return {
     url: absoluteUrl(defaultLocale, path),
-    lastModified: options?.lastModified ?? new Date(),
+    lastModified: safeLastModified(options?.lastModified),
     changeFrequency: options?.changeFrequency,
     priority: options?.priority,
     alternates: {
@@ -91,7 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const article of articles) {
     entries.push(
       sitemapEntry(`/blog/${article.slug}`, {
-        lastModified: new Date(article.updatedAt),
+        lastModified: safeLastModified(article.updatedAt),
         changeFrequency: "monthly",
         priority: 0.6,
       })
@@ -102,7 +115,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const campaign of campaigns) {
     entries.push(
       sitemapEntry(`/campanii/${campaign.slug}`, {
-        lastModified: new Date(campaign.updatedAt),
+        lastModified: safeLastModified(campaign.updatedAt),
         changeFrequency: "weekly",
         priority: 0.7,
       })

@@ -28,6 +28,11 @@ function applyCacheHeaders(response: NextResponse, pathname: string) {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Metadata routes must never pass through locale redirects.
+  if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
+    return NextResponse.next();
+  }
+
   // Admin must never pass through next-intl (defense in depth alongside matcher).
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     const response = NextResponse.next();
