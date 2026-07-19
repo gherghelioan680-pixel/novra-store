@@ -33,6 +33,16 @@ export const DEFAULT_DESCRIPTION =
 
 export const OG_IMAGE_PATH = "/logo.png";
 
+/** Favicon + touch icons (Google: ≥48px, multiples of 48). */
+export const SITE_ICONS: Metadata["icons"] = {
+  icon: [
+    { url: "/favicon.ico", sizes: "any" },
+    { url: "/icon.png", sizes: "48x48", type: "image/png" },
+    { url: "/icon-96.png", sizes: "96x96", type: "image/png" },
+  ],
+  apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+};
+
 export function localePath(locale: AppLocale, path: string): string {
   const normalized = path === "/" || path === "" ? "/" : path.startsWith("/") ? path : `/${path}`;
 
@@ -96,6 +106,7 @@ export function buildSiteMetadata(locale: AppLocale, description: string): Metad
       description,
       images: [OG_IMAGE_PATH],
     },
+    icons: SITE_ICONS,
     manifest: "/manifest.json",
   };
 }
@@ -122,5 +133,6 @@ export const ROOT_METADATA: Metadata = {
     description: DEFAULT_DESCRIPTION,
     images: [OG_IMAGE_PATH],
   },
+  icons: SITE_ICONS,
   manifest: "/manifest.json",
 };
