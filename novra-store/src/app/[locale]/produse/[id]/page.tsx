@@ -42,13 +42,27 @@ type PageProps = {
 export default function ProductDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const [product, setProduct] = useState<CatalogProduct | undefined>(() => getProductById(id));
+  const [isLoading, setIsLoading] = useState(() => !getProductById(id));
 
   useEffect(() => {
     return createStoreRefreshEffect(async () => {
       await loadProductOverrides();
       setProduct(getProductById(id));
+      setIsLoading(false);
     }, { scopes: ["products"] });
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-novra-bg text-white">
+        <Navbar />
+        <main className="pb-page site-container pt-8">
+          <p className="text-gray-500 text-sm">Se încarcă produsul...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     notFound();

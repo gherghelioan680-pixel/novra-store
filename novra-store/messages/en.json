@@ -95,7 +95,21 @@
     "selectVariant": "Select variant",
     "bestseller": "Bestseller",
     "bundleSavings": "Save {amount} RON",
-    "bundleSavingsShort": "−{amount} lei"
+    "bundleSavingsShort": "−{amount} lei",
+    "allCategories": "All",
+    "sortBy": "Sort by:",
+    "sortFeatured": "Featured",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortName": "Name A-Z",
+    "productCount": "{count, plural, one {# product} other {# products}}",
+    "emptyCategory": "No products in {category}.",
+    "emptyCategoryHint": "Try another category or check back later.",
+    "paginationPrev": "Previous",
+    "paginationNext": "Next",
+    "paginationAria": "Product catalog pagination",
+    "paginationPageAria": "Page {page}",
+    "viewProductAria": "View details for {title}"
   },
   "metadata": {
     "description": "Premium cables built for speed, safety and uncompromising performance."
@@ -891,7 +905,7 @@
   "categories": {
     "usb-c": "Cables",
     "lightning": "Adapters",
-    "accesorii": "Cable + Adapter"
+    "accesorii": "Bundle"
   },
   "catalogProducts": {
     "usb-c-100w": {

@@ -95,7 +95,21 @@
     "selectVariant": "Selectează varianta",
     "bestseller": "Bestseller",
     "bundleSavings": "Economisești {amount} RON",
-    "bundleSavingsShort": "−{amount} lei"
+    "bundleSavingsShort": "−{amount} lei",
+    "allCategories": "Toate",
+    "sortBy": "Sortează:",
+    "sortFeatured": "Recomandate",
+    "sortPriceAsc": "Preț crescător",
+    "sortPriceDesc": "Preț descrescător",
+    "sortName": "Nume A-Z",
+    "productCount": "{count, plural, one {# produs} few {# produse} other {# produse}}",
+    "emptyCategory": "Niciun produs în categoria {category}.",
+    "emptyCategoryHint": "Încearcă o altă categorie sau revino mai târziu.",
+    "paginationPrev": "Înapoi",
+    "paginationNext": "Înainte",
+    "paginationAria": "Paginare catalog produse",
+    "paginationPageAria": "Pagina {page}",
+    "viewProductAria": "Vezi detalii pentru {title}"
   },
   "metadata": {
     "description": "Cabluri premium create pentru viteză, siguranță și performanță fără compromis."
@@ -891,7 +905,7 @@
   "categories": {
     "usb-c": "Cabluri",
     "lightning": "Adaptoare",
-    "accesorii": "Cablu + Adaptor"
+    "accesorii": "Bundle"
   },
   "catalogProducts": {
     "usb-c-100w": {

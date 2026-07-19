@@ -95,7 +95,21 @@
     "selectVariant": "Variante wählen",
     "bestseller": "Bestseller",
     "bundleSavings": "Sparen Sie {amount} RON",
-    "bundleSavingsShort": "−{amount} lei"
+    "bundleSavingsShort": "−{amount} lei",
+    "allCategories": "Alle",
+    "sortBy": "Sortieren:",
+    "sortFeatured": "Empfohlen",
+    "sortPriceAsc": "Preis aufsteigend",
+    "sortPriceDesc": "Preis absteigend",
+    "sortName": "Name A-Z",
+    "productCount": "{count, plural, one {# Produkt} other {# Produkte}}",
+    "emptyCategory": "Keine Produkte in {category}.",
+    "emptyCategoryHint": "Versuchen Sie eine andere Kategorie oder schauen Sie später wieder vorbei.",
+    "paginationPrev": "Zurück",
+    "paginationNext": "Weiter",
+    "paginationAria": "Produktkatalog-Seitennummerierung",
+    "paginationPageAria": "Seite {page}",
+    "viewProductAria": "Details für {title} ansehen"
   },
   "metadata": {
     "description": "Premium-Kabel für Geschwindigkeit, Sicherheit und kompromisslose Leistung."
@@ -891,7 +905,7 @@
   "categories": {
     "usb-c": "Kabel",
     "lightning": "Adapter",
-    "accesorii": "Kabel + Adapter"
+    "accesorii": "Bundle"
   },
   "catalogProducts": {
     "usb-c-100w": {

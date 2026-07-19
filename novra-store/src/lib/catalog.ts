@@ -302,12 +302,105 @@ export const CATALOG_PRODUCTS: CatalogProduct[] = [
 ];
 
 export const CATALOG_CATEGORIES = [
-  { id: "usb-c", label: "Cabluri" },
-  { id: "lightning", label: "Adaptoare" },
-  { id: "accesorii", label: "Cablu + Adaptor" },
+  { id: "usb-c", slug: "cabluri", label: "Cabluri" },
+  { id: "lightning", slug: "adaptoare", label: "Adaptoare" },
+  { id: "accesorii", slug: "bundle", label: "Bundle" },
 ] as const;
 
 export const VALID_CATEGORY_IDS = new Set<string>(CATALOG_CATEGORIES.map((cat) => cat.id));
+
+/** URL slug → internal category id (includes legacy internal ids). */
+export const CATEGORY_SLUG_TO_ID: Record<string, string> = {
+  cabluri: "usb-c",
+  adaptoare: "lightning",
+  bundle: "accesorii",
+  accesorii: "accesorii",
+  "usb-c": "usb-c",
+  lightning: "lightning",
+};
+
+export const CATEGORY_ID_TO_SLUG: Record<string, string> = Object.fromEntries(
+  CATALOG_CATEGORIES.map((cat) => [cat.id, cat.slug])
+);
+
+export const VALID_CATEGORY_SLUGS = new Set<string>([
+  ...CATALOG_CATEGORIES.map((cat) => cat.slug),
+  "accesorii",
+]);
+
+export const PRODUCTS_PER_PAGE = 12;
+
+export type ProductSortOption = "featured" | "price-asc" | "price-desc" | "name";
+
+export const PRODUCT_SORT_OPTIONS: ProductSortOption[] = [
+  "featured",
+  "price-asc",
+  "price-desc",
+  "name",
+];
+
+export function normalizeCategoryParam(param: string | null | undefined): string | null {
+  if (!param || param === "all" || param === "toate") return null;
+  const mapped = CATEGORY_SLUG_TO_ID[param];
+  if (mapped && VALID_CATEGORY_IDS.has(mapped)) return mapped;
+  if (VALID_CATEGORY_IDS.has(param)) return param;
+  return null;
+}
+
+export function getCategorySlug(categoryId: string): string {
+  return CATEGORY_ID_TO_SLUG[categoryId] ?? categoryId;
+}
+
+export function getCategoryUrlParam(categoryId: string | null): string | undefined {
+  if (!categoryId) return undefined;
+  return getCategorySlug(categoryId);
+}
+
+export function sortCatalogProducts(
+  products: CatalogProduct[],
+  sort: ProductSortOption
+): CatalogProduct[] {
+  const sorted = [...products];
+  switch (sort) {
+    case "price-asc":
+      return sorted.sort((a, b) => a.basePrice - b.basePrice);
+    case "price-desc":
+      return sorted.sort((a, b) => b.basePrice - a.basePrice);
+    case "name":
+      return sorted.sort((a, b) => a.title.localeCompare(b.title, "ro"));
+    case "featured":
+    default:
+      return sorted.sort((a, b) => {
+        const aFeatured = a.bestseller ? 1 : 0;
+        const bFeatured = b.bestseller ? 1 : 0;
+        if (bFeatured !== aFeatured) return bFeatured - aFeatured;
+        return a.title.localeCompare(b.title, "ro");
+      });
+  }
+}
+
+export function paginateProducts<T>(items: T[], page: number, perPage = PRODUCTS_PER_PAGE): T[] {
+  const safePage = Math.max(1, page);
+  const start = (safePage - 1) * perPage;
+  return items.slice(start, start + perPage);
+}
+
+export function getTotalPages(count: number, perPage = PRODUCTS_PER_PAGE): number {
+  if (count <= 0) return 1;
+  return Math.ceil(count / perPage);
+}
+
+export function normalizePageParam(param: string | null | undefined): number {
+  const parsed = Number.parseInt(param ?? "1", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+export function normalizeSortParam(param: string | null | undefined): ProductSortOption {
+  if (param && PRODUCT_SORT_OPTIONS.includes(param as ProductSortOption)) {
+    return param as ProductSortOption;
+  }
+  return "featured";
+}
 
 const USB_C_CABLE_IDS = new Set(["usb-c-100w", "usb-c-pro-240w", "usb-a-c-100w"]);
 
@@ -770,9 +863,16 @@ export function slugFromTitle(title: string): string {
   return slug || `produs-${Date.now()}`;
 }
 
-export function buildProduseUrl(params: { category?: string }) {
+export function buildProduseUrl(params: {
+  category?: string | null;
+  page?: number;
+  sort?: ProductSortOption;
+}) {
   const search = new URLSearchParams();
-  if (params.category) search.set("category", params.category);
+  const categoryParam = params.category ? getCategoryUrlParam(params.category) : undefined;
+  if (categoryParam) search.set("category", categoryParam);
+  if (params.page && params.page > 1) search.set("page", String(params.page));
+  if (params.sort && params.sort !== "featured") search.set("sort", params.sort);
   const query = search.toString();
   return query ? `/produse?${query}` : "/produse";
 }

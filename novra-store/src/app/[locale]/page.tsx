@@ -417,7 +417,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link
-                  href="/produse?category=accesorii"
+                  href="/produse?category=bundle"
                   className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-semibold transition text-sm sm:text-base"
                 >
                   {th("viewBundles")}
