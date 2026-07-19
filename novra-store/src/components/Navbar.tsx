@@ -111,11 +111,15 @@ export default function Navbar() {
             isAccountPage ? "bg-novra-bg" : "bg-novra-bg/95"
           }`}
         >
-          <div className="site-container py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 min-w-0">
+          <div
+            className={`site-container flex min-w-0 items-center justify-between gap-2 sm:gap-3 ${
+              isAccountPage ? "max-md:py-2.5 py-2.5 sm:py-3" : "py-2.5 sm:py-3"
+            }`}
+          >
             <Link
               href="/"
-              className={`relative flex shrink-0 items-center min-w-0 bg-novra-bg pr-2 ${
-                isAccountPage ? "z-[10003]" : "z-[1]"
+              className={`relative flex shrink-0 items-center min-w-0 bg-novra-bg ${
+                isAccountPage ? "z-[10003] pr-1" : "z-[1] pr-2"
               }`}
             >
               <Image
@@ -142,7 +146,7 @@ export default function Navbar() {
 
             <div
               className={`relative flex shrink-0 items-center gap-2 sm:gap-4 ${
-                isAccountPage ? "z-[10000] max-md:gap-1" : "z-[10001]"
+                isAccountPage ? "z-[10000] max-md:gap-0 max-md:pr-0.5" : "z-[10001]"
               }`}
             >
               <div className={isAccountPage ? "hidden md:contents" : "contents"}>
@@ -172,7 +176,9 @@ export default function Navbar() {
 
               <Link
                 href="/cos"
-                className="relative min-w-11 min-h-11 flex items-center justify-center p-1 transition-all duration-300 hover:-translate-y-0.5 hover:text-purple-500 touch-manipulation"
+                className={`relative flex min-h-11 min-w-11 items-center justify-center p-1 touch-manipulation transition-all duration-300 hover:-translate-y-0.5 hover:text-purple-500 ${
+                  isAccountPage ? "text-gray-300" : ""
+                }`}
                 aria-label={t("cartAria")}
               >
                 <ShoppingCart size={20} />

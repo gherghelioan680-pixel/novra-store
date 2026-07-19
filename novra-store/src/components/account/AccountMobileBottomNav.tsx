@@ -1,9 +1,8 @@
 "use client";
 
-import { Home, LayoutGrid, ShoppingCart, User } from "lucide-react";
+import { Home, LayoutGrid, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { useCart } from "@/context/CartContext";
 
 const BOTTOM_NAV_HEIGHT = "3.75rem";
 
@@ -14,12 +13,10 @@ export function accountMobileBottomPadding(extra = "0px") {
 export default function AccountMobileBottomNav() {
   const tNav = useTranslations("nav");
   const tAccount = useTranslations("account");
-  const { totalItems } = useCart();
 
   const items = [
     { href: "/", label: tNav("home"), icon: Home, active: false },
     { href: "/produse", label: tNav("products"), icon: LayoutGrid, active: false },
-    { href: "/cos", label: tNav("cart"), icon: ShoppingCart, active: false, showBadge: true },
     { href: "/contul-meu", label: tAccount("accountTab"), icon: User, active: true },
   ] as const;
 
@@ -29,11 +26,7 @@ export default function AccountMobileBottomNav() {
       aria-label={tNav("mobileNavAria")}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      {items.map((item) => {
-        const { href, label, icon: Icon, active } = item;
-        const showBadge = "showBadge" in item && item.showBadge;
-
-        return (
+      {items.map(({ href, label, icon: Icon, active }) => (
         <Link
           key={href}
           href={href}
@@ -44,18 +37,12 @@ export default function AccountMobileBottomNav() {
               : "text-gray-400 hover:text-purple-300 active:text-purple-200"
           }`}
         >
-          <span className="relative flex h-6 w-6 items-center justify-center">
+          <span className="flex h-6 w-6 items-center justify-center">
             <Icon size={22} strokeWidth={active ? 2.25 : 2} />
-            {showBadge && totalItems > 0 && (
-              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-600 px-1 text-[9px] font-bold leading-none text-white">
-                {totalItems > 9 ? "9+" : totalItems}
-              </span>
-            )}
           </span>
           <span className="leading-none">{label}</span>
         </Link>
-        );
-      })}
+      ))}
     </nav>
   );
 }
