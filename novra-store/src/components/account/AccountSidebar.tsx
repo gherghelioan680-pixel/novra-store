@@ -17,8 +17,10 @@ import {
   Menu,
   X,
   Link2,
+  ShoppingCart,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { AccountSection } from "./types";
 import AccountLogo from "./AccountLogo";
 
@@ -52,6 +54,7 @@ export default function AccountSidebar({
   onMobileClose,
 }: AccountSidebarProps) {
   const t = useTranslations("account");
+  const tNav = useTranslations("nav");
 
   const navGroups: NavGroup[] = [
     {
@@ -158,7 +161,7 @@ export default function AccountSidebar({
       <button
         type="button"
         onClick={onMobileToggle}
-        className="fixed left-4 top-4 z-50 hidden h-10 w-10 max-md:flex items-center justify-center rounded-xl border border-white/10 bg-novra-card"
+        className="fixed left-4 top-[calc(var(--header-height,148px)+0.75rem)] z-50 hidden h-10 w-10 max-md:flex items-center justify-center rounded-xl border border-white/10 bg-novra-card"
         aria-label={t("menuAria")}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -181,6 +184,31 @@ export default function AccountSidebar({
         {[
           { id: "overview" as AccountSection, labelKey: "overview", icon: LayoutDashboard },
           { id: "my-orders" as AccountSection, labelKey: "orders", icon: ShoppingBag },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavigate(item.id)}
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] transition ${
+                isActive ? "text-purple-400" : "text-gray-500"
+              }`}
+            >
+              <Icon size={18} />
+              {t(item.labelKey)}
+            </button>
+          );
+        })}
+        <Link
+          href="/cos"
+          className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] text-gray-500 transition hover:text-purple-400"
+        >
+          <ShoppingCart size={18} />
+          {tNav("cart")}
+        </Link>
+        {[
           { id: "my-profile" as AccountSection, labelKey: "profile", icon: User },
           { id: "my-novra-credits" as AccountSection, labelKey: "credits", icon: Coins },
         ].map((item) => {

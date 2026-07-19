@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Menu, MessageCircle, ShoppingCart, User } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -12,7 +12,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CurrencySwitcher from "@/components/CurrencySwitcher";
 import { clampHeaderHeight } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { buildWhatsAppUrl } from "@/lib/store";
+import { buildWhatsAppUrl, NOVRA_STORE_UPDATED } from "@/lib/store";
+import { getCurrentUser, type User as AuthUser } from "@/lib/auth";
 
 const MOBILE_HEADER_FALLBACK = 148;
 const MOBILE_NAV_TOGGLE_ID = "mobile-nav-toggle";
@@ -21,6 +22,7 @@ export default function Navbar() {
   const t = useTranslations("nav");
   const { whatsappNumber } = useSiteSettings();
   const { totalItems } = useCart();
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   const menuToggleRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +43,19 @@ export default function Navbar() {
     { href: "/cos", label: t("cart"), showCartCount: true },
     { href: "/contul-meu", label: t("myAccount"), icon: "user" as const },
   ];
+
+  useEffect(() => {
+    const syncUser = () => setCurrentUser(getCurrentUser());
+    syncUser();
+    window.addEventListener("storage", syncUser);
+    window.addEventListener(NOVRA_STORE_UPDATED, syncUser);
+    window.addEventListener("focus", syncUser);
+    return () => {
+      window.removeEventListener("storage", syncUser);
+      window.removeEventListener(NOVRA_STORE_UPDATED, syncUser);
+      window.removeEventListener("focus", syncUser);
+    };
+  }, []);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -113,10 +128,20 @@ export default function Navbar() {
 
               <Link
                 href="/contul-meu"
-                className="hidden sm:flex items-center gap-2 text-sm text-gray-300 transition-all duration-300 hover:-translate-y-0.5 hover:text-[#8b8cff]"
+                className="relative min-w-11 min-h-11 flex items-center justify-center gap-2 p-1 text-sm text-gray-300 transition-all duration-300 hover:-translate-y-0.5 hover:text-[#8b8cff] touch-manipulation md:min-w-0 md:min-h-0 md:p-0"
+                aria-label={currentUser ? t("myAccount") : t("login")}
               >
-                <User size={18} />
-                <span>{t("myAccount")}</span>
+                {currentUser?.name ? (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600/30 text-xs font-semibold text-purple-200 md:hidden">
+                    {currentUser.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <User size={20} className="md:hidden" />
+                )}
+                <User size={18} className="hidden md:block shrink-0" />
+                <span className="hidden md:inline">
+                  {currentUser ? t("myAccount") : t("login")}
+                </span>
               </Link>
 
               <Link

@@ -252,11 +252,17 @@ export function getCurrentUser(): User | null {
 export function setCurrentUser(user: User | null): { ok: true } | { ok: false; message: string } {
   if (user) {
     const result = storageSet(CURRENT_USER_KEY, JSON.stringify(user));
-    if (result.ok) syncSession(user);
+    if (result.ok) {
+      syncSession(user);
+      dispatchStoreUpdate({ scope: "users" });
+    }
     return result;
   }
   const result = storageRemove(CURRENT_USER_KEY);
-  if (result.ok) syncSession(null);
+  if (result.ok) {
+    syncSession(null);
+    dispatchStoreUpdate({ scope: "users" });
+  }
   return result;
 }
 

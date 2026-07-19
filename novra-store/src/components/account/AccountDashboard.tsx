@@ -24,6 +24,7 @@ import SupportCenterView from "./views/SupportCenterView";
 import AffiliateProgramView from "./views/AffiliateProgramView";
 import ReferFriendView from "./views/ReferFriendView";
 import AccountLocaleSync from "./AccountLocaleSync";
+import Navbar from "@/components/Navbar";
 
 const VALID_SECTIONS: AccountSection[] = [
   "overview",
@@ -195,7 +196,7 @@ function AccountDashboardContent() {
           onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))] max-md:pt-14 sm:max-md:pt-16 md:pb-8 md:pt-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden max-md:pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
           <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
             {showHeader && (
               <AccountHeader
@@ -239,6 +240,7 @@ function AccountDashboardContent() {
 export default function AccountDashboard() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-novra-bg" />}>
+      <Navbar />
       <AccountDashboardContent />
     </Suspense>
   );
