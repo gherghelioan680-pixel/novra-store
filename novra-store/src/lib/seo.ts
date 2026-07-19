@@ -1,13 +1,28 @@
 import type { Metadata } from "next";
 import { defaultLocale, locales, type AppLocale } from "@/i18n/routing";
 
-/** Canonical origin (Vercel redirects apex novra.ro → www.novra.ro). */
+/** Canonical production origin — apex domain, no www. */
+export const CANONICAL_ORIGIN = "https://novra.ro";
+
 function resolveSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (configured === "https://novra.ro" || configured === "http://novra.ro") {
-    return "https://www.novra.ro";
+  if (!configured) {
+    return CANONICAL_ORIGIN;
   }
-  return configured || "https://www.novra.ro";
+
+  try {
+    const parsed = new URL(
+      configured.startsWith("http://") || configured.startsWith("https://")
+        ? configured
+        : `https://${configured}`,
+    );
+    if (parsed.hostname === "novra.ro" || parsed.hostname === "www.novra.ro") {
+      return CANONICAL_ORIGIN;
+    }
+    return `${parsed.protocol}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ""}`;
+  } catch {
+    return CANONICAL_ORIGIN;
+  }
 }
 
 export const SITE_URL = resolveSiteUrl();
@@ -30,11 +45,16 @@ export function localePath(locale: AppLocale, path: string): string {
 
 export function absoluteUrl(locale: AppLocale, path: string): string {
   const localized = localePath(locale, path);
-  return `${SITE_URL}${localized || "/"}`;
+  if (!localized || localized === "/") {
+    return `${SITE_URL}/`;
+  }
+  return `${SITE_URL}${localized}`;
 }
 
 export function buildLanguageAlternates(path: string): Record<string, string> {
-  const alternates: Record<string, string> = {};
+  const alternates: Record<string, string> = {
+    "x-default": absoluteUrl(defaultLocale, path),
+  };
   for (const locale of locales) {
     alternates[locale] = absoluteUrl(locale, path);
   }
@@ -81,7 +101,6 @@ export function buildSiteMetadata(locale: AppLocale, description: string): Metad
 }
 
 export const ROOT_METADATA: Metadata = {
-  metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
     template: "%s | NOVRA",

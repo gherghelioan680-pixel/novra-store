@@ -1,3 +1,5 @@
+import { CANONICAL_ORIGIN } from "@/lib/seo";
+
 export const AFFILIATE_STORAGE_FILES = {
   affiliates: "affiliates.json",
   applications: "affiliate-applications.json",
@@ -12,7 +14,7 @@ export const AFFILIATE_REF_COOKIE = "novra-affiliate-ref";
 export const AFFILIATE_REF_STORAGE_KEY = "novra-affiliate-ref";
 export const AFFILIATE_REF_TIMESTAMP_KEY = "novra-affiliate-ref-ts";
 export const AFFILIATE_ATTRIBUTION_DAYS = 30;
-export const SITE_URL = "https://www.novra.ro";
+export const SITE_URL = CANONICAL_ORIGIN;
 
 /**
  * Comision implicit: 8% din subtotalul produselor (total comandă minus transport).

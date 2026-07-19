@@ -11,7 +11,10 @@ export const viewport: Viewport = {
   themeColor: "#13111c",
 };
 
-export const metadata: Metadata = ROOT_METADATA;
+export const metadata: Metadata = {
+  ...ROOT_METADATA,
+  metadataBase: new URL("https://novra.ro"),
+};
 
 export default function RootLayout({
   children,
