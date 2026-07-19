@@ -23,6 +23,8 @@ import {
   Bell,
   UserX,
   Inbox,
+  MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +49,8 @@ const navItems = [
   { href: "/admin/recomandari", label: "Recomandări", icon: UserPlus },
   { href: "/admin/notificari", label: "Notificări Push", icon: Bell },
   { href: "/admin/recenzii", label: "Recenzii", icon: Star },
+  { href: "/admin/autenticitate", label: "Autenticitate", icon: ShieldCheck },
+  { href: "/admin/harta-livrari", label: "Harta livrări", icon: MapPin },
   { href: "/admin/setari", label: "Setări", icon: Settings },
 ];
 

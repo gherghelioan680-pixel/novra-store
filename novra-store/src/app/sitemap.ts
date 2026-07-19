@@ -23,6 +23,8 @@ const STATIC_PATHS = [
   "/promotii",
   "/recenzii",
   "/urmareste-comanda",
+  "/verificare-autenticitate",
+  "/harta-livrari",
 ] as const;
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;

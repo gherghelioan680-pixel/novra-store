@@ -22,6 +22,8 @@
     "promotions": "Aktionen",
     "blog": "Blog & Ratgeber",
     "reviews": "Kundenbewertungen",
+    "authenticity": "Produktauthentizität",
+    "deliveryMap": "Lieferkarte",
     "info": "INFORMATIONEN",
     "about": "Über uns",
     "shipping": "Versand & Zahlung",
@@ -1549,5 +1551,40 @@
       "warranty": "2 Jahre Garantie",
       "premium": "Premium-Materialien"
     }
+  },
+  "authenticity": {
+    "badge": "Fälschungsschutz",
+    "title": "Produkt",
+    "titleHighlight": "authentizität",
+    "subtitle": "Geben Sie den eindeutigen Code auf der NOVRA-Verpackung ein, um die Echtheit zu bestätigen.",
+    "formTitle": "Code prüfen",
+    "codeLabel": "Authentizitätscode",
+    "codePlaceholder": "NOVRA-XXXX-XXXX",
+    "codeHint": "Der Code befindet sich auf dem Siegel oder der Karte in der Box.",
+    "submit": "Jetzt prüfen",
+    "verifying": "Wird geprüft...",
+    "successTitle": "Originales NOVRA-Produkt",
+    "successDefault": "Originales NOVRA-Produkt",
+    "errorDefault": "Ungültiger oder bereits verwendeter Code.",
+    "howTitle": "So funktioniert es",
+    "howStep1": "Finden Sie den eindeutigen Code auf der NOVRA-Verpackung.",
+    "howStep2": "Geben Sie den Code ein und tippen Sie auf Prüfen.",
+    "howStep3": "Sofortige Bestätigung — ohne persönliche Daten."
+  },
+  "deliveryMap": {
+    "badge": "Lieferungen in Rumänien",
+    "title": "Liefer",
+    "titleHighlight": "karte",
+    "subtitle": "Kreise, in die wir NOVRA-Bestellungen geliefert haben — nur aggregierte Daten, keine persönlichen Informationen.",
+    "loading": "Karte wird geladen...",
+    "hidden": "Die Lieferkarte ist derzeit nicht verfügbar.",
+    "totalOrders": "Gelieferte Bestellungen",
+    "activeCounties": "Aktive Kreise",
+    "updatedAt": "Aktualisiert",
+    "orders": "Bestellungen",
+    "noData": "Keine Bestellungen",
+    "topCounties": "Top-Kreise",
+    "county": "Kreis",
+    "privacyNote": "Wir zeigen nur Kreisnamen und aggregierte Bestellzahlen — keine Adressen oder persönlichen Daten."
   }
 }

@@ -22,6 +22,8 @@
     "promotions": "Promoții",
     "blog": "Blog & Ghiduri",
     "reviews": "Recenzii clienți",
+    "authenticity": "Verificare autenticitate",
+    "deliveryMap": "Harta livrărilor",
     "info": "INFORMAȚII",
     "about": "Despre noi",
     "shipping": "Livrare și plată",
@@ -1549,5 +1551,40 @@
       "warranty": "Garanție 2 ani",
       "premium": "Materiale premium"
     }
+  },
+  "authenticity": {
+    "badge": "Protecție anti-contrafacere",
+    "title": "Verificare",
+    "titleHighlight": "autenticitate",
+    "subtitle": "Introdu codul unic de pe ambalajul produsului NOVRA pentru a confirma că este original.",
+    "formTitle": "Verifică codul",
+    "codeLabel": "Cod autenticitate",
+    "codePlaceholder": "NOVRA-XXXX-XXXX",
+    "codeHint": "Codul se găsepe pe eticheta sigiliului sau pe cardul din cutie.",
+    "submit": "Verifică acum",
+    "verifying": "Se verifică...",
+    "successTitle": "Produs original NOVRA",
+    "successDefault": "Produs original NOVRA",
+    "errorDefault": "Cod invalid sau deja utilizat.",
+    "howTitle": "Cum funcționează",
+    "howStep1": "Găsește codul unic pe ambalajul produsului NOVRA.",
+    "howStep2": "Introdu codul în formular și apasă Verifică.",
+    "howStep3": "Primești confirmarea instant — fără date personale."
+  },
+  "deliveryMap": {
+    "badge": "Livrări în România",
+    "title": "Harta",
+    "titleHighlight": "livrărilor",
+    "subtitle": "Zonele în care am livrat comenzi NOVRA — date agregate pe județ, fără informații personale.",
+    "loading": "Se încarcă harta...",
+    "hidden": "Harta livrărilor nu este disponibilă momentan.",
+    "totalOrders": "Comenzi livrate",
+    "activeCounties": "Județe active",
+    "updatedAt": "Actualizat",
+    "orders": "Comenzi",
+    "noData": "Fără comenzi",
+    "topCounties": "Top județe",
+    "county": "Județ",
+    "privacyNote": "Afișăm doar numele județului și numărul agregat de comenzi — fără adrese sau date personale."
   }
 }

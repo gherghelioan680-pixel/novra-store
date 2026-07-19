@@ -52,6 +52,8 @@ export type SiteSettings = {
   facebookUrl?: string;
   instagramUrl?: string;
   tiktokUrl?: string;
+  /** Afișează harta publică a livrărilor în România */
+  deliveryMapPublicEnabled?: boolean;
 };
 
 export const DEFAULT_NEWSLETTER_WELCOME_MESSAGE =
@@ -118,6 +120,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   facebookUrl: "",
   instagramUrl: "",
   tiktokUrl: "",
+  deliveryMapPublicEnabled: true,
 };
 
 function mergeComingSoon(partial?: Partial<ComingSoonSettings>): ComingSoonSettings {

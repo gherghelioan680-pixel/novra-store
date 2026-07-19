@@ -80,6 +80,16 @@ export default function Footer() {
                 {t("reviews")}
               </Link>
             </li>
+            <li>
+              <Link href="/verificare-autenticitate" className="hover:text-purple-400 transition">
+                {t("authenticity")}
+              </Link>
+            </li>
+            <li>
+              <Link href="/harta-livrari" className="hover:text-purple-400 transition">
+                {t("deliveryMap")}
+              </Link>
+            </li>
           </ul>
         </div>
 

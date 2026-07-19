@@ -19,6 +19,7 @@ import {
 import { processReferralRewardsForOrder } from "@/lib/referrals-server";
 import { markAbandonedCartCompleted } from "@/lib/abandoned-cart-server";
 import { isEmailBanned, BANNED_USER_MESSAGE } from "@/lib/user-ban-server";
+import { recordDeliveredCounty, recordOrderCounty } from "@/lib/delivery-map-server";
 
 export const runtime = "nodejs";
 
@@ -322,6 +323,11 @@ export async function POST(request: NextRequest) {
       await markAbandonedCartCompleted(order.userEmail);
     }
 
+    await recordOrderCounty(orders[0]);
+    if (orders[0].status === "delivered") {
+      await recordDeliveredCounty(orders[0]);
+    }
+
     return Response.json({ ok: true, order: orders[0] });
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
@@ -375,6 +381,7 @@ export async function PATCH(request: NextRequest) {
 
         if (updates.status && updates.status !== previous.status) {
           await applyStatusEmailUpdates(orders, index, previous, settings.orderEmailsEnabled);
+          await recordDeliveredCounty(orders[index], previous.status);
         }
       }
 
@@ -425,6 +432,7 @@ export async function PATCH(request: NextRequest) {
       trackingEmailSent = updated.trackingEmailSent ?? trackingEmailSent;
       statusEmailsSent = { ...updated.statusEmailsSent };
       await writeJsonFile(ORDERS_FILE, orders);
+      await recordDeliveredCounty(updated, previous.status);
     }
 
     if (

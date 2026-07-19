@@ -22,6 +22,8 @@
     "promotions": "Promotions",
     "blog": "Blog & Guides",
     "reviews": "Customer reviews",
+    "authenticity": "Product authenticity",
+    "deliveryMap": "Delivery map",
     "info": "INFORMATION",
     "about": "About us",
     "shipping": "Shipping & payment",
@@ -1549,5 +1551,40 @@
       "warranty": "2-year warranty",
       "premium": "Premium materials"
     }
+  },
+  "authenticity": {
+    "badge": "Anti-counterfeit protection",
+    "title": "Product",
+    "titleHighlight": "authenticity",
+    "subtitle": "Enter the unique code from your NOVRA product packaging to confirm it is genuine.",
+    "formTitle": "Verify your code",
+    "codeLabel": "Authenticity code",
+    "codePlaceholder": "NOVRA-XXXX-XXXX",
+    "codeHint": "The code is on the seal label or card inside the box.",
+    "submit": "Verify now",
+    "verifying": "Verifying...",
+    "successTitle": "Genuine NOVRA product",
+    "successDefault": "Genuine NOVRA product",
+    "errorDefault": "Invalid or already used code.",
+    "howTitle": "How it works",
+    "howStep1": "Find the unique code on your NOVRA product packaging.",
+    "howStep2": "Enter the code in the form and tap Verify.",
+    "howStep3": "Get instant confirmation — no personal data required."
+  },
+  "deliveryMap": {
+    "badge": "Deliveries in Romania",
+    "title": "Delivery",
+    "titleHighlight": "map",
+    "subtitle": "Counties where we have delivered NOVRA orders — aggregated data only, no personal information.",
+    "loading": "Loading map...",
+    "hidden": "The delivery map is not available at the moment.",
+    "totalOrders": "Orders delivered",
+    "activeCounties": "Active counties",
+    "updatedAt": "Updated",
+    "orders": "Orders",
+    "noData": "No orders",
+    "topCounties": "Top counties",
+    "county": "County",
+    "privacyNote": "We only show county names and aggregated order counts — no addresses or personal data."
   }
 }
