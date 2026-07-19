@@ -36,6 +36,7 @@
     "terms": "AGB",
     "cookies": "Cookie-Richtlinie",
     "affiliateTerms": "Affiliate-Programm AGB",
+    "affiliateProgram": "Affiliate-Programm",
     "legalNavAria": "Rechtliche Dokumente",
     "anpc": "ANPC — Verbraucherschutz (RO)",
     "odr": "EU-OS-Plattform",
@@ -809,7 +810,19 @@
     "orderWhatsappTitle": "Über WhatsApp bestellen",
     "orderWhatsappAria": "{title} über WhatsApp bestellen",
     "addToCartAria": "{title} schnell in den Warenkorb",
-    "outOfStockAria": "{title} — nicht vorrätig"
+    "outOfStockAria": "{title} — nicht vorrätig",
+    "exploreBadge": "NOVRA entdecken",
+    "exploreTitle": "Alles Wichtige auf einen Klick",
+    "exploreSubtitle": "Aktionen, Bewertungen, Lieferkarte und Echtheitsprüfung — auf eigenen Seiten, damit die Startseite übersichtlich bleibt.",
+    "explorePromotionsTitle": "Aktuelle Aktionen",
+    "explorePromotionsDesc": "Rabattcodes und exklusive NOVRA-Kampagnen.",
+    "exploreReviewsTitle": "Kundenbewertungen",
+    "exploreReviewsDesc": "Über 10.000 zufriedene Kunden — echte Erfahrungen lesen.",
+    "exploreDeliveryTitle": "Lieferkarte",
+    "exploreDeliveryDesc": "Sehen Sie, wohin wir bereits in Rumänien geliefert haben.",
+    "exploreAuthenticityTitle": "Echtheitsprüfung",
+    "exploreAuthenticityDesc": "Bestätigen Sie, dass Ihr NOVRA-Produkt original ist.",
+    "seeMore": "Mehr anzeigen"
   },
   "affiliate": {
     "title": "NOVRA Affiliate-Programm",
@@ -846,7 +859,9 @@
     "gdprTitle": "Erhobene Daten & DSGVO",
     "gdprText": "Für das Affiliate-Programm erheben wir: Name, E-Mail, Referenzcode, Klick-/Bestellstatistiken und bei Auszahlung Bankdaten (IBAN oder Karte) für die Provision. Wir verwenden ?ref= Attributions-Cookie (30 Tage). Verarbeitung entspricht DSGVO — Details in <privacyLink>Datenschutzrichtlinie</privacyLink> und <termsLink>Programm-AGB</termsLink>.",
     "readyToStart": "Bereit zu starten?",
-    "accountLink": "Mein Konto → Affiliate-Programm"
+    "accountLink": "Mein Konto → Affiliate-Programm",
+    "metadataTitle": "Affiliate-Programm | NOVRA",
+    "metadataDescription": "Verdienen Sie Provision durch die Bewerbung von NOVRA-Produkten. Bewerben Sie sich im Konto, erhalten Sie Ihren Link und ziehen Sie Einnahmen ab."
   },
   "categories": {
     "usb-c": "Kabel",

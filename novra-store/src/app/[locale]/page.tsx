@@ -16,8 +16,6 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { getReviewAvatarUrl } from "@/lib/reviews";
 import {
-  CATALOG_CATEGORIES,
-  buildProduseUrl,
   getProductsByCategory,
   getProductById,
   loadProductOverrides,
@@ -29,8 +27,8 @@ import {
 } from "@/lib/catalog";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useReviews } from "@/hooks/useReviews";
-import AffiliateProgramSection from "@/components/AffiliateProgramSection";
 import CampaignHomeBanner from "@/components/CampaignHomeBanner";
+import HomeExploreLinks from "@/components/HomeExploreLinks";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
@@ -156,11 +154,9 @@ function HeroPriceRotator() {
 
 export default function Home() {
   const th = useTranslations("home");
-  const tc = useTranslations("common");
   const tcat = useTranslations("categories");
   const { whatsappNumber } = useSiteSettings();
-  const reviews = useReviews(3);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const reviews = useReviews(2);
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "sending" | "success" | "duplicate" | "error">("idle");
   const [newsletterDiscountMessage, setNewsletterDiscountMessage] = useState("");
   const [homepageProducts, setHomepageProducts] = useState(() => buildHomepageProducts(tcat));
@@ -171,19 +167,6 @@ export default function Home() {
       setHomepageProducts(buildHomepageProducts(tcat));
     }, { scopes: ["products"] });
   }, [tcat]);
-
-  useEffect(() => {
-    if (!isModalOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsModalOpen(false);
-    };
-    document.addEventListener("keydown", handleEscape);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isModalOpen]);
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -517,13 +500,6 @@ export default function Home() {
                 {th("discoverStory")}
                 <ArrowRight size={16} aria-hidden />
               </Link>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 border border-novra-border hover:bg-novra-elevated px-6 py-3 min-h-11 rounded-full font-semibold transition duration-300 text-sm sm:text-base touch-manipulation"
-              >
-                {th("quickSummary")}
-              </button>
             </div>
           </div>
           <div className="order-1 lg:order-2 relative h-72 sm:h-96 lg:h-[480px] rounded-3xl overflow-hidden border border-purple-500/15 bg-gradient-to-b from-purple-950/50 to-novra-card/40 shadow-2xl shadow-purple-950/25">
@@ -547,9 +523,8 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* Recenzii */}
+      {/* Recenzii — teaser */}
       <motion.section
-        id="recenzii"
         initial={false}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -580,7 +555,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto">
             {reviews.map((review, i) => (
               <motion.div
                 key={review.id}
@@ -622,7 +597,7 @@ export default function Home() {
         </div>
       </motion.section>
 
-      <AffiliateProgramSection />
+      <HomeExploreLinks />
 
       {/* Newsletter Premium */}
       <motion.section
@@ -754,66 +729,6 @@ export default function Home() {
       <footer id="contact">
         <Footer />
       </footer>
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-novra-bg/85 backdrop-blur-sm"
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="rezumat-rapid-title"
-              className="bg-novra-surface border border-novra-border p-5 sm:p-8 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90dvh] sm:max-h-[85dvh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 id="rezumat-rapid-title" className="text-2xl font-bold mb-2">
-                {th("modalTitle")}
-              </h2>
-              <p className="text-gray-300 mb-6 text-sm sm:text-base">
-                {th("modalDesc")}
-              </p>
-
-              <div className="space-y-2.5 mb-6">
-                {CATALOG_CATEGORIES.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={buildProduseUrl({ category: cat.id })}
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex items-center justify-between gap-3 min-h-11 px-4 py-3 rounded-xl border border-novra-border bg-novra-card/40 hover:border-purple-500/40 hover:bg-novra-card/70 transition-colors touch-manipulation"
-                  >
-                    <span className="font-medium text-sm sm:text-base">{tcat(cat.id)}</span>
-                    <ArrowRight size={16} className="text-purple-400 shrink-0" aria-hidden />
-                  </Link>
-                ))}
-                <Link
-                  href="/produse"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex items-center justify-between gap-3 min-h-11 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-600/15 hover:bg-purple-600/25 transition-colors touch-manipulation"
-                >
-                  <span className="font-semibold text-sm sm:text-base">{th("allProducts")}</span>
-                  <ArrowRight size={16} className="text-purple-300 shrink-0" aria-hidden />
-                </Link>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="w-full min-h-11 bg-purple-600 py-3 rounded-lg font-semibold hover:bg-purple-700 touch-manipulation"
-              >
-                {tc("close")}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

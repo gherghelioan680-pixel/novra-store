@@ -36,6 +36,7 @@
     "terms": "Terms & conditions",
     "cookies": "Cookie policy",
     "affiliateTerms": "Affiliate program terms",
+    "affiliateProgram": "Affiliate program",
     "legalNavAria": "Legal documents",
     "anpc": "ANPC — Consumer protection (RO)",
     "odr": "EU ODR platform",
@@ -809,7 +810,19 @@
     "orderWhatsappTitle": "Order on WhatsApp",
     "orderWhatsappAria": "Order {title} on WhatsApp",
     "addToCartAria": "Quick add {title} to cart",
-    "outOfStockAria": "{title} — out of stock"
+    "outOfStockAria": "{title} — out of stock",
+    "exploreBadge": "Discover NOVRA",
+    "exploreTitle": "Everything you need, one click away",
+    "exploreSubtitle": "Promotions, reviews, delivery map and authenticity check — on dedicated pages, keeping the homepage focused.",
+    "explorePromotionsTitle": "Active promotions",
+    "explorePromotionsDesc": "Discount codes and exclusive NOVRA campaigns.",
+    "exploreReviewsTitle": "Customer reviews",
+    "exploreReviewsDesc": "10,000+ happy customers — read real experiences.",
+    "exploreDeliveryTitle": "Delivery map",
+    "exploreDeliveryDesc": "See where we've already delivered in Romania.",
+    "exploreAuthenticityTitle": "Authenticity check",
+    "exploreAuthenticityDesc": "Confirm your NOVRA product is genuine.",
+    "seeMore": "See more"
   },
   "affiliate": {
     "title": "NOVRA Affiliate Program",
@@ -846,7 +859,9 @@
     "gdprTitle": "Data collected & GDPR",
     "gdprText": "For the affiliate program we collect: name, email, referral code, click/order statistics and, upon withdrawal, bank details (IBAN or card) for commission transfer. We use ?ref= attribution cookie (30 days). Processing complies with GDPR — details in <privacyLink>Privacy policy</privacyLink> and <termsLink>Program terms</termsLink>.",
     "readyToStart": "Ready to start?",
-    "accountLink": "My Account → Affiliate Program"
+    "accountLink": "My Account → Affiliate Program",
+    "metadataTitle": "Affiliate Program | NOVRA",
+    "metadataDescription": "Earn commission by promoting NOVRA products. Apply in your account, get your unique link and withdraw earnings."
   },
   "categories": {
     "usb-c": "Cables",

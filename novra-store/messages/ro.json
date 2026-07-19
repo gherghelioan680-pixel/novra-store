@@ -36,6 +36,7 @@
     "terms": "Termeni și condiții",
     "cookies": "Politica cookie-uri",
     "affiliateTerms": "Termeni program afiliere",
+    "affiliateProgram": "Program afiliere",
     "legalNavAria": "Documente legale",
     "anpc": "ANPC — Protecția consumatorilor",
     "odr": "SOL/ODR — Platforma UE",
@@ -809,7 +810,19 @@
     "orderWhatsappTitle": "Comandă pe WhatsApp",
     "orderWhatsappAria": "Comandă {title} pe WhatsApp",
     "addToCartAria": "Adaugă rapid {title} în coș",
-    "outOfStockAria": "{title} — stoc epuizat"
+    "outOfStockAria": "{title} — stoc epuizat",
+    "exploreBadge": "Descoperă NOVRA",
+    "exploreTitle": "Tot ce ai nevoie, la un click",
+    "exploreSubtitle": "Promoții, recenzii, livrări și verificare autenticitate — pe pagini dedicate, fără aglomerare pe homepage.",
+    "explorePromotionsTitle": "Promoții active",
+    "explorePromotionsDesc": "Coduri reducere și campanii exclusive NOVRA.",
+    "exploreReviewsTitle": "Recenzii clienți",
+    "exploreReviewsDesc": "Peste 10.000+ clienți mulțumiți — citește experiențele reale.",
+    "exploreDeliveryTitle": "Harta livrărilor",
+    "exploreDeliveryDesc": "Vezi unde am livrat deja în România.",
+    "exploreAuthenticityTitle": "Verificare autenticitate",
+    "exploreAuthenticityDesc": "Confirmă că produsul tău NOVRA este original.",
+    "seeMore": "Vezi mai mult"
   },
   "affiliate": {
     "title": "Program de Afiliere NOVRA",
@@ -846,7 +859,9 @@
     "gdprTitle": "Date colectate & GDPR",
     "gdprText": "Pentru programul de afiliere colectăm: nume, email, cod de referință, statistici click-uri/comenzi și, la retragere, date bancare (IBAN sau card) pentru transferul comisionului. Folosim cookie de atribuire ?ref= (30 zile). Prelucrarea respectă GDPR — detalii în <privacyLink>Politica de confidențialitate</privacyLink> și <termsLink>Termenii programului</termsLink>.",
     "readyToStart": "Gata să începi?",
-    "accountLink": "Contul meu → Program Afiliere"
+    "accountLink": "Contul meu → Program Afiliere",
+    "metadataTitle": "Program Afiliere | NOVRA",
+    "metadataDescription": "Câștigă comision promovând produsele NOVRA. Aplică în cont, primește linkul tău unic și retrage câștigurile."
   },
   "categories": {
     "usb-c": "Cabluri",

@@ -17,6 +17,7 @@ const STATIC_PATHS = [
   "/politica-confidentialitate",
   "/politica-cookies",
   "/termeni-program-afiliere",
+  "/program-afiliere",
   "/livrare-si-plata",
   "/garantie-si-retur",
   "/accesorii",

@@ -133,6 +133,11 @@ export default function Footer() {
                   {t("contact")}
                 </Link>
               </li>
+              <li>
+                <Link href="/program-afiliere" className="hover:text-purple-400 transition">
+                  {t("affiliateProgram")}
+                </Link>
+              </li>
             </ul>
           </div>
 
