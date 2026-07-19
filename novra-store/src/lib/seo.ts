@@ -108,6 +108,11 @@ export function buildSiteMetadata(locale: AppLocale, description: string): Metad
     },
     icons: SITE_ICONS,
     manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      title: "NOVRA",
+      statusBarStyle: "black-translucent",
+    },
   };
 }
 
@@ -117,6 +122,14 @@ export const ROOT_METADATA: Metadata = {
     template: "%s | NOVRA",
   },
   description: DEFAULT_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    title: "NOVRA",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   openGraph: {
     type: "website",
     siteName: "NOVRA",

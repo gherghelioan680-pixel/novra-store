@@ -34,6 +34,11 @@ import ProductStockLabel from "@/components/produse/ProductStockLabel";
 import ProductBadges, { ProductBadgesOverlay } from "@/components/produse/ProductBadges";
 import { getWhatsAppNumber } from "@/lib/site-settings";
 import { buildWhatsAppUrl as buildWhatsAppLink, createStoreRefreshEffect } from "@/lib/store";
+import dynamic from "next/dynamic";
+import PriceDisplay from "@/components/PriceDisplay";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
+
+const LiveVisitors = dynamic(() => import("@/components/LiveVisitors"), { ssr: false });
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -76,6 +81,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
   const tp = useTranslations("products");
   const tc = useTranslations("common");
   const tw = useTranslations("whatsapp");
+  const { formatRon } = useFormatPrice();
   const { addItem } = useCart();
   const [activeOptionIdx, setActiveOptionIdx] = useState(0);
   const [bundleSelections, setBundleSelections] = useState(DEFAULT_BUNDLE_SELECTIONS);
@@ -111,15 +117,15 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
     if (isLockedVariant(p.id, optionIndex)) return null;
 
     let variantLabel: string;
-    let finalPrice: string;
+    let priceRon: number;
 
     if (isBundleProduct(p.category)) {
       const sel = getBundleSelection(p.id);
       variantLabel = getBundleVariantLabel(sel.adapterIdx, sel.cableIdx);
-      finalPrice = p.basePrice.toFixed(2);
+      priceRon = p.basePrice;
     } else {
       variantLabel = p.options[optionIndex];
-      finalPrice = (p.basePrice + p.modifiers[optionIndex]).toFixed(2);
+      priceRon = p.basePrice + p.modifiers[optionIndex];
     }
 
     const variantField = isBundleProduct(p.category)
@@ -131,7 +137,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
       title: p.title,
       variantField,
       variantLabel,
-      price: finalPrice,
+      price: formatRon(priceRon),
     });
 
     return buildWhatsAppLink(getWhatsAppNumber(), message);
@@ -187,6 +193,7 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
   return (
     <div className="min-h-screen bg-novra-bg text-white">
       <Navbar />
+      <LiveVisitors />
 
       <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-8">
         <Link
@@ -378,9 +385,11 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
             <div className="border-t border-white/10 pt-3 mt-auto hidden md:block">
               <div className="mb-2.5">
                 <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
-                <span className="text-xl font-bold text-white tracking-tight">
-                  {getCurrentPrice().toFixed(2)} {tc("ron")}
-                </span>
+                <PriceDisplay
+                  amountRon={getCurrentPrice()}
+                  className="text-xl font-bold text-white tracking-tight"
+                  secondaryClassName="block text-xs text-gray-500 mt-0.5 font-normal"
+                />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2.5">
@@ -415,9 +424,11 @@ function ProductDetailContent({ product }: { product: CatalogProduct }) {
       <div className="fixed bottom-0 left-0 right-0 z-[200] bg-novra-surface/98 backdrop-blur-sm border-t border-white/10 px-4 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden">
         <div className="mb-2">
           <span className="text-[9px] uppercase tracking-widest text-gray-500 block font-medium">{t("finalPrice")}</span>
-          <span className="text-xl font-bold text-white tracking-tight">
-            {getCurrentPrice().toFixed(2)} {tc("ron")}
-          </span>
+          <PriceDisplay
+            amountRon={getCurrentPrice()}
+            className="text-xl font-bold text-white tracking-tight"
+            secondaryClassName="block text-xs text-gray-500 mt-0.5 font-normal"
+          />
         </div>
 
         <div className="flex gap-2.5">

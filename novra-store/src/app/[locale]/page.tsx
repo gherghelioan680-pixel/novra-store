@@ -33,6 +33,8 @@ import StatsBar from "@/components/home/StatsBar";
 import WhyNovraSection from "@/components/home/WhyNovraSection";
 import BrandStoryBlock from "@/components/home/BrandStoryBlock";
 import ScrollReveal from "@/components/home/ScrollReveal";
+import PriceDisplay from "@/components/PriceDisplay";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import { addNewsletterSubscriber } from "@/lib/newsletter";
 import { buildWhatsAppUrl, createStoreRefreshEffect } from "@/lib/store";
 
@@ -749,6 +751,7 @@ function ProductCard({
   const th = useTranslations("home");
   const tp = useTranslations("products");
   const tc = useTranslations("common");
+  const { formatRon } = useFormatPrice();
   const { addItem } = useCart();
   const [showGoToCart, setShowGoToCart] = useState(false);
 
@@ -762,7 +765,11 @@ function ProductCard({
   const handleWhatsAppOrder = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const message = th("productWhatsappMessage", { title, category, price });
+    const message = th("productWhatsappMessage", {
+      title,
+      category,
+      price: formatRon(unitPrice),
+    });
     window.open(buildWhatsAppUrl(whatsappNumber, message), "_blank");
   };
 
@@ -819,7 +826,11 @@ function ProductCard({
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-white/8">
         <div>
-          <p className="text-purple-400 font-bold text-lg sm:text-xl">{price}</p>
+          <PriceDisplay
+            amountRon={unitPrice}
+            className="text-purple-400 font-bold text-lg sm:text-xl"
+            secondaryClassName="block text-xs text-gray-500 mt-0.5 font-normal"
+          />
           <p className={`text-xs mt-1 ${inStock ? "text-emerald-400" : "text-red-400"}`}>{stockLabel}</p>
         </div>
         <div className="flex flex-wrap gap-2">

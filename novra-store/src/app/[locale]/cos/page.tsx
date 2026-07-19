@@ -17,6 +17,8 @@ import {
   validateCartStock,
 } from "@/lib/catalog";
 import { subscribeToStoreUpdates } from "@/lib/store";
+import PriceDisplay from "@/components/PriceDisplay";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 
 function CartAddFromUrl() {
   const router = useLocaleRouter();
@@ -59,6 +61,7 @@ function CartAddFromUrl() {
 function CosPageContent() {
   const t = useTranslations("cart");
   const tc = useTranslations("common");
+  const { formatRon } = useFormatPrice();
   const { items, updateQuantity, removeItem, totalPrice, totalItems, hydrated } = useCart();
   const [, setStockTick] = useState(0);
 
@@ -146,9 +149,11 @@ function CosPageContent() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white truncate">{item.title}</h3>
                     <p className="text-gray-500 text-xs mt-0.5">{item.variantLabel}</p>
-                    <p className="text-purple-400 font-bold text-sm mt-2">
-                      {item.unitPrice.toFixed(2)} RON
-                    </p>
+                    <PriceDisplay
+                      amountRon={item.unitPrice}
+                      className="text-purple-400 font-bold text-sm"
+                      secondaryClassName="block text-[10px] text-gray-500 mt-0.5 font-normal"
+                    />
                     {product && (
                       <p className={`text-[11px] mt-1 ${available > 0 ? "text-emerald-400" : "text-red-400"}`}>
                         {formatStockLabel(available)}
@@ -197,9 +202,11 @@ function CosPageContent() {
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 block font-medium">
                   {tc("total")}
                 </span>
-                <span className="text-3xl font-bold text-white tracking-tight">
-                  {totalPrice.toFixed(2)} {tc("ron")}
-                </span>
+                <PriceDisplay
+                  amountRon={totalPrice}
+                  className="text-3xl font-bold text-white tracking-tight"
+                  secondaryClassName="block text-sm text-gray-500 mt-1 font-normal"
+                />
               </div>
 
               <Link

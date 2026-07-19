@@ -55,6 +55,7 @@
     "reject": "Refuz",
     "total": "Total",
     "ron": "RON",
+    "eur": "EUR",
     "product": "produs",
     "products": "produse",
     "viewProducts": "Vezi produsele",
@@ -195,8 +196,18 @@
     "viewFaq": "Vezi FAQ"
   },
   "liveVisitors": {
-    "ariaLabel": "{count} clienți live pe site",
-    "live": "live"
+    "ariaLabel": "{count} persoane vizualizează site-ul acum",
+    "viewingNow": "persoane vizualizează acum"
+  },
+  "currency": {
+    "label": "Monedă",
+    "approx": "≈"
+  },
+  "pwa": {
+    "installTitle": "Instalează aplicația NOVRA",
+    "installDescription": "Acces rapid de pe ecranul principal, fără browser.",
+    "installAction": "Instalează",
+    "installDismiss": "Mai târziu"
   },
   "marketingTicker": {
     "fallback": "Livrare 24-48h în toată România"

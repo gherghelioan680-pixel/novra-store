@@ -27,6 +27,7 @@ import {
   type AppliedDiscount,
 } from "@/lib/discount-codes";
 import { ROMANIAN_COUNTIES } from "@/lib/romanian-counties";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 
 function buildInitialFormData() {
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
@@ -70,6 +71,7 @@ function CheckoutPageContent() {
   const t = useTranslations("checkout");
   const tc = useTranslations("common");
   const tCopy = useTranslations("copy");
+  const { formatRon } = useFormatPrice();
   const { items, totalPrice, clearCart, hydrated } = useCart();
   const { freeShippingThreshold, deliveryCost, cardPaymentEnabled } = useSiteSettings();
   const [status, setStatus] = useState<"idle" | "sending" | "redirecting" | "success" | "error">("idle");
@@ -233,7 +235,7 @@ function CheckoutPageContent() {
   const formatOrderMessage = (purchaseCode?: string) => {
     const lines = items.map(
       (item) =>
-        `- ${item.title} (${item.variantLabel}) x${item.quantity} = ${(item.unitPrice * item.quantity).toFixed(2)} RON`
+        `- ${item.title} (${item.variantLabel}) x${item.quantity} = ${formatRon(item.unitPrice * item.quantity)}`
     );
     return [
       "COMANDĂ NOVRA",
@@ -242,18 +244,18 @@ function CheckoutPageContent() {
       "Produse:",
       ...lines,
       "",
-      `Subtotal: ${totalPrice.toFixed(2)} RON`,
+      `Subtotal: ${formatRon(totalPrice)}`,
       appliedDiscount && discountAmount > 0
-        ? `Reducere (${appliedDiscount.code}): -${discountAmount.toFixed(2)} RON`
+        ? `Reducere (${appliedDiscount.code}): -${formatRon(discountAmount)}`
         : "",
       campaignDiscount && campaignDiscountAmount > 0
-        ? `Reducere campanie (${campaignDiscount.title}): -${campaignDiscountAmount.toFixed(2)} RON`
+        ? `Reducere campanie (${campaignDiscount.title}): -${formatRon(campaignDiscountAmount)}`
         : "",
       freeShippingFromCode && appliedDiscount
         ? `Livrare gratuită (cod ${appliedDiscount.code})`
-        : `Livrare: ${shippingCost === 0 ? "Gratuită" : `${shippingCost.toFixed(2)} RON`}`,
-      creditsToApply > 0 ? `NovraCredits: -${creditsToApply.toFixed(2)} RON` : "",
-      `Total: ${orderTotal.toFixed(2)} RON`,
+        : `Livrare: ${shippingCost === 0 ? "Gratuită" : formatRon(shippingCost)}`,
+      creditsToApply > 0 ? `NovraCredits: -${formatRon(creditsToApply)}` : "",
+      `Total: ${formatRon(orderTotal)}`,
       "",
       `Metodă plată: ${
         fullyPaidWithCredits
@@ -666,7 +668,7 @@ function CheckoutPageContent() {
                     <>
                       {" "}
                       {t("discountAmount")} {formatDiscountValue(appliedDiscount.type, appliedDiscount.value)} (−
-                      {discountAmount.toFixed(2)} RON)
+                      {formatRon(discountAmount)})
                     </>
                   )}
                   {freeShippingFromCode && (
@@ -698,7 +700,7 @@ function CheckoutPageContent() {
                       {t("creditsAvailable", { credits: userCredits })}
                       {useCredits && creditsToApply > 0 && (
                         <span className="text-emerald-400">
-                          {t("creditsApplying", { amount: creditsToApply.toFixed(2) })}
+                          {t("creditsApplying", { amount: formatRon(creditsToApply) })}
                         </span>
                       )}
                     </p>
@@ -813,8 +815,8 @@ function CheckoutPageContent() {
                   : fullyPaidWithCredits
                     ? t("payWithCredits")
                     : paymentMethod === "card" && cardAvailable && !fullyPaidWithCredits
-                      ? t("payNow", { total: orderTotal.toFixed(2) })
-                      : t("sendOrder", { total: orderTotal.toFixed(2) })}
+                      ? t("payNow", { total: formatRon(orderTotal) })
+                      : t("sendOrder", { total: formatRon(orderTotal) })}
             </button>
           </form>
             ) : (
@@ -836,7 +838,7 @@ function CheckoutPageContent() {
                     <span className="text-gray-500">({item.variantLabel}) x{item.quantity}</span>
                   </span>
                   <span className="text-white font-medium shrink-0">
-                    {(item.unitPrice * item.quantity).toFixed(2)} RON
+                    {formatRon(item.unitPrice * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -844,18 +846,18 @@ function CheckoutPageContent() {
             <div className="border-t border-white/10 pt-4 space-y-2">
               <div className="flex justify-between text-sm text-gray-300">
                 <span>{t("subtotalProducts")}</span>
-                <span>{totalPrice.toFixed(2)} RON</span>
+                <span>{formatRon(totalPrice)}</span>
               </div>
               {discountAmount > 0 && appliedDiscount && (
                 <div className="flex justify-between text-sm text-emerald-400">
                   <span>{t("discountAmount")} ({appliedDiscount.code})</span>
-                  <span>−{discountAmount.toFixed(2)} RON</span>
+                  <span>−{formatRon(discountAmount)}</span>
                 </div>
               )}
               {campaignDiscountAmount > 0 && campaignDiscount && (
                 <div className="flex justify-between text-sm text-emerald-400">
                   <span>{t("campaign")} ({campaignDiscount.title})</span>
-                  <span>−{campaignDiscountAmount.toFixed(2)} RON</span>
+                  <span>−{formatRon(campaignDiscountAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">
@@ -866,7 +868,7 @@ function CheckoutPageContent() {
                   )}
                 </span>
                 <span className={freeShippingFromCode ? "text-emerald-400" : undefined}>
-                  {shippingCost === 0 ? t("freeShipping") : `${shippingCost.toFixed(2)} RON`}
+                  {shippingCost === 0 ? t("freeShipping") : formatRon(shippingCost)}
                 </span>
               </div>
               {shippingCost > 0 && !freeShippingFromCode && (
@@ -877,7 +879,7 @@ function CheckoutPageContent() {
               {creditsToApply > 0 && (
                 <div className="flex justify-between text-sm text-emerald-400">
                   <span>{t("useNovraCredits")}</span>
-                  <span>−{creditsToApply.toFixed(2)} RON</span>
+                  <span>−{formatRon(creditsToApply)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-300">
@@ -892,7 +894,7 @@ function CheckoutPageContent() {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">{tc("total")}</span>
-                <span className="text-xl font-bold text-purple-400">{orderTotal.toFixed(2)} RON</span>
+                <span className="text-xl font-bold text-purple-400">{formatRon(orderTotal)}</span>
               </div>
             </div>
           </div>

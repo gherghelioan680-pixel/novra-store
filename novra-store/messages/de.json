@@ -55,6 +55,7 @@
     "reject": "Ablehnen",
     "total": "Gesamt",
     "ron": "RON",
+    "eur": "EUR",
     "product": "Produkt",
     "products": "Produkte",
     "viewProducts": "Produkte ansehen",
@@ -195,8 +196,18 @@
     "viewFaq": "FAQ ansehen"
   },
   "liveVisitors": {
-    "ariaLabel": "{count} Live-Besucher auf der Website",
-    "live": "live"
+    "ariaLabel": "{count} Personen sehen die Website gerade an",
+    "viewingNow": "Personen sehen gerade zu"
+  },
+  "currency": {
+    "label": "Währung",
+    "approx": "≈"
+  },
+  "pwa": {
+    "installTitle": "NOVRA App installieren",
+    "installDescription": "Schneller Zugriff vom Startbildschirm, ohne Browser.",
+    "installAction": "Installieren",
+    "installDismiss": "Später"
   },
   "marketingTicker": {
     "fallback": "24–48h Lieferung in ganz Rumänien"

@@ -1,12 +1,15 @@
 {
-  "name": "NOVRA Store",
+  "name": "NOVRA",
   "short_name": "NOVRA",
   "description": "Cabluri premium NOVRA — Precision. Performance. Power.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#13111c",
   "theme_color": "#7c3aed",
   "lang": "ro",
+  "categories": ["shopping", "lifestyle"],
   "icons": [
     {
       "src": "/icon.png",
@@ -23,6 +26,12 @@
     {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },

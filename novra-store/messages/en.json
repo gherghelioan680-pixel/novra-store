@@ -55,6 +55,7 @@
     "reject": "Decline",
     "total": "Total",
     "ron": "RON",
+    "eur": "EUR",
     "product": "product",
     "products": "products",
     "viewProducts": "View products",
@@ -195,8 +196,18 @@
     "viewFaq": "View FAQ"
   },
   "liveVisitors": {
-    "ariaLabel": "{count} live visitors on site",
-    "live": "live"
+    "ariaLabel": "{count} people viewing the site right now",
+    "viewingNow": "people viewing now"
+  },
+  "currency": {
+    "label": "Currency",
+    "approx": "≈"
+  },
+  "pwa": {
+    "installTitle": "Install the NOVRA app",
+    "installDescription": "Quick access from your home screen, no browser needed.",
+    "installAction": "Install",
+    "installDismiss": "Later"
   },
   "marketingTicker": {
     "fallback": "24–48h delivery across Romania"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -7,6 +8,7 @@ import ComingSoonGate from "@/components/ComingSoonGate";
 import SetDocumentLang from "@/components/SetDocumentLang";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { buildSiteMetadata } from "@/lib/seo";
+import { CURRENCY_COOKIE, isDisplayCurrency } from "@/lib/currency";
 
 export async function generateMetadata({
   params,
@@ -38,12 +40,15 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const cookieStore = await cookies();
+  const currencyCookie = cookieStore.get(CURRENCY_COOKIE)?.value;
+  const initialCurrency = isDisplayCurrency(currencyCookie) ? currencyCookie : "RON";
 
   return (
     <NextIntlClientProvider messages={messages}>
       <SetDocumentLang locale={locale} />
       <ComingSoonGate>
-        <Providers>{children}</Providers>
+        <Providers initialCurrency={initialCurrency}>{children}</Providers>
       </ComingSoonGate>
     </NextIntlClientProvider>
   );

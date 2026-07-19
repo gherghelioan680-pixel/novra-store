@@ -9,7 +9,9 @@ import ProductImage from "@/components/produse/ProductImage";
 import BundleProductImages from "@/components/produse/BundleProductImages";
 import { ProductBadgesOverlay } from "@/components/produse/ProductBadges";
 import ScrollReveal from "@/components/home/ScrollReveal";
+import PriceDisplay from "@/components/PriceDisplay";
 import { useCart } from "@/context/CartContext";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import {
   buildProductUrl,
   formatStockLabel,
@@ -31,6 +33,7 @@ export function CatalogProductCard({ product, index = 0 }: CatalogProductCardPro
   const tp = useTranslations("products");
   const th = useTranslations("home");
   const tc = useTranslations("common");
+  const { formatRon } = useFormatPrice();
   const { addItem } = useCart();
   const [showGoToCart, setShowGoToCart] = useState(false);
 
@@ -45,7 +48,7 @@ export function CatalogProductCard({ product, index = 0 }: CatalogProductCardPro
   const isBundle = isBundleProduct(product.category);
   const variantLabel = product.tag || product.options[0] || "Standard";
   const unitPrice = product.basePrice;
-  const price = `${product.basePrice.toFixed(2)} ${tc("ron")}`;
+  const price = formatRon(product.basePrice);
 
   const handleQuickAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -114,7 +117,11 @@ export function CatalogProductCard({ product, index = 0 }: CatalogProductCardPro
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-white/8 mt-auto">
           <div>
-            <p className="text-purple-400 font-bold text-lg sm:text-xl">{price}</p>
+            <PriceDisplay
+              amountRon={product.basePrice}
+              className="text-purple-400 font-bold text-lg sm:text-xl"
+              secondaryClassName="block text-xs text-gray-500 mt-0.5 font-normal"
+            />
             <p className={`text-xs mt-1 ${inStock ? "text-emerald-400" : "text-red-400"}`}>{stockLabel}</p>
           </div>
           <div className="flex flex-wrap gap-2">

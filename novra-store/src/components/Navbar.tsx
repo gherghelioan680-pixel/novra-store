@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import MarketingTicker from "@/components/MarketingTicker";
 import CountdownBanner from "@/components/CountdownBanner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import CurrencySwitcher from "@/components/CurrencySwitcher";
 import { clampHeaderHeight } from "@/lib/motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/store";
@@ -107,6 +108,7 @@ export default function Navbar() {
             </div>
 
             <div className="relative z-[10001] flex gap-2 sm:gap-4 items-center shrink-0">
+              <CurrencySwitcher />
               <LanguageSwitcher />
 
               <Link
@@ -188,6 +190,7 @@ export default function Navbar() {
                           )}
                         </Link>
                       ))}
+                      <CurrencySwitcher variant="mobile" />
                       <LanguageSwitcher variant="mobile" />
                     </div>
                   </nav>
