@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { ROOT_METADATA } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -10,11 +11,7 @@ export const viewport: Viewport = {
   themeColor: "#13111c",
 };
 
-export const metadata: Metadata = {
-  title: "NOVRA | Precision. Performance. Power.",
-  description: "Cabluri premium create pentru viteză, siguranță și performanță fără compromis.",
-  manifest: "/manifest.json",
-};
+export const metadata: Metadata = ROOT_METADATA;
 
 export default function RootLayout({
   children,

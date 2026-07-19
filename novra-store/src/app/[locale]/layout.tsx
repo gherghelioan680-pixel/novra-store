@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import Providers from "@/components/Providers";
 import ComingSoonGate from "@/components/ComingSoonGate";
 import SetDocumentLang from "@/components/SetDocumentLang";
-import { routing } from "@/i18n/routing";
+import { routing, type AppLocale } from "@/i18n/routing";
+import { buildSiteMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -15,11 +16,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata" });
 
-  return {
-    title: "NOVRA | Precision. Performance. Power.",
-    description: t("description"),
-    manifest: "/manifest.json",
-  };
+  return buildSiteMetadata(locale as AppLocale, t("description"));
 }
 
 export function generateStaticParams() {
