@@ -22,7 +22,7 @@ export default function AccountMobileSectionNav({
   return (
     <div className="mb-5 md:hidden">
       <Link
-        href="/produse"
+        href="/"
         className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-medium text-purple-400 transition hover:text-purple-300 active:text-purple-200 touch-manipulation [-webkit-tap-highlight-color:transparent]"
       >
         <ArrowLeft size={18} aria-hidden />
